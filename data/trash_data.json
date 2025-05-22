@@ -1,0 +1,132 @@
+[
+  {
+    "latitude": 37.7749,
+    "longitude": -122.4194,
+    "timestamp": "2023-10-15T14:30:00",
+    "file_path": "test_data_entry",
+    "trash_type": "plastic",
+    "estimated_kg": 2.5,
+    "sparcity": "medium",
+    "cleanliness": "poor"
+  },
+  {
+    "latitude": 37.7749,
+    "longitude": -122.4194,
+    "timestamp": "2025-05-17T16:56:08",
+    "file_path": "test_data_entry",
+    "trash_type": "plastic",
+    "estimated_kg": 2.5,
+    "sparcity": "medium",
+    "cleanliness": "poor"
+  },
+  {
+    "latitude": 37.7739,
+    "longitude": -122.4312,
+    "timestamp": "2025-05-19T06:27:51",
+    "file_path": "test_data_entry",
+    "trash_type": "paper",
+    "estimated_kg": 1.2,
+    "sparcity": "low",
+    "cleanliness": "moderate"
+  },
+  {
+    "latitude": 37.7833,
+    "longitude": -122.4167,
+    "timestamp": "2025-05-21T12:27:01",
+    "file_path": "test_data_entry",
+    "trash_type": "metal",
+    "estimated_kg": 3.4,
+    "sparcity": "high",
+    "cleanliness": "very_poor"
+  },
+  {
+    "latitude": 37.8044,
+    "longitude": -122.2712,
+    "timestamp": "2025-05-21T13:01:20",
+    "file_path": "test_data_entry",
+    "trash_type": "glass",
+    "estimated_kg": 4.1,
+    "sparcity": "medium",
+    "cleanliness": "poor"
+  },
+  {
+    "latitude": 37.7695,
+    "longitude": -122.4856,
+    "timestamp": "2025-05-21T15:44:36",
+    "file_path": "test_data_entry",
+    "trash_type": "plastic",
+    "estimated_kg": 5.2,
+    "sparcity": "high",
+    "cleanliness": "very_poor"
+  },
+  {
+    "latitude": 40.7128,
+    "longitude": -74.006,
+    "timestamp": "2025-05-16T01:02:36",
+    "file_path": "test_data_entry",
+    "trash_type": "plastic",
+    "estimated_kg": 3.7,
+    "sparcity": "high",
+    "cleanliness": "poor"
+  },
+  {
+    "latitude": 40.7282,
+    "longitude": -73.9942,
+    "timestamp": "2025-05-18T03:15:33",
+    "file_path": "test_data_entry",
+    "trash_type": "organic",
+    "estimated_kg": 2.3,
+    "sparcity": "medium",
+    "cleanliness": "moderate"
+  },
+  {
+    "latitude": 40.7484,
+    "longitude": -73.9857,
+    "timestamp": "2025-05-18T04:54:35",
+    "file_path": "test_data_entry",
+    "trash_type": "paper",
+    "estimated_kg": 1.8,
+    "sparcity": "low",
+    "cleanliness": "good"
+  },
+  {
+    "latitude": 35.6762,
+    "longitude": 139.6503,
+    "timestamp": "2025-05-17T23:19:52",
+    "file_path": "test_data_entry",
+    "trash_type": "electronic",
+    "estimated_kg": 4.2,
+    "sparcity": "low",
+    "cleanliness": "good"
+  },
+  {
+    "latitude": 35.6895,
+    "longitude": 139.6917,
+    "timestamp": "2025-05-15T22:27:35",
+    "file_path": "test_data_entry",
+    "trash_type": "plastic",
+    "estimated_kg": 1.4,
+    "sparcity": "medium",
+    "cleanliness": "moderate"
+  },
+  {
+    "latitude": 51.5074,
+    "longitude": -0.1278,
+    "timestamp": "2025-05-15T12:57:27",
+    "file_path": "test_data_entry",
+    "trash_type": "glass",
+    "estimated_kg": 3.1,
+    "sparcity": "medium",
+    "cleanliness": "moderate"
+  },
+  {
+    "latitude": 51.5226,
+    "longitude": -0.1058,
+    "timestamp": "2025-05-16T00:40:14",
+    "file_path": "test_data_entry",
+    "trash_type": "plastic",
+    "estimated_kg": 2.7,
+    "sparcity": "high",
+    "cleanliness": "poor"
+  }
+]

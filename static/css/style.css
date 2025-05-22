@@ -1,0 +1,22 @@
+#map-container {
+    height: 600px;
+    width: 100%;
+}
+
+#image-preview {
+    max-height: 200px;
+    object-fit: contain;
+}
+
+.navbar-brand {
+    font-weight: bold;
+}
+
+.card {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: #86b7fe;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+} 

@@ -11,6 +11,7 @@ from utils.geo_utils import extract_metadata
 from utils.file_utils import save_file
 from utils.db_utils import save_to_db, get_all_entries
 from forms.report_form import parse_optional_form
+import time
 
 app = FastAPI()
 
@@ -36,29 +37,68 @@ async def home():
 @app.post("/upload")
 async def upload_file(
     file: UploadFile = File(...),
-    fill_form: bool = Form(False),
+    latitude: float = Form(None),
+    longitude: float = Form(None),
+    fill_form: str = Form(None),
     trash_type: str = Form(None),
     estimated_kg: float = Form(None),
     sparcity: str = Form(None),
     cleanliness: str = Form(None)
 ):
-    # Save uploaded file
-    file_id = str(uuid.uuid4())
-    file_path = os.path.join(UPLOAD_FOLDER, file_id + "_" + file.filename)
-    await save_file(file, file_path)
-
-    # Extract metadata from file
-    metadata = extract_metadata(file_path)
-
-    # Handle optional form
-    if fill_form:
-        form_data = parse_optional_form(trash_type, estimated_kg, sparcity, cleanliness)
-        metadata.update(form_data)
-
-    # Save to DB
-    save_to_db(metadata, file_path)
-
-    return JSONResponse(content={"status": "success", "metadata": metadata})
+    try:
+        # Generate unique filename
+        file_id = str(uuid.uuid4())
+        filename = f"{file_id}_{file.filename}"
+        file_path = os.path.join(UPLOAD_FOLDER, filename)
+        
+        # Save the uploaded file
+        with open(file_path, "wb") as buffer:
+            content = await file.read()
+            buffer.write(content)
+        
+        print(f"File saved to: {file_path}")
+        
+        # Extract metadata from image
+        metadata = extract_metadata(file_path)
+        print(f"Extracted metadata: {metadata}")
+        
+        # If no GPS in image but we have form data, use form coordinates
+        if ('latitude' not in metadata or 'longitude' not in metadata) and latitude and longitude:
+            print(f"Using form coordinates: lat={latitude}, lng={longitude}")
+            metadata['latitude'] = latitude
+            metadata['longitude'] = longitude
+        
+        # Add timestamp if not present
+        if 'timestamp' not in metadata:
+            metadata['timestamp'] = time.strftime("%Y-%m-%dT%H:%M:%S", time.localtime())
+        
+        # Add file path
+        metadata['file_path'] = file_path
+        
+        # Handle manual form data if provided
+        if fill_form == 'true':
+            print("Processing manual form data")
+            form_data = parse_optional_form(trash_type, estimated_kg, sparcity, cleanliness)
+            metadata.update(form_data)
+            print(f"Added form data: {form_data}")
+        
+        # Save to database
+        save_to_db(metadata, file_path)
+        
+        print(f"Final metadata saved: {metadata}")
+        
+        return JSONResponse(content={
+            "status": "success", 
+            "message": "File uploaded successfully",
+            "metadata": metadata
+        })
+        
+    except Exception as e:
+        print(f"Upload error: {e}")
+        return JSONResponse(
+            status_code=500,
+            content={"status": "error", "message": str(e)}
+        )
 
 @app.post("/test-data")
 async def add_test_data(
@@ -98,6 +138,39 @@ async def get_map():
 async def get_trash_data():
     entries = get_all_entries()
     return JSONResponse(content=entries)
+
+@app.post("/api/check-coordinates")
+async def check_coordinates(file: UploadFile = File(...)):
+    """Check if uploaded image has GPS coordinates"""
+    try:
+        # Save file temporarily
+        temp_path = f"temp_{file.filename}"
+        with open(temp_path, "wb") as buffer:
+            content = await file.read()
+            buffer.write(content)
+        
+        # Extract metadata
+        metadata = extract_metadata(temp_path)
+        
+        # Clean up temp file
+        os.remove(temp_path)
+        
+        # Check if coordinates exist
+        has_coordinates = 'latitude' in metadata and 'longitude' in metadata
+        
+        response = {
+            "has_coordinates": has_coordinates
+        }
+        
+        if has_coordinates:
+            response["latitude"] = metadata["latitude"]
+            response["longitude"] = metadata["longitude"]
+        
+        return JSONResponse(content=response)
+        
+    except Exception as e:
+        print(f"Error checking coordinates: {e}")
+        return JSONResponse(content={"has_coordinates": False})
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)

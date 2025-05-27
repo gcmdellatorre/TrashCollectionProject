@@ -1,4 +1,4 @@
-```language=markdown:architecture.md
+```language=markdown:ARCHITECTURE.md
 # Trash Tracker Architecture
 
 ## System Design

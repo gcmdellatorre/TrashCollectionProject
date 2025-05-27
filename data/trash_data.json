@@ -128,5 +128,15 @@
     "estimated_kg": 2.7,
     "sparcity": "high",
     "cleanliness": "poor"
+  },
+  {
+    "latitude": 39.6889279,
+    "longitude": 2.8420532,
+    "timestamp": "2025-05-27T18:43:15",
+    "file_path": "data/images/7ab54e14-6dce-4e17-89c2-caebfb1071f8_WhatsApp Image 2025-05-22 at 17.51.14.jpeg",
+    "trash_type": "organic",
+    "estimated_kg": 150.0,
+    "sparcity": "low",
+    "cleanliness": "very_poor"
   }
 ]

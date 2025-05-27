@@ -258,49 +258,21 @@ async def get_image(blob_id: str, thumbnail: bool = False):
         )
 
 @app.get("/api/find-dirty-places")
-async def find_dirty_places(
-    lat: float = None,
-    lng: float = None,
-    address: str = None,
+async def find_dirty_places_endpoint(
+    lat: float,
+    lng: float,
     limit: int = 5,
-    max_distance: float = 50.0
+    max_distance: float = 25  # This should be the radius parameter
 ):
     """Find closest dirty places to a location"""
     try:
-        # Get coordinates
-        if address and not (lat and lng):
-            coords = geocode_location(address)
-            if coords:
-                lat, lng = coords
-            else:
-                return JSONResponse(
-                    status_code=400,
-                    content={"error": "Could not find coordinates for the given address"}
-                )
-        
-        if not (lat and lng):
-            return JSONResponse(
-                status_code=400,
-                content={"error": "Please provide either lat/lng or address"}
-            )
-        
-        # Find dirty places
-        dirty_places = find_closest_dirty_places(lat, lng, limit, max_distance)
-        
-        # Get location summary
-        summary = get_location_summary(lat, lng)
-        
-        return JSONResponse(content={
-            "search_location": {"lat": lat, "lng": lng},
-            "summary": summary,
-            "dirty_places": dirty_places
-        })
-        
+        result = find_closest_dirty_places(lat, lng, limit, max_distance)
+        return JSONResponse(content=result)
     except Exception as e:
         print(f"Error finding dirty places: {e}")
         return JSONResponse(
-            status_code=500,
-            content={"error": str(e)}
+            content={"error": "Failed to find dirty places"}, 
+            status_code=500
         )
 
 @app.get("/api/location-summary")

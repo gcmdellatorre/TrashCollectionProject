@@ -35,8 +35,8 @@ def calculate_dirtiness_score(report: Dict) -> float:
     # Sparcity multiplier
     sparcity_multipliers = {
         'low': 1.0,
-        'medium': 1.5,
-        'high': 2.0
+        'medium': 1.0,
+        'high': 1.0
     }
     score *= sparcity_multipliers.get(report.get('sparcity', 'medium'), 1.5)
     
@@ -51,11 +51,11 @@ def calculate_dirtiness_score(report: Dict) -> float:
     
     # Trash type weights (some types are "dirtier" than others)
     trash_type_weights = {
-        'organic': 1.5,      # Smelly, attracts pests
-        'mixed': 1.4,        # Usually messier
+        'organic': 2.,      # Smelly, attracts pests
+        'mixed': 1.8,        # Usually messier
         'plastic': 1.2,      # Visible pollution
-        'electronic': 1.1,   # Toxic
-        'paper': 1.0,        # Biodegradable
+        'electronic': 1.4,   # Toxic
+        'paper': .5,        # Biodegradable
         'glass': 0.9,        # Clean but dangerous
         'metal': 0.8         # Usually cleaner
     }
@@ -67,51 +67,92 @@ def find_closest_dirty_places(
     search_lat: float, 
     search_lng: float, 
     limit: int = 5,
-    max_distance_km: float = 50.0
-) -> List[Dict]:
+    max_distance_km: float = 25
+) -> Dict:
     """
     Find the closest dirty places to a given location
-    Returns list of reports sorted by distance, with dirtiness scores
+    
+    Args:
+        search_lat: Latitude of search center
+        search_lng: Longitude of search center
+        limit: Maximum number of places to return
+        max_distance_km: Maximum search radius in kilometers
+    
+    Returns:
+        dict: Search results with summary and dirty places
     """
     reports = get_all_trash_reports()
     
     if not reports:
-        return []
+        return {
+            "search_location": {"lat": search_lat, "lng": search_lng},
+            "summary": {
+                "message": f"No trash reports found within {max_distance_km}km of this location. This area seems clean! 🌟"
+            },
+            "dirty_places": []
+        }
     
-    # Calculate distance and dirtiness for each report
-    enriched_reports = []
-    
+    # Calculate distances and scores for all reports
+    scored_reports = []
     for report in reports:
-        if not (report.get('latitude') and report.get('longitude')):
+        if not (report.get("latitude") and report.get("longitude")):
             continue
             
-        # Calculate distance
-        distance = haversine_distance(
+        distance_km = haversine_distance(
             search_lat, search_lng,
-            report['latitude'], report['longitude']
+            report["latitude"], report["longitude"]
         )
         
-        # Skip if too far
-        if distance > max_distance_km:
-            continue
-        
-        # Calculate dirtiness score
-        dirtiness_score = calculate_dirtiness_score(report)
-        
-        # Add enriched data
-        enriched_report = {
-            **report,
-            'distance_km': round(distance, 2),
-            'dirtiness_score': round(dirtiness_score, 1),
-            'combined_score': round(dirtiness_score / (distance + 0.1), 2)  # Closer + dirtier = higher score
+        # Only include reports within the specified radius
+        if distance_km <= max_distance_km:
+            dirtiness_score = calculate_dirtiness_score(report)
+            combined_score = dirtiness_score / (distance_km + 0.1)  # Add small value to avoid division by zero
+            
+            scored_reports.append({
+                **report,
+                "distance_km": round(distance_km, 2),
+                "dirtiness_score": round(dirtiness_score, 1),
+                "combined_score": round(combined_score, 1)
+            })
+    
+    if not scored_reports:
+        return {
+            "search_location": {"lat": search_lat, "lng": search_lng},
+            "summary": {
+                "message": f"No dirty places found within {max_distance_km}km of this location. This area seems clean! 🌟"
+            },
+            "dirty_places": []
         }
-        
-        enriched_reports.append(enriched_report)
     
-    # Sort by combined score (dirtiness/distance ratio) - higher is "worse"
-    enriched_reports.sort(key=lambda x: x['combined_score'], reverse=True)
+    # Sort by combined score (higher is worse/closer)
+    scored_reports.sort(key=lambda x: x["combined_score"], reverse=True)
     
-    return enriched_reports[:limit]
+    # Limit results
+    top_reports = scored_reports[:limit]
+    
+    # Generate summary statistics
+    total_reports = len(scored_reports)
+    total_weight = sum(float(r.get("estimated_kg", 0) or 0) for r in scored_reports)
+    
+    # Most common trash type
+    trash_types = [r.get("trash_type") for r in scored_reports if r.get("trash_type")]
+    most_common_type = max(set(trash_types), key=trash_types.count) if trash_types else "Unknown"
+    
+    # Average dirtiness score
+    avg_dirtiness = sum(r["dirtiness_score"] for r in scored_reports) / len(scored_reports)
+    
+    summary = {
+        "total_reports": total_reports,
+        "total_estimated_kg": round(total_weight, 1),
+        "most_common_trash_type": most_common_type,
+        "avg_dirtiness_score": round(avg_dirtiness, 1)
+    }
+    
+    return {
+        "search_location": {"lat": search_lat, "lng": search_lng},
+        "summary": summary,
+        "dirty_places": top_reports
+    }
 
 def find_dirtiest_areas_in_radius(
     center_lat: float,

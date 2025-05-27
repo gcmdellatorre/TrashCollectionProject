@@ -1,6 +1,44 @@
-fastapi
-uvicorn
-python-multipart
-Pillow
-aiofiles
-folium
+# Core FastAPI
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
+python-multipart>=0.0.6
+
+# Image processing
+pillow>=10.0.0
+
+# Configuration
+python-decouple>=3.8
+
+# Database
+sqlalchemy>=2.0.0
+
+# Blob storage
+minio>=7.2.0
+
+aiofiles==24.1.0
+annotated-types==0.7.0
+anyio==4.9.0
+argon2-cffi==23.1.0
+argon2-cffi-bindings==21.2.0
+branca==0.8.1
+certifi==2025.4.26
+cffi==1.17.1
+charset-normalizer==3.4.2
+click==8.2.1
+folium==0.19.6
+h11==0.16.0
+idna==3.10
+Jinja2==3.1.6
+MarkupSafe==3.0.2
+numpy==2.2.6
+pycparser==2.22
+pycryptodome==3.23.0
+pydantic==2.11.4
+pydantic_core==2.33.2
+requests==2.32.3
+sniffio==1.3.1
+starlette==0.46.2
+typing-inspection==0.4.0
+typing_extensions==4.13.2
+urllib3==2.4.0
+xyzservices==2025.4.0

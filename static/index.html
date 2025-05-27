@@ -96,12 +96,56 @@
                     </div>
                     <div class="card-body p-0">
                         <!-- Search bar for main map -->
-                        <div class="p-3 border-bottom">
-                            <div class="input-group">
-                                <input type="text" id="main-map-search" class="form-control" placeholder="Search for a location on the map...">
-                                <button type="button" id="main-map-search-btn" class="btn btn-outline-primary">
-                                    <i class="bi bi-search"></i> Search
-                                </button>
+                        <div class="search-section mb-4">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="input-group">
+                                        <input type="text" 
+                                               id="main-map-search" 
+                                               class="form-control" 
+                                               placeholder="Search for a location (e.g., 'New York', 'London', '123 Main St')"
+                                               onkeypress="if(event.key==='Enter') searchMainMap(this.value)">
+                                        <button class="btn btn-primary" 
+                                                type="button" 
+                                                id="main-map-search-btn"
+                                                onclick="searchMainMap(document.getElementById('main-map-search').value)">
+                                            <i class="bi bi-search"></i> Find Location
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="input-group">
+                                        <span class="input-group-text">
+                                            <i class="bi bi-geo-alt"></i> Radius
+                                        </span>
+                                        <input type="number" 
+                                               id="search-radius" 
+                                               class="form-control" 
+                                               value="1" 
+                                               min="1" 
+                                               max="100" 
+                                               step="1"
+                                               title="Search radius in kilometers">
+                                        <span class="input-group-text">km</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <button class="btn btn-success w-100" 
+                                            type="button" 
+                                            id="find-dirty-btn"
+                                            disabled
+                                            title="First search for a location, then click to find dirty places">
+                                        <i class="bi bi-trash"></i> Find Dirty Places
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="row mt-2">
+                                <div class="col-12">
+                                    <small class="text-muted">
+                                        <i class="bi bi-info-circle"></i> 
+                                        First search for a location, set your radius (1-100km), then click "Find Dirty Places" to discover problematic areas nearby.
+                                    </small>
+                                </div>
                             </div>
                         </div>
                         <div id="map-container"></div>

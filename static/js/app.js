@@ -6,6 +6,11 @@ document.addEventListener('DOMContentLoaded', function() {
     let modalMap;
     let selectedLocation = null;
     
+    // Global variables to track search state
+    let currentSearchLocation = null;
+    let currentSearchRadius = null;
+    let searchMarkers = []; // Track all search-related markers and circles
+    
     // Initialize the application
     initMap();
     setupEventListeners();
@@ -129,7 +134,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const refreshButton = document.getElementById('refresh-map');
         if (refreshButton) {
             refreshButton.addEventListener('click', function() {
-                console.log('Manual map refresh requested');
+                console.log('Refreshing map and clearing search results');
+                clearSearchResults();
                 loadMapData();
             });
         }
@@ -157,19 +163,57 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
         }
+        
+        // Find dirty places button
+        const findDirtyBtn = document.getElementById('find-dirty-btn');
+        if (findDirtyBtn) {
+            findDirtyBtn.addEventListener('click', function() {
+                if (currentSearchLocation) {
+                    const radiusInput = document.getElementById('search-radius');
+                    const radius = radiusInput ? parseFloat(radiusInput.value) || 1 : 1;
+                    findClosestDirtyPlaces(currentSearchLocation.lat, currentSearchLocation.lng, radius);
+                } else {
+                    alert('Please search for a location first.');
+                }
+            });
+        }
+        
+        // Add radius input event listener
+        const radiusInput = document.getElementById('search-radius');
+        if (radiusInput) {
+            radiusInput.addEventListener('change', function() {
+                const value = parseFloat(this.value);
+                if (value < 1) this.value = 1;
+                if (value > 100) this.value = 100;
+                
+                // Update find dirty button tooltip with new radius
+                const findDirtyBtn = document.getElementById('find-dirty-btn');
+                if (currentSearchLocation && findDirtyBtn) {
+                    findDirtyBtn.title = `Click to find dirty places within ${this.value}km of the selected location`;
+                }
+            });
+        }
     }
     
     // Search functionality for main map
     function searchMainMap(query) {
         console.log('Searching main map for:', query);
         
+        // Get radius from input
+        const radiusInput = document.getElementById('search-radius');
+        const radius = radiusInput ? parseFloat(radiusInput.value) || 1 : 1;
+        
         const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1`;
         
         // Show loading state
         const searchBtn = document.getElementById('main-map-search-btn');
+        const findDirtyBtn = document.getElementById('find-dirty-btn');
         const originalText = searchBtn.innerHTML;
         searchBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Searching...';
         searchBtn.disabled = true;
+        
+        // Clear previous search results
+        clearSearchResults();
         
         fetch(url)
             .then(response => response.json())
@@ -181,10 +225,14 @@ document.addEventListener('DOMContentLoaded', function() {
                     
                     console.log('Location found on main map:', lat, lng);
                     
-                    // Center main map on found location with appropriate zoom
+                    // Store current search location
+                    currentSearchLocation = { lat, lng };
+                    currentSearchRadius = radius;
+                    
+                    // Center main map on found location
                     map.setView([lat, lng], 12);
                     
-                    // Add a temporary marker for the searched location
+                    // Add search marker
                     const searchMarker = L.marker([lat, lng], {
                         icon: L.divIcon({
                             className: 'search-marker',
@@ -195,19 +243,23 @@ document.addEventListener('DOMContentLoaded', function() {
                     }).addTo(map);
                     
                     searchMarker.bindPopup(`<strong>Search Result:</strong><br>${result.display_name}`).openPopup();
+                    searchMarkers.push(searchMarker);
                     
-                    // Remove search marker after 10 seconds
-                    setTimeout(() => {
-                        map.removeLayer(searchMarker);
-                    }, 10000);
+                    // Enable the "Find Dirty Places" button
+                    findDirtyBtn.disabled = false;
+                    findDirtyBtn.title = `Click to find dirty places within ${radius}km of this location`;
                     
                 } else {
                     alert('Location not found. Please try a different search term.');
+                    // Disable find dirty button if location not found
+                    findDirtyBtn.disabled = true;
+                    findDirtyBtn.title = "First search for a location, then click to find dirty places";
                 }
             })
             .catch(error => {
                 console.error('Main map search error:', error);
                 alert('Error searching for location. Please try again.');
+                findDirtyBtn.disabled = true;
             })
             .finally(() => {
                 // Restore button state
@@ -216,295 +268,393 @@ document.addEventListener('DOMContentLoaded', function() {
             });
     }
     
-    // Update submit button visibility based on form state
-    function updateSubmitButtonVisibility() {
-        const submitBtn = document.getElementById('submit-btn');
-        const fileInput = document.getElementById('file');
-        const latitude = document.getElementById('latitude').value;
-        const longitude = document.getElementById('longitude').value;
-        
-        // Show submit button if we have a file and either:
-        // 1. We have coordinates, OR
-        // 2. We're in the process of getting coordinates (location flow started)
-        const hasFile = fileInput && fileInput.files && fileInput.files.length > 0;
-        const hasLocation = latitude && longitude;
-        const locationFlowStarted = document.getElementById('location-status') !== null;
-        
-        if (hasFile && (hasLocation || locationFlowStarted)) {
-            submitBtn.style.display = 'block';
-            submitBtn.disabled = !hasLocation; // Disable if no location yet
-            
-            if (!hasLocation) {
-                submitBtn.textContent = 'Please Set Location First';
-                submitBtn.className = 'btn btn-secondary';
-            } else {
-                submitBtn.textContent = 'Submit Report';
-                submitBtn.className = 'btn btn-primary';
+    function findClosestDirtyPlaces(lat = null, lng = null, radius = null) {
+        // Use stored location and current radius if not provided
+        if (!lat || !lng) {
+            if (!currentSearchLocation) {
+                alert('Please search for a location first.');
+                return;
             }
-        } else {
-            submitBtn.style.display = 'none';
+            lat = currentSearchLocation.lat;
+            lng = currentSearchLocation.lng;
         }
-    }
-    
-    // Handle file input change - start the UX flow
-    function handleFileInputChange(e) {
-        console.log('File input changed!');
-        const file = e.target.files[0];
-        if (file) {
-            console.log('File selected:', file.name, 'Size:', file.size, 'Type:', file.type);
-            
-            // Show image preview
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                console.log('Image loaded for preview');
-                const preview = document.getElementById('image-preview');
-                if (preview) {
-                    preview.src = e.target.result;
-                    const previewContainer = document.getElementById('preview-container');
-                    if (previewContainer) {
-                        previewContainer.classList.remove('d-none');
-                    }
+        
+        // Get current radius from input
+        const radiusInput = document.getElementById('search-radius');
+        radius = radius || (radiusInput ? parseFloat(radiusInput.value) || 1 : 1);
+        
+        console.log('Finding dirty places near:', lat, lng, 'within', radius, 'km');
+        
+        // Clear previous dirty place markers but keep search location
+        clearDirtyPlaceMarkers();
+        
+        // Add search radius circle
+        const radiusCircle = L.circle([lat, lng], {
+            color: '#ff6b6b',
+            fillColor: '#ff6b6b',
+            fillOpacity: 0.1,
+            radius: radius * 1000, // Convert km to meters
+            weight: 2,
+            dashArray: '5, 5'
+        }).addTo(map);
+        
+        radiusCircle.bindPopup(`Search radius: ${radius}km`);
+        searchMarkers.push(radiusCircle);
+        
+        // Show loading state for find dirty button
+        const findDirtyBtn = document.getElementById('find-dirty-btn');
+        const originalText = findDirtyBtn.innerHTML;
+        findDirtyBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Searching...';
+        findDirtyBtn.disabled = true;
+        
+        fetch(`/api/find-dirty-places?lat=${lat}&lng=${lng}&limit=5&max_distance=${radius}`)
+            .then(response => response.json())
+            .then(data => {
+                console.log('Dirty places response:', data);
+                
+                if (data.dirty_places && data.dirty_places.length > 0) {
+                    // Show location summary with found results
+                    showLocationSummary(data.summary, radius, true);
+                    
+                    // Add numbered markers for dirty places
+                    data.dirty_places.forEach((place, index) => {
+                        const dirtyMarker = L.marker([place.latitude, place.longitude], {
+                            icon: L.divIcon({
+                                className: 'dirty-place-marker',
+                                html: `<div style="background-color: #8B4513; color: white; width: 25px; height: 25px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">${index + 1}</div>`,
+                                iconSize: [25, 25],
+                                iconAnchor: [12, 12]
+                            })
+                        }).addTo(map);
+                        
+                        dirtyMarker.bindPopup(`
+                            <div style="min-width: 200px;">
+                                <h6>🗑️ Dirty Place #${index + 1}</h6>
+                                <p><strong>Distance:</strong> ${place.distance_km}km</p>
+                                <p><strong>Type:</strong> ${place.trash_type || 'Unknown'}</p>
+                                <p><strong>Weight:</strong> ${place.estimated_kg || '?'}kg</p>
+                                <p><strong>Dirtiness Score:</strong> ${place.dirtiness_score}/100</p>
+                                <p><strong>Combined Score:</strong> ${place.combined_score.toFixed(1)}</p>
+                            </div>
+                        `);
+                        
+                        searchMarkers.push(dirtyMarker);
+                    });
+                    
+                } else {
+                    // Show no results message with correct radius
+                    showLocationSummary({
+                        message: `No dirty places found within ${radius}km of this location. This area seems clean! 🌟`
+                    }, radius, false);
                 }
-            }
-            reader.readAsDataURL(file);
-            
-            // Start location detection flow
-            console.log('Starting location detection flow...');
-            startLocationDetectionFlow(file);
+            })
+            .catch(error => {
+                console.error('Error finding dirty places:', error);
+                showLocationSummary({
+                    message: `Error searching for dirty places within ${radius}km. Please try again.`
+                }, radius, false);
+            })
+            .finally(() => {
+                // Restore button state
+                findDirtyBtn.innerHTML = originalText;
+                findDirtyBtn.disabled = false;
+            });
+    }
+    
+    function showLocationSummary(summary, radius, hasResults) {
+        // Create or update summary display
+        let summaryDiv = document.getElementById('location-summary');
+        if (!summaryDiv) {
+            summaryDiv = document.createElement('div');
+            summaryDiv.id = 'location-summary';
+            summaryDiv.style.cssText = `
+                position: absolute;
+                top: 60px;
+                right: 20px;
+                background: white;
+                padding: 15px;
+                border-radius: 8px;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+                max-width: 300px;
+                z-index: 1000;
+                border-left: 4px solid #007bff;
+            `;
+            document.getElementById('map-container').appendChild(summaryDiv);
+        }
+        
+        if (summary.message) {
+            // No results or error message
+            summaryDiv.innerHTML = `
+                <div style="color: ${hasResults ? '#007bff' : '#28a745'};">
+                    ${summary.message}
+                </div>
+            `;
         } else {
-            console.log('No file selected');
+            // Results found - show detailed summary
+            summaryDiv.innerHTML = `
+                <div style="font-weight: bold; margin-bottom: 10px;">📍 Area Summary</div>
+                <div><strong>Reports found:</strong> ${summary.total_reports}</div>
+                <div><strong>Total waste:</strong> ${summary.total_estimated_kg}kg</div>
+                <div><strong>Most common:</strong> ${summary.most_common_trash_type}</div>
+                <div><strong>Avg. dirtiness:</strong> ${summary.avg_dirtiness_score}/100</div>
+                <div style="margin-top: 10px; font-size: 12px; color: #666;">
+                    Within ${radius}km radius
+                </div>
+            `;
+        }
+        
+        // Auto-hide after 20 seconds
+        setTimeout(() => {
+            if (summaryDiv && summaryDiv.parentNode) {
+                summaryDiv.parentNode.removeChild(summaryDiv);
+            }
+        }, 20000);
+    }
+    
+    function clearSearchResults() {
+        // Remove all search-related markers and circles
+        searchMarkers.forEach(marker => {
+            map.removeLayer(marker);
+        });
+        searchMarkers = [];
+        
+        // Remove summary if it exists
+        const summaryDiv = document.getElementById('location-summary');
+        if (summaryDiv && summaryDiv.parentNode) {
+            summaryDiv.parentNode.removeChild(summaryDiv);
+        }
+        
+        // Reset search state
+        currentSearchLocation = null;
+        currentSearchRadius = null;
+        
+        // Disable find dirty button
+        const findDirtyBtn = document.getElementById('find-dirty-btn');
+        findDirtyBtn.disabled = true;
+        findDirtyBtn.title = "First search for a location, then click to find dirty places";
+    }
+    
+    function clearDirtyPlaceMarkers() {
+        // Remove only dirty place markers and radius circle, keep search location marker
+        const markersToRemove = [];
+        searchMarkers.forEach((marker, index) => {
+            // Keep the first marker (search location), remove others
+            if (index > 0) {
+                map.removeLayer(marker);
+                markersToRemove.push(index);
+            }
+        });
+        
+        // Remove from array (in reverse order to maintain indices)
+        markersToRemove.reverse().forEach(index => {
+            searchMarkers.splice(index, 1);
+        });
+        
+        // Remove summary
+        const summaryDiv = document.getElementById('location-summary');
+        if (summaryDiv && summaryDiv.parentNode) {
+            summaryDiv.parentNode.removeChild(summaryDiv);
         }
     }
     
-    // Start the location detection flow
-    function startLocationDetectionFlow(file) {
-        console.log('Starting location detection flow for file:', file.name);
+    // Handle file input change
+    function handleFileInputChange(event) {
+        const file = event.target.files[0];
+        if (!file) return;
         
-        // Clear any previous location data
-        selectedLocation = null;
-        const latInput = document.getElementById('latitude');
-        const lngInput = document.getElementById('longitude');
-        if (latInput) latInput.value = '';
-        if (lngInput) lngInput.value = '';
+        console.log('File selected:', file.name);
         
-        // Remove any existing status messages
-        const existingStatus = document.getElementById('location-status');
-        if (existingStatus) {
-            console.log('Removing existing status message');
-            existingStatus.remove();
-        }
+        // Show file preview
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const preview = document.getElementById('file-preview');
+            preview.innerHTML = `<img src="${e.target.result}" alt="Preview" style="max-width: 100%; max-height: 200px;">`;
+            preview.classList.remove('d-none');
+        };
+        reader.readAsDataURL(file);
         
-        // Step 1: Try to extract GPS from image
-        extractGPSFromImage(file);
+        // Check for GPS coordinates
+        checkCoordinates(file);
     }
     
-    // Step 1: Extract GPS data from image
-    function extractGPSFromImage(file) {
-        console.log('Attempting to extract GPS from image:', file.name);
-        
-        // Show status immediately
-        showLocationStatus('Checking image for GPS data...', 'info');
-        
+    function checkCoordinates(file) {
         const formData = new FormData();
         formData.append('file', file);
-        
-        console.log('Making request to /api/check-coordinates');
         
         fetch('/api/check-coordinates', {
             method: 'POST',
             body: formData
         })
-        .then(response => {
-            console.log('Response status:', response.status);
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            return response.json();
-        })
+        .then(response => response.json())
         .then(data => {
-            console.log('GPS check response:', data);
+            console.log('Coordinate check response:', data);
+            
+            const coordsInfo = document.getElementById('coordinates-info');
+            const locationModal = document.getElementById('locationModal');
             
             if (data.has_coordinates) {
-                // Success! GPS found
-                selectedLocation = {
-                    lat: data.latitude,
-                    lng: data.longitude
-                };
-                document.getElementById('latitude').value = data.latitude;
-                document.getElementById('longitude').value = data.longitude;
+                coordsInfo.innerHTML = `
+                    <div class="alert alert-success">
+                        <i class="bi bi-geo-alt-fill"></i> GPS coordinates found: ${data.latitude.toFixed(6)}, ${data.longitude.toFixed(6)}
+                    </div>
+                `;
+                coordsInfo.classList.remove('d-none');
                 
-                showLocationStatus(`GPS coordinates found in image! Location set to ${data.latitude.toFixed(4)}, ${data.longitude.toFixed(4)}`, 'success');
-                console.log('GPS coordinates extracted successfully');
+                // Enable submit button since we have coordinates
+                updateSubmitButtonVisibility();
             } else {
-                // No GPS found, move to step 2
-                console.log('No GPS found in image, requesting user location');
-                requestUserLocation();
+                coordsInfo.innerHTML = `
+                    <div class="alert alert-warning">
+                        <i class="bi bi-geo-alt"></i> No GPS coordinates found in image. 
+                        <button type="button" class="btn btn-sm btn-outline-primary ms-2" data-bs-toggle="modal" data-bs-target="#locationModal">
+                            Select Location
+                        </button>
+                    </div>
+                `;
+                coordsInfo.classList.remove('d-none');
+                
+                // Disable submit button until location is selected
+                updateSubmitButtonVisibility();
             }
         })
         .catch(error => {
-            console.error('Error checking GPS:', error);
-            showLocationStatus('Error checking GPS data. Please choose how to set your location:', 'warning');
-            // If GPS check fails, move to step 2
-            requestUserLocation();
-        });
-    }
-    
-    // Step 2: Request user's current location
-    function requestUserLocation() {
-        console.log('Requesting user location');
-        
-        showLocationStatus('No GPS data found in image. Please choose how to set your location:', 'warning');
-        
-        const statusElement = document.getElementById('location-status');
-        if (statusElement) {
-            statusElement.innerHTML += `
-                <div class="mt-2">
-                    <button type="button" id="share-location-btn" class="btn btn-primary btn-sm me-2">
-                        <i class="bi bi-geo-alt"></i> Share My Location
-                    </button>
-                    <button type="button" id="select-on-map-btn" class="btn btn-outline-secondary btn-sm">
-                        <i class="bi bi-map"></i> Select on Map
+            console.error('Error checking coordinates:', error);
+            const coordsInfo = document.getElementById('coordinates-info');
+            coordsInfo.innerHTML = `
+                <div class="alert alert-danger">
+                    Error checking GPS coordinates. You can still select location manually.
+                    <button type="button" class="btn btn-sm btn-outline-primary ms-2" data-bs-toggle="modal" data-bs-target="#locationModal">
+                        Select Location
                     </button>
                 </div>
             `;
+            coordsInfo.classList.remove('d-none');
+        });
+    }
+    
+    function updateSubmitButtonVisibility() {
+        const submitButton = document.getElementById('submit-button');
+        const coordsInfo = document.getElementById('coordinates-info');
+        const formCheckbox = document.getElementById('fill-form-check');
+        
+        // Check if we have coordinates (either from GPS or manual selection)
+        const hasCoordinates = coordsInfo && !coordsInfo.classList.contains('d-none') && 
+                              (coordsInfo.innerHTML.includes('GPS coordinates found') || 
+                               coordsInfo.innerHTML.includes('Location selected'));
+        
+        // Check if form is required and filled
+        const formRequired = formCheckbox && formCheckbox.checked;
+        const formFilled = !formRequired || checkFormFilled();
+        
+        if (hasCoordinates && formFilled) {
+            submitButton.classList.remove('d-none');
+        } else {
+            submitButton.classList.add('d-none');
+        }
+    }
+    
+    function checkFormFilled() {
+        const trashType = document.getElementById('trash_type').value;
+        const estimatedKg = document.getElementById('estimated_kg').value;
+        const sparcity = document.getElementById('sparcity').value;
+        const cleanliness = document.getElementById('cleanliness').value;
+        
+        return trashType && estimatedKg && sparcity && cleanliness;
+    }
+    
+    function handleUploadFormSubmit(event) {
+        event.preventDefault();
+        
+        const formData = new FormData(event.target);
+        const submitButton = document.getElementById('submit-button');
+        
+        // Show loading state
+        const originalText = submitButton.innerHTML;
+        submitButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status"></span> Uploading...';
+        submitButton.disabled = true;
+        
+        fetch('/upload', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('Upload response:', data);
             
-            setTimeout(() => {
-                const shareBtn = document.getElementById('share-location-btn');
-                const mapBtn = document.getElementById('select-on-map-btn');
+            if (data.success) {
+                // Show success message
+                alert('Trash report uploaded successfully!');
                 
-                if (shareBtn) {
-                    shareBtn.onclick = function() {
-                        console.log('Share location button clicked');
-                        if (!navigator.geolocation) {
-                            showMapSelector();
-                            return;
-                        }
-                        
-                        showLocationStatus('Getting your current location...', 'info');
-                        
-                        navigator.geolocation.getCurrentPosition(
-                            function(position) {
-                                console.log('Geolocation success:', position.coords);
-                                selectedLocation = {
-                                    lat: position.coords.latitude,
-                                    lng: position.coords.longitude
-                                };
-                                document.getElementById('latitude').value = position.coords.latitude;
-                                document.getElementById('longitude').value = position.coords.longitude;
-                                
-                                showLocationStatus(`Current location detected! Location set to ${position.coords.latitude.toFixed(4)}, ${position.coords.longitude.toFixed(4)}`, 'success');
-                                updateSubmitButtonVisibility(); // Enable submit button
-                            },
-                            function(error) {
-                                console.log('Geolocation failed:', error.message);
-                                showLocationStatus('Unable to access your location. Please select your location on the map.', 'warning');
-                                showMapSelector();
-                            },
-                            {
-                                enableHighAccuracy: true,
-                                timeout: 10000,
-                                maximumAge: 300000
-                            }
-                        );
-                    };
-                }
+                // Reset form
+                event.target.reset();
+                document.getElementById('file-preview').classList.add('d-none');
+                document.getElementById('coordinates-info').classList.add('d-none');
+                document.getElementById('details-form').classList.add('d-none');
+                document.getElementById('fill-form-check').checked = false;
                 
-                if (mapBtn) {
-                    mapBtn.onclick = function() {
-                        console.log('Select on map button clicked');
-                        showMapSelector();
-                    };
-                }
-            }, 100);
-        }
+                // Refresh map data
+                loadMapData();
+            } else {
+                alert('Error uploading report: ' + (data.error || 'Unknown error'));
+            }
+        })
+        .catch(error => {
+            console.error('Upload error:', error);
+            alert('Error uploading report. Please try again.');
+        })
+        .finally(() => {
+            // Restore button state
+            submitButton.innerHTML = originalText;
+            submitButton.disabled = false;
+            updateSubmitButtonVisibility();
+        });
     }
     
-    // Step 3: Show map selector modal
-    function showMapSelector() {
-        console.log('Opening map selector modal');
-        
-        const modalElement = document.getElementById('locationModal');
-        if (!modalElement) {
-            console.error('Location modal not found in DOM!');
-            alert('Error: Location selection modal not found. Please refresh the page and try again.');
-            return;
-        }
-        
-        // Show the modal
-        const modal = new bootstrap.Modal(modalElement);
-        modal.show();
-        
-        // Initialize the modal map when modal is shown
-        modalElement.addEventListener('shown.bs.modal', function() {
-            console.log('Modal shown, initializing map');
-            initializeModalMap();
-        }, { once: true });
-    }
-    
-    // Initialize the modal map
+    // Modal map functionality
     function initializeModalMap() {
         console.log('Initializing modal map');
         
-        const defaultLat = map ? map.getCenter().lat : 40.7128;
-        const defaultLng = map ? map.getCenter().lng : -74.0060;
-        
-        modalMap = L.map('modal-map').setView([defaultLat, defaultLng], 10);
-        
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        }).addTo(modalMap);
-        
-        let selectedMarker = null;
-        
-        modalMap.on('click', function(e) {
-            const lat = e.latlng.lat;
-            const lng = e.latlng.lng;
+        if (!modalMap) {
+            modalMap = L.map('modal-map-container').setView([51.505, -0.09], 13);
             
-            console.log('Modal map clicked at:', lat, lng);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(modalMap);
             
-            selectedLocation = { lat, lng };
-            
-            if (selectedMarker) {
-                selectedMarker.setLatLng(e.latlng);
-            } else {
-                selectedMarker = L.marker(e.latlng).addTo(modalMap);
-            }
-            
-            document.getElementById('selected-location').innerHTML = 
-                `<strong>Selected:</strong> ${lat.toFixed(6)}, ${lng.toFixed(6)}`;
-            document.getElementById('confirm-location').disabled = false;
-            
-            selectedMarker.bindPopup(`Selected location: ${lat.toFixed(4)}, ${lng.toFixed(4)}`).openPopup();
-        });
-        
-        // Handle location search
-        document.getElementById('search-btn').onclick = function() {
-            const query = document.getElementById('location-search').value.trim();
-            if (query) {
-                searchLocation(query);
-            }
-        };
-        
-        // Handle confirm button
-        document.getElementById('confirm-location').onclick = function() {
-            if (selectedLocation) {
-                document.getElementById('latitude').value = selectedLocation.lat;
-                document.getElementById('longitude').value = selectedLocation.lng;
+            // Add click event to modal map
+            modalMap.on('click', function(e) {
+                const lat = e.latlng.lat;
+                const lng = e.latlng.lng;
                 
-                showLocationStatus(`Location selected! Set to ${selectedLocation.lat.toFixed(4)}, ${selectedLocation.lng.toFixed(4)}`, 'success');
+                console.log('Modal map clicked:', lat, lng);
                 
-                bootstrap.Modal.getInstance(document.getElementById('locationModal')).hide();
-            }
-        };
+                // Clear existing markers
+                modalMap.eachLayer(layer => {
+                    if (layer instanceof L.Marker) {
+                        modalMap.removeLayer(layer);
+                    }
+                });
+                
+                // Add new marker
+                const marker = L.marker([lat, lng]).addTo(modalMap);
+                marker.bindPopup(`Selected: ${lat.toFixed(6)}, ${lng.toFixed(6)}`).openPopup();
+                
+                selectedLocation = { lat, lng };
+                document.getElementById('selected-location').innerHTML = 
+                    `<strong>Selected:</strong> ${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+                document.getElementById('confirm-location').disabled = false;
+            });
+        }
         
+        // Refresh map size when modal is shown
         setTimeout(() => {
             modalMap.invalidateSize();
         }, 200);
     }
     
-    // Search for location using Nominatim
-    function searchLocation(query) {
-        console.log('Searching for location:', query);
+    // Modal search functionality
+    function searchModalMap(query) {
+        console.log('Searching modal map for:', query);
         
         const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1`;
         
@@ -537,99 +687,32 @@ document.addEventListener('DOMContentLoaded', function() {
             });
     }
     
-    // Show location status message
-    function showLocationStatus(message, type) {
-        console.log('Showing location status:', message, type);
-        
-        const existingStatus = document.getElementById('location-status');
-        if (existingStatus) existingStatus.remove();
-        
-        const statusElement = document.createElement('div');
-        statusElement.id = 'location-status';
-        statusElement.className = `alert alert-${type} mt-2`;
-        statusElement.innerHTML = message;
-        
-        const fileInput = document.getElementById('file');
-        if (fileInput && fileInput.parentNode) {
-            fileInput.parentNode.insertBefore(statusElement, fileInput.nextSibling);
-            console.log('Status message inserted into DOM');
+    // Confirm location selection
+    function confirmLocation() {
+        if (selectedLocation) {
+            console.log('Location confirmed:', selectedLocation);
+            
+            const coordsInfo = document.getElementById('coordinates-info');
+            coordsInfo.innerHTML = `
+                <div class="alert alert-success">
+                    <i class="bi bi-geo-alt-fill"></i> Location selected: ${selectedLocation.lat.toFixed(6)}, ${selectedLocation.lng.toFixed(6)}
+                    <input type="hidden" name="latitude" value="${selectedLocation.lat}">
+                    <input type="hidden" name="longitude" value="${selectedLocation.lng}">
+                </div>
+            `;
+            coordsInfo.classList.remove('d-none');
+            
+            // Close modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('locationModal'));
+            modal.hide();
             
             // Update submit button visibility
             updateSubmitButtonVisibility();
-        } else {
-            console.error('Could not insert status message - file input or parent not found');
         }
     }
     
-    // Handle form submission
-    function handleUploadFormSubmit(e) {
-        e.preventDefault();
-        console.log('Form submitted');
-        
-        const formData = new FormData();
-        const fileInput = document.getElementById('file');
-        const file = fileInput.files[0];
-        
-        if (!file) {
-            alert('Please select an image file');
-            return;
-        }
-        
-        formData.append('file', file);
-        
-        // Add location data if available
-        const latitude = document.getElementById('latitude').value;
-        const longitude = document.getElementById('longitude').value;
-        
-        if (latitude && longitude) {
-            formData.append('latitude', latitude);
-            formData.append('longitude', longitude);
-        }
-        
-        // Add manual form data if checkbox is checked
-        const fillFormCheck = document.getElementById('fill-form-check');
-        if (fillFormCheck && fillFormCheck.checked) {
-            formData.append('fill_form', 'true');
-            
-            const trashType = document.getElementById('trash-type').value;
-            const estimatedKg = document.getElementById('estimated-kg').value;
-            const sparcity = document.getElementById('sparcity').value;
-            const cleanliness = document.getElementById('cleanliness').value;
-            
-            if (trashType) formData.append('trash_type', trashType);
-            if (estimatedKg) formData.append('estimated_kg', estimatedKg);
-            if (sparcity) formData.append('sparcity', sparcity);
-            if (cleanliness) formData.append('cleanliness', cleanliness);
-        }
-        
-        // Submit form
-        fetch('/upload', {
-            method: 'POST',
-            body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
-            alert('Report submitted successfully!');
-            loadMapData();
-            resetForm();
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('Error submitting report. Please try again.');
-        });
-    }
-    
-    // Reset form after submission
-    function resetForm() {
-        document.getElementById('upload-form').reset();
-        document.getElementById('preview-container').classList.add('d-none');
-        document.getElementById('details-form').classList.add('d-none');
-        
-        const existingStatus = document.getElementById('location-status');
-        if (existingStatus) existingStatus.remove();
-        
-        selectedLocation = null;
-        document.getElementById('latitude').value = '';
-        document.getElementById('longitude').value = '';
-    }
+    // Make functions globally available
+    window.initializeModalMap = initializeModalMap;
+    window.searchModalMap = searchModalMap;
+    window.confirmLocation = confirmLocation;
 }); 

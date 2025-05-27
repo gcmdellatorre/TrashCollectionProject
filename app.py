@@ -9,11 +9,20 @@ import uuid
 import json
 from utils.geo_utils import extract_metadata
 from utils.file_utils import save_file
-from utils.db_utils import save_to_db, get_all_entries
+from utils.db_utils import save_trash_report, get_all_trash_reports, initialize_database
 from forms.report_form import parse_optional_form
 import time
+from contextlib import asynccontextmanager
+from utils.geo_functions import find_closest_dirty_places, get_location_summary, geocode_location
 
-app = FastAPI()
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Initialize database
+    initialize_database()
+    print("Database initialized")
+    yield
+
+app = FastAPI(lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
@@ -46,51 +55,64 @@ async def upload_file(
     cleanliness: str = Form(None)
 ):
     try:
-        # Generate unique filename
-        file_id = str(uuid.uuid4())
-        filename = f"{file_id}_{file.filename}"
-        file_path = os.path.join(UPLOAD_FOLDER, filename)
+        # Read file data
+        file_data = await file.read()
         
-        # Save the uploaded file
-        with open(file_path, "wb") as buffer:
-            content = await file.read()
-            buffer.write(content)
-        
-        print(f"File saved to: {file_path}")
+        print(f"Processing file: {file.filename}")
         
         # Extract metadata from image
-        metadata = extract_metadata(file_path)
+        # Save temporarily to extract GPS data
+        temp_path = f"temp_{file.filename}"
+        with open(temp_path, "wb") as temp_file:
+            temp_file.write(file_data)
+        
+        metadata = extract_metadata(temp_path)
+        os.remove(temp_path)  # Clean up temp file
+        
         print(f"Extracted metadata: {metadata}")
         
-        # If no GPS in image but we have form data, use form coordinates
-        if ('latitude' not in metadata or 'longitude' not in metadata) and latitude and longitude:
-            print(f"Using form coordinates: lat={latitude}, lng={longitude}")
-            metadata['latitude'] = latitude
-            metadata['longitude'] = longitude
-        
-        # Add timestamp if not present
-        if 'timestamp' not in metadata:
-            metadata['timestamp'] = time.strftime("%Y-%m-%dT%H:%M:%S", time.localtime())
-        
-        # Add file path
-        metadata['file_path'] = file_path
+        # Use form coordinates if no GPS in image
+        if ('latitude' not in metadata or 'longitude' not in metadata):
+            if latitude and longitude:
+                print(f"Using form coordinates: lat={latitude}, lng={longitude}")
+                final_latitude = latitude
+                final_longitude = longitude
+            else:
+                raise ValueError("No GPS coordinates found in image and none provided in form")
+        else:
+            final_latitude = metadata['latitude']
+            final_longitude = metadata['longitude']
         
         # Handle manual form data if provided
+        form_data = {}
         if fill_form == 'true':
             print("Processing manual form data")
             form_data = parse_optional_form(trash_type, estimated_kg, sparcity, cleanliness)
-            metadata.update(form_data)
-            print(f"Added form data: {form_data}")
+            print(f"Form data: {form_data}")
         
-        # Save to database
-        save_to_db(metadata, file_path)
+        # Save to new database system
+        report_id = save_trash_report(
+            latitude=final_latitude,
+            longitude=final_longitude,
+            image_data=file_data,
+            filename=file.filename,
+            trash_type=form_data.get('trash_type'),
+            estimated_kg=form_data.get('estimated_kg'),
+            sparcity=form_data.get('sparcity'),
+            cleanliness=form_data.get('cleanliness')
+        )
         
-        print(f"Final metadata saved: {metadata}")
+        print(f"Saved trash report with ID: {report_id}")
         
         return JSONResponse(content={
             "status": "success", 
             "message": "File uploaded successfully",
-            "metadata": metadata
+            "report_id": report_id,
+            "metadata": {
+                "latitude": final_latitude,
+                "longitude": final_longitude,
+                **form_data
+            }
         })
         
     except Exception as e:
@@ -110,23 +132,46 @@ async def add_test_data(
     sparcity: str = Form(None),
     cleanliness: str = Form(None)
 ):
-    # Create metadata with location and timestamp
-    import time
-    metadata = {
-        "latitude": latitude,
-        "longitude": longitude,
-        "timestamp": timestamp or time.strftime("%Y-%m-%dT%H:%M:%S", time.localtime()),
-        "file_path": "test_data_entry"  # No actual file
-    }
-    
-    # Handle form data
-    form_data = parse_optional_form(trash_type, estimated_kg, sparcity, cleanliness)
-    metadata.update(form_data)
-    
-    # Save to DB
-    save_to_db(metadata, "test_data_entry")
-    
-    return JSONResponse(content={"status": "success", "metadata": metadata})
+    try:
+        # Handle form data
+        form_data = parse_optional_form(trash_type, estimated_kg, sparcity, cleanliness)
+        
+        # Create a dummy image for test data (1x1 pixel)
+        from PIL import Image
+        import io
+        dummy_image = Image.new('RGB', (1, 1), color='white')
+        img_bytes = io.BytesIO()
+        dummy_image.save(img_bytes, format='JPEG')
+        dummy_image_data = img_bytes.getvalue()
+        
+        # Save to new database system
+        report_id = save_trash_report(
+            latitude=latitude,
+            longitude=longitude,
+            image_data=dummy_image_data,
+            filename="test_data.jpg",
+            trash_type=form_data.get('trash_type'),
+            estimated_kg=form_data.get('estimated_kg'),
+            sparcity=form_data.get('sparcity'),
+            cleanliness=form_data.get('cleanliness')
+        )
+        
+        return JSONResponse(content={
+            "status": "success", 
+            "report_id": report_id,
+            "metadata": {
+                "latitude": latitude,
+                "longitude": longitude,
+                **form_data
+            }
+        })
+        
+    except Exception as e:
+        print(f"Test data error: {e}")
+        return JSONResponse(
+            status_code=500,
+            content={"status": "error", "message": str(e)}
+        )
 
 @app.get("/map", response_class=HTMLResponse)
 async def get_map():
@@ -136,8 +181,27 @@ async def get_map():
 
 @app.get("/api/trash-data")
 async def get_trash_data():
-    entries = get_all_entries()
-    return JSONResponse(content=entries)
+    try:
+        reports = get_all_trash_reports()
+        # Convert to format expected by frontend
+        entries = []
+        for report in reports:
+            entry = {
+                "latitude": report["latitude"],
+                "longitude": report["longitude"],
+                "timestamp": report["timestamp"],
+                "file_path": f"blob:{report['image_blob_id']}",  # Indicate it's a blob reference
+                "trash_type": report.get("trash_type"),
+                "estimated_kg": report.get("estimated_kg"),
+                "sparcity": report.get("sparcity"),
+                "cleanliness": report.get("cleanliness")
+            }
+            entries.append(entry)
+        
+        return JSONResponse(content=entries)
+    except Exception as e:
+        print(f"Error getting trash data: {e}")
+        return JSONResponse(content=[])
 
 @app.post("/api/check-coordinates")
 async def check_coordinates(file: UploadFile = File(...)):
@@ -171,6 +235,86 @@ async def check_coordinates(file: UploadFile = File(...)):
     except Exception as e:
         print(f"Error checking coordinates: {e}")
         return JSONResponse(content={"has_coordinates": False})
+
+# Add endpoint to serve images from blob storage
+@app.get("/api/image/{blob_id}")
+async def get_image(blob_id: str, thumbnail: bool = False):
+    """Serve images from blob storage"""
+    try:
+        from utils.blob_storage import blob_service
+        image_data = blob_service.get_image(blob_id, thumbnail=thumbnail)
+        
+        from fastapi.responses import Response
+        return Response(
+            content=image_data,
+            media_type="image/jpeg",
+            headers={"Cache-Control": "max-age=3600"}
+        )
+    except Exception as e:
+        print(f"Error serving image: {e}")
+        return JSONResponse(
+            status_code=404,
+            content={"error": "Image not found"}
+        )
+
+@app.get("/api/find-dirty-places")
+async def find_dirty_places(
+    lat: float = None,
+    lng: float = None,
+    address: str = None,
+    limit: int = 5,
+    max_distance: float = 50.0
+):
+    """Find closest dirty places to a location"""
+    try:
+        # Get coordinates
+        if address and not (lat and lng):
+            coords = geocode_location(address)
+            if coords:
+                lat, lng = coords
+            else:
+                return JSONResponse(
+                    status_code=400,
+                    content={"error": "Could not find coordinates for the given address"}
+                )
+        
+        if not (lat and lng):
+            return JSONResponse(
+                status_code=400,
+                content={"error": "Please provide either lat/lng or address"}
+            )
+        
+        # Find dirty places
+        dirty_places = find_closest_dirty_places(lat, lng, limit, max_distance)
+        
+        # Get location summary
+        summary = get_location_summary(lat, lng)
+        
+        return JSONResponse(content={
+            "search_location": {"lat": lat, "lng": lng},
+            "summary": summary,
+            "dirty_places": dirty_places
+        })
+        
+    except Exception as e:
+        print(f"Error finding dirty places: {e}")
+        return JSONResponse(
+            status_code=500,
+            content={"error": str(e)}
+        )
+
+@app.get("/api/location-summary")
+async def location_summary(lat: float, lng: float, radius: float = 5.0):
+    """Get summary of trash situation around a location"""
+    try:
+        summary = get_location_summary(lat, lng, radius)
+        return JSONResponse(content=summary)
+    except Exception as e:
+        print(f"Error getting location summary: {e}")
+        return JSONResponse(
+            status_code=500,
+            content={"error": str(e)}
+        )
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)

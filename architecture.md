@@ -1,5 +1,9 @@
-```language=markdown:ARCHITECTURE.md
-# Trash Tracker Architecture
+# Trash Detection App Architecture
+
+## Overview
+A FastAPI-based web application for reporting and tracking trash locations with image uploads, GPS coordinates, and advanced geospatial analysis.
+
+## Project Structure
 
 ## System Design
 

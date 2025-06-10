@@ -99,15 +99,15 @@ document.addEventListener('DOMContentLoaded', function() {
             });
     }
     
-    // Add a marker to the map
+    // Add a marker to the map with MamaLand earth-tone palette
     function addMarker(point) {
-        let iconColor = 'red';
-        if (point.trash_type === 'plastic') iconColor = 'blue';
-        else if (point.trash_type === 'paper') iconColor = 'green';
-        else if (point.trash_type === 'metal') iconColor = 'orange';
-        else if (point.trash_type === 'glass') iconColor = 'purple';
-        else if (point.trash_type === 'organic') iconColor = 'green';
-        else if (point.trash_type === 'electronic') iconColor = 'gray';
+        let iconColor = '#B5633F'; // brown-sugar (default)
+        if (point.trash_type === 'plastic') iconColor = '#408F89'; // dark-cyan
+        else if (point.trash_type === 'paper') iconColor = '#2C7E78'; // myrtle-green  
+        else if (point.trash_type === 'metal') iconColor = '#9A835A'; // chamoisee
+        else if (point.trash_type === 'glass') iconColor = '#F3BF35'; // saffron
+        else if (point.trash_type === 'organic') iconColor = '#EFA365'; // sandy-brown
+        else if (point.trash_type === 'electronic') iconColor = '#5B5E52'; // ebony
         
         const marker = L.marker([point.latitude, point.longitude], {
             icon: L.divIcon({
@@ -336,7 +336,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     const searchMarker = L.marker([lat, lng], {
                         icon: L.divIcon({
                             className: 'search-marker',
-                            html: `<div style="background-color: #ff6b6b; width: 20px; height: 20px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>`,
+                            html: `<div style="background-color: #F1803A; width: 20px; height: 20px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>`,
                             iconSize: [20, 20],
                             iconAnchor: [10, 10]
                         })
@@ -390,8 +390,8 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Add search radius circle
         const radiusCircle = L.circle([lat, lng], {
-            color: '#ff6b6b',
-            fillColor: '#ff6b6b',
+                    color: '#F1803A',
+        fillColor: '#F1803A',
             fillOpacity: 0.1,
             radius: radius * 1000, // Convert km to meters
             weight: 2,
@@ -421,7 +421,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         const dirtyMarker = L.marker([place.latitude, place.longitude], {
                             icon: L.divIcon({
                                 className: 'dirty-place-marker',
-                                html: `<div style="background-color: #8B4513; color: white; width: 25px; height: 25px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">${index + 1}</div>`,
+                                html: `<div style="background-color: #5B5E52; color: white; width: 25px; height: 25px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">${index + 1}</div>`,
                                 iconSize: [25, 25],
                                 iconAnchor: [12, 12]
                             })
@@ -477,7 +477,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 box-shadow: 0 2px 10px rgba(0,0,0,0.1);
                 max-width: 300px;
                 z-index: 1000;
-                border-left: 4px solid #007bff;
+                border-left: 4px solid #2C7E78;
             `;
             document.getElementById('map-container').appendChild(summaryDiv);
         }
@@ -485,9 +485,9 @@ document.addEventListener('DOMContentLoaded', function() {
         if (summary.message) {
             // No results or error message
             summaryDiv.innerHTML = `
-                <div style="color: ${hasResults ? '#007bff' : '#28a745'};">
-                    ${summary.message}
-                </div>
+                            <div style="color: ${hasResults ? '#2C7E78' : '#408F89'};">
+                ${summary.message}
+            </div>
             `;
         } else {
             // Results found - show detailed summary
@@ -497,7 +497,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <div><strong>Total waste:</strong> ${summary.total_estimated_kg}kg</div>
                 <div><strong>Most common:</strong> ${summary.most_common_trash_type}</div>
                 <div><strong>Avg. dirtiness:</strong> ${summary.avg_dirtiness_score}/100</div>
-                <div style="margin-top: 10px; font-size: 12px; color: #666;">
+                <div style="margin-top: 10px; font-size: 12px; color: #B9B9A8;">
                     Within ${radius}km radius
                 </div>
             `;

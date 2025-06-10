@@ -1,15 +1,29 @@
-/* Color Palette Variables */
+/* Expanded MamaLand Color Palette */
 :root {
     --eggshell: #EEE5D3;
     --brown-sugar: #B5633F;
     --dark-cyan: #408F89;
     --saffron: #F3BF35;
     --pumpkin: #F1803A;
+    --ebony: #5B5E52;
+    --ash-gray: #B9B9A8;
+    --chamoisee: #9A835A;
+    --myrtle-green: #2C7E78;
+    --sandy-brown: #EFA365;
+    
+    /* Pale variations for backgrounds */
+    --pale-eggshell: #F5F2EA;
+    --pale-ash-gray: #E8E8DF;
+    --pale-sandy-brown: #F7EFE1;
+    --pale-chamoisee: #F0EDE5;
 }
 
-/* MamaLand Brand Typography */
+/* MamaLand Brand Typography & Base Styles */
 body {
     font-family: 'Rubik', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: linear-gradient(135deg, var(--pale-eggshell) 0%, var(--eggshell) 100%);
+    color: var(--ebony);
+    min-height: 100vh;
 }
 
 .brand-text {
@@ -22,35 +36,201 @@ body {
 
 .navbar-brand img {
     border-radius: 50%;
-    box-shadow: 0 2px 8px rgba(64, 143, 137, 0.3);
+    box-shadow: 0 2px 8px rgba(44, 126, 120, 0.3);
 }
 
+/* Navbar Styling */
+.navbar {
+    background: linear-gradient(90deg, var(--eggshell) 0%, var(--pale-eggshell) 100%) !important;
+    border-bottom: 3px solid var(--chamoisee);
+    box-shadow: 0 2px 15px rgba(154, 131, 90, 0.2);
+}
+
+.navbar-brand {
+    color: var(--brown-sugar) !important;
+}
+
+/* Container Variations */
+.container {
+    background-color: transparent;
+}
+
+.container-fluid {
+    background: var(--pale-eggshell);
+}
+
+/* Card Styling with Variations */
+.card {
+    background: linear-gradient(145deg, #ffffff 0%, var(--pale-ash-gray) 100%);
+    border: 2px solid var(--myrtle-green);
+    box-shadow: 0 6px 20px rgba(44, 126, 120, 0.15);
+    border-radius: 15px;
+    backdrop-filter: blur(10px);
+}
+
+.card:nth-child(even) {
+    background: linear-gradient(145deg, #ffffff 0%, var(--pale-sandy-brown) 100%);
+    border-color: var(--dark-cyan);
+}
+
+.card-header {
+    background: linear-gradient(135deg, var(--myrtle-green) 0%, var(--dark-cyan) 100%);
+    color: white;
+    border-bottom: none;
+    font-weight: 600;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+}
+
+.card-body {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(5px);
+}
+
+/* Button Comprehensive Styling */
+.btn-primary {
+    background: linear-gradient(135deg, var(--dark-cyan) 0%, var(--myrtle-green) 100%);
+    border: none;
+    color: #fff;
+    font-weight: 500;
+    box-shadow: 0 4px 15px rgba(44, 126, 120, 0.3);
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover, .btn-primary:focus, .btn-primary:active {
+    background: linear-gradient(135deg, var(--brown-sugar) 0%, var(--chamoisee) 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(181, 99, 63, 0.4);
+}
+
+.btn-success {
+    background: linear-gradient(135deg, var(--saffron) 0%, var(--sandy-brown) 100%);
+    border: none;
+    color: var(--ebony);
+    font-weight: 500;
+    box-shadow: 0 4px 15px rgba(243, 191, 53, 0.3);
+}
+
+.btn-success:hover, .btn-success:focus, .btn-success:active {
+    background: linear-gradient(135deg, var(--pumpkin) 0%, var(--sandy-brown) 100%);
+    color: #fff;
+    transform: translateY(-2px);
+}
+
+.btn-outline-primary {
+    border: 2px solid var(--dark-cyan);
+    color: var(--dark-cyan);
+    background: rgba(255, 255, 255, 0.8);
+}
+
+.btn-outline-primary:hover {
+    background: var(--dark-cyan);
+    color: #fff;
+    transform: translateY(-1px);
+}
+
+.btn-warning {
+    background: linear-gradient(135deg, var(--pumpkin) 0%, var(--sandy-brown) 100%);
+    border: none;
+    color: #fff;
+    font-weight: 500;
+}
+
+.btn-warning:hover {
+    background: linear-gradient(135deg, var(--saffron) 0%, var(--pumpkin) 100%);
+    color: var(--ebony);
+}
+
+/* Form Elements */
+.form-control, .form-select {
+    border: 2px solid var(--ash-gray);
+    background: rgba(255, 255, 255, 0.9);
+    color: var(--ebony);
+    border-radius: 8px;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: var(--myrtle-green);
+    box-shadow: 0 0 0 0.25rem rgba(44, 126, 120, 0.25);
+    background: #fff;
+}
+
+.form-label {
+    color: var(--ebony);
+    font-weight: 500;
+}
+
+/* Search Section Enhanced with Variation */
+.search-section {
+    padding: 25px;
+    background: linear-gradient(135deg, var(--pale-sandy-brown) 0%, var(--pale-chamoisee) 100%);
+    border: 2px solid var(--chamoisee);
+    border-radius: 20px;
+    margin-bottom: 25px;
+    box-shadow: 0 8px 25px rgba(154, 131, 90, 0.15);
+    backdrop-filter: blur(10px);
+}
+
+.search-section .input-group {
+    margin-bottom: 15px;
+}
+
+.search-section .btn {
+    white-space: nowrap;
+}
+
+/* Map Container */
 #map-container {
     height: 600px;
     width: 100%;
+    border: 3px solid var(--myrtle-green);
+    border-radius: 15px;
+    box-shadow: 0 8px 30px rgba(44, 126, 120, 0.2);
+    overflow: hidden;
 }
 
 #image-preview {
     max-height: 200px;
     object-fit: contain;
+    border-radius: 12px;
+    border: 2px solid var(--dark-cyan);
+    box-shadow: 0 4px 15px rgba(64, 143, 137, 0.2);
 }
 
-.navbar-brand {
-    font-weight: bold;
+/* Text Colors with Better Hierarchy */
+.text-muted {
+    color: var(--ash-gray) !important;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    color: var(--ebony);
+    font-weight: 600;
+}
+
+h5 {
     color: var(--brown-sugar);
+    border-bottom: 2px solid var(--chamoisee);
+    padding-bottom: 8px;
+    margin-bottom: 20px;
 }
 
-.card {
-    box-shadow: 0 0.125rem 0.25rem rgba(64, 143, 137, 0.075);
-    border-color: var(--dark-cyan);
+/* Alert Styling */
+.alert {
+    border: 2px solid var(--saffron);
+    background: linear-gradient(135deg, rgba(243, 191, 53, 0.1) 0%, rgba(239, 163, 101, 0.1) 100%);
+    color: var(--ebony);
+    border-radius: 12px;
+    backdrop-filter: blur(5px);
 }
 
-.form-control:focus, .form-select:focus {
-    border-color: var(--dark-cyan);
-    box-shadow: 0 0 0 0.25rem rgba(64, 143, 137, 0.25);
+/* Input Groups */
+.input-group-text {
+    background: linear-gradient(135deg, var(--dark-cyan) 0%, var(--myrtle-green) 100%);
+    border: none;
+    color: #fff;
+    font-weight: 500;
 }
 
-/* ✨ NEW: Better button spacing in forms */
+/* Better button spacing in forms */
 .card-body button:not(:last-child) {
     margin-bottom: 12px;
 }
@@ -60,56 +240,73 @@ body {
     margin-left: 8px;
 }
 
-/* ✨ NEW: Better spacing for map search section */
-.search-section {
-    padding: 15px;
-    background-color: var(--eggshell);
-    border-radius: 8px;
-    margin-bottom: 20px;
-    border: 1px solid var(--brown-sugar);
+/* Modal Styling */
+.modal-content {
+    background: linear-gradient(145deg, #ffffff 0%, var(--pale-eggshell) 100%);
+    border: 2px solid var(--chamoisee);
+    border-radius: 15px;
 }
 
-.search-section .input-group {
-    margin-bottom: 10px;
-}
-
-.search-section .btn {
-    white-space: nowrap;
-}
-
-/* Enhanced styling with new color palette */
-.btn-primary {
-    background-color: var(--dark-cyan);
-    border-color: var(--dark-cyan);
-}
-
-.btn-primary:hover {
-    background-color: var(--brown-sugar);
-    border-color: var(--brown-sugar);
-}
-
-.btn-warning {
-    background-color: var(--saffron);
-    border-color: var(--saffron);
-    color: #333;
-}
-
-.btn-warning:hover {
-    background-color: var(--pumpkin);
-    border-color: var(--pumpkin);
+.modal-header {
+    background: linear-gradient(135deg, var(--myrtle-green) 0%, var(--dark-cyan) 100%);
     color: #fff;
+    border-bottom: none;
+    border-radius: 13px 13px 0 0;
 }
 
-.navbar {
-    background-color: var(--eggshell) !important;
-    border-bottom: 2px solid var(--brown-sugar);
+.modal-footer {
+    border-top: 1px solid var(--ash-gray);
+    background: var(--pale-eggshell);
 }
 
-.card-header {
-    background-color: var(--eggshell);
-    border-bottom: 1px solid var(--brown-sugar);
+/* Links */
+a {
+    color: var(--dark-cyan);
+    text-decoration: none;
 }
 
-.text-muted {
-    color: var(--brown-sugar) !important;
+a:hover {
+    color: var(--brown-sugar);
+    text-decoration: underline;
+}
+
+/* Badge/Label styling */
+.badge {
+    background: linear-gradient(135deg, var(--saffron) 0%, var(--sandy-brown) 100%);
+    color: var(--ebony);
+    border-radius: 20px;
+    padding: 6px 12px;
+}
+
+/* Table styling */
+.table {
+    background: rgba(255, 255, 255, 0.9);
+    color: var(--ebony);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.table th {
+    background: linear-gradient(135deg, var(--myrtle-green) 0%, var(--dark-cyan) 100%);
+    color: #fff;
+    border: none;
+    font-weight: 600;
+}
+
+.table td {
+    border-color: var(--ash-gray);
+    background: rgba(255, 255, 255, 0.7);
+}
+
+.table tbody tr:nth-child(even) td {
+    background: var(--pale-eggshell);
+}
+
+/* Enhanced container backgrounds */
+.row > .col:nth-child(odd) .card {
+    background: linear-gradient(145deg, #ffffff 0%, var(--pale-sandy-brown) 100%);
+}
+
+.row > .col:nth-child(even) .card {
+    background: linear-gradient(145deg, #ffffff 0%, var(--pale-chamoisee) 100%);
 } 

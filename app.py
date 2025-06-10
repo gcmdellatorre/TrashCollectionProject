@@ -22,13 +22,17 @@ async def lifespan(app: FastAPI):
     print("Database initialized")
     
     # Auto-seed with sample data if database is empty (good for demos)
-    reports = get_all_trash_reports()
-    if len(reports) == 0:
-        print("Database is empty - creating sample data for demo...")
-        await create_sample_data_internal(count=25)
-        print("✅ Sample data created successfully!")
-    else:
-        print(f"Database already has {len(reports)} reports - skipping auto-seed")
+    try:
+        reports = get_all_trash_reports()
+        if len(reports) == 0:
+            print("Database is empty - creating sample data for demo...")
+            await create_sample_data_internal(count=10)
+            print("✅ Sample data created successfully!")
+        else:
+            print(f"Database already has {len(reports)} reports - skipping auto-seed")
+    except Exception as e:
+        print(f"⚠️ Auto-seeding failed (app will continue): {e}")
+        # Don't crash the app if seeding fails
     
     yield
 

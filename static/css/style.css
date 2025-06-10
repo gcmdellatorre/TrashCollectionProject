@@ -29,4 +29,20 @@
 /* Additional spacing for button groups */
 .btn + .btn {
     margin-left: 8px;
+}
+
+/* ✨ NEW: Better spacing for map search section */
+.search-section {
+    padding: 15px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.search-section .input-group {
+    margin-bottom: 10px;
+}
+
+.search-section .btn {
+    white-space: nowrap;
 } 

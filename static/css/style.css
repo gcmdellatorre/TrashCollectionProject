@@ -309,4 +309,98 @@ a:hover {
 
 .row > .col:nth-child(even) .card {
     background: linear-gradient(145deg, #ffffff 0%, var(--pale-chamoisee) 100%);
+}
+
+/* MamaLand Corner Logo */
+.mamaland-logo-corner {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    z-index: 999;
+    opacity: 0.85;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.mamaland-logo-corner:hover {
+    opacity: 1;
+    transform: scale(1.05);
+}
+
+.corner-logo {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    box-shadow: 0 4px 20px rgba(44, 126, 120, 0.3);
+    border: 3px solid var(--eggshell);
+    background: var(--eggshell);
+    object-fit: contain;
+    padding: 5px;
+}
+
+/* Mobile responsiveness for corner logo */
+@media (max-width: 768px) {
+    .mamaland-logo-corner {
+        bottom: 15px;
+        left: 15px;
+    }
+    
+    .corner-logo {
+        width: 60px;
+        height: 60px;
+    }
+}
+
+/* Navbar Logo Styling */
+.navbar-logo {
+    border-radius: 50%;
+    border: 2px solid var(--brown-sugar);
+    box-shadow: 0 2px 8px rgba(44, 126, 120, 0.3);
+    background: var(--eggshell);
+    padding: 2px;
+    object-fit: contain;
+}
+
+/* Large Logo Display Below Report Trash */
+.large-logo-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 20px;
+    padding: 20px;
+    background: linear-gradient(135deg, var(--pale-eggshell) 0%, var(--eggshell) 100%);
+    border-radius: 20px;
+    border: 2px solid var(--chamoisee);
+    box-shadow: 0 6px 25px rgba(154, 131, 90, 0.15);
+}
+
+.large-mamaland-logo {
+    width: 180px;
+    height: 180px;
+    border-radius: 20px;
+    border: 3px solid var(--brown-sugar);
+    box-shadow: 0 8px 30px rgba(181, 99, 63, 0.3);
+    background: var(--eggshell);
+    padding: 10px;
+    object-fit: contain;
+    transition: all 0.3s ease;
+}
+
+.large-mamaland-logo:hover {
+    transform: scale(1.05);
+    box-shadow: 0 12px 40px rgba(181, 99, 63, 0.4);
+}
+
+/* Mobile responsiveness for large logo */
+@media (max-width: 768px) {
+    .large-logo-container {
+        margin-top: 15px;
+        padding: 15px;
+    }
+    
+    .large-mamaland-logo {
+        width: 120px;
+        height: 120px;
+        padding: 8px;
+    }
 } 

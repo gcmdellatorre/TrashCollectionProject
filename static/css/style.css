@@ -1,3 +1,12 @@
+/* Color Palette Variables */
+:root {
+    --eggshell: #EEE5D3;
+    --brown-sugar: #B5633F;
+    --dark-cyan: #408F89;
+    --saffron: #F3BF35;
+    --pumpkin: #F1803A;
+}
+
 #map-container {
     height: 600px;
     width: 100%;
@@ -10,15 +19,17 @@
 
 .navbar-brand {
     font-weight: bold;
+    color: var(--brown-sugar);
 }
 
 .card {
-    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    box-shadow: 0 0.125rem 0.25rem rgba(64, 143, 137, 0.075);
+    border-color: var(--dark-cyan);
 }
 
 .form-control:focus, .form-select:focus {
-    border-color: #86b7fe;
-    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    border-color: var(--dark-cyan);
+    box-shadow: 0 0 0 0.25rem rgba(64, 143, 137, 0.25);
 }
 
 /* ✨ NEW: Better button spacing in forms */
@@ -34,9 +45,10 @@
 /* ✨ NEW: Better spacing for map search section */
 .search-section {
     padding: 15px;
-    background-color: #f8f9fa;
+    background-color: var(--eggshell);
     border-radius: 8px;
     margin-bottom: 20px;
+    border: 1px solid var(--brown-sugar);
 }
 
 .search-section .input-group {
@@ -45,4 +57,41 @@
 
 .search-section .btn {
     white-space: nowrap;
+}
+
+/* Enhanced styling with new color palette */
+.btn-primary {
+    background-color: var(--dark-cyan);
+    border-color: var(--dark-cyan);
+}
+
+.btn-primary:hover {
+    background-color: var(--brown-sugar);
+    border-color: var(--brown-sugar);
+}
+
+.btn-warning {
+    background-color: var(--saffron);
+    border-color: var(--saffron);
+    color: #333;
+}
+
+.btn-warning:hover {
+    background-color: var(--pumpkin);
+    border-color: var(--pumpkin);
+    color: #fff;
+}
+
+.navbar {
+    background-color: var(--eggshell) !important;
+    border-bottom: 2px solid var(--brown-sugar);
+}
+
+.card-header {
+    background-color: var(--eggshell);
+    border-bottom: 1px solid var(--brown-sugar);
+}
+
+.text-muted {
+    color: var(--brown-sugar) !important;
 } 

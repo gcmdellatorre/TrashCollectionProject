@@ -181,6 +181,14 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
         
+        // Create sample data button
+        const createSampleDataButton = document.getElementById('create-sample-data');
+        if (createSampleDataButton) {
+            createSampleDataButton.addEventListener('click', function() {
+                createSampleData();
+            });
+        }
+        
         // Main map search functionality
         const mainMapSearchBtn = document.getElementById('main-map-search-btn');
         const mainMapSearchInput = document.getElementById('main-map-search');
@@ -1002,5 +1010,43 @@ document.addEventListener('DOMContentLoaded', function() {
         showSubmitButtonForTesting();
         updateSubmitButtonVisibility();
     }, 1000);
+    
+    // Function to create sample data
+    function createSampleData() {
+        const button = document.getElementById('create-sample-data');
+        const originalText = button.innerHTML;
+        
+        // Show loading state
+        button.innerHTML = '<i class="bi bi-hourglass-split"></i> Creating...';
+        button.disabled = true;
+        
+        // Call the API endpoint
+        fetch('/api/seed-database?count=25', {
+            method: 'POST'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                alert(`🎉 Success! Created ${data.count} sample trash reports.\n\nThe map will now refresh to show the new data points around the world!`);
+                
+                // Refresh the map to show new data
+                loadMapData();
+            } else {
+                alert('❌ Error creating sample data: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error creating sample data:', error);
+            alert('❌ Error creating sample data. Please try again.');
+        })
+        .finally(() => {
+            // Restore button state
+            button.innerHTML = originalText;
+            button.disabled = false;
+        });
+    }
+    
+    // Make function globally available
+    window.createSampleData = createSampleData;
 }); 
 

@@ -14,6 +14,7 @@ from forms.report_form import parse_optional_form
 import time
 from contextlib import asynccontextmanager
 from utils.geo_functions import find_closest_dirty_places, get_location_summary, geocode_location
+from utils.blob_storage import blob_service
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -26,7 +27,7 @@ async def lifespan(app: FastAPI):
         reports = get_all_trash_reports()
         if len(reports) == 0:
             print("Database is empty - creating sample data for demo...")
-            await create_sample_data_internal(count=10)
+            await create_sample_data_internal(count=25)
             print("✅ Sample data created successfully!")
         else:
             print(f"Database already has {len(reports)} reports - skipping auto-seed")
@@ -335,7 +336,6 @@ async def check_coordinates(file: UploadFile = File(...)):
 async def get_image(blob_id: str, thumbnail: bool = False):
     """Serve images from blob storage"""
     try:
-        from utils.blob_storage import blob_service
         image_data = blob_service.get_image(blob_id, thumbnail=thumbnail)
         
         from fastapi.responses import Response

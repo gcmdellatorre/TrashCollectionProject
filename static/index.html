@@ -34,6 +34,13 @@
                                 </div>
                             </div>
                             
+                            <!-- Move hidden fields INSIDE the form -->
+                            <input type="hidden" id="latitude" name="latitude">
+                            <input type="hidden" id="longitude" name="longitude">
+                            
+                            <!-- Coordinates display area -->
+                            <div id="coordinates-info" class="d-none mb-3"></div>
+                            
                             <div class="form-check mb-3">
                                 <input class="form-check-input" type="checkbox" id="fill-form-check">
                                 <label class="form-check-label" for="fill-form-check">
@@ -82,7 +89,10 @@
                                 </div>
                             </div>
                             
-                            <button type="submit" id="submit-btn" class="btn btn-primary">Submit Report</button>
+                            <button type="submit" id="submit-btn" class="btn btn-primary d-none">Submit Report</button>
+                            <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#locationModal">
+                                📍 Select Location Manually
+                            </button>
                         </form>
                     </div>
                 </div>    
@@ -159,10 +169,6 @@
     <script src="/static/js/app.js"></script>
     <script src="/static/js/test_frontend.js"></script>
 
-    <!-- Hidden fields to store location data -->
-    <input type="hidden" id="latitude" name="latitude">
-    <input type="hidden" id="longitude" name="longitude">
-
     <!-- Location Modal -->
     <div class="modal fade" id="locationModal" tabindex="-1" aria-labelledby="locationModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg">
@@ -173,18 +179,159 @@
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
-                        <input type="text" id="location-search" class="form-control" placeholder="Search for a location (e.g., 'Central Park, New York')">
-                        <button type="button" id="search-btn" class="btn btn-outline-primary btn-sm mt-2">Search</button>
+                        <div class="input-group">
+                            <input type="text" 
+                                   id="location-search" 
+                                   class="form-control" 
+                                   placeholder="Search for a location (e.g., 'Central Park, New York')"
+                                   onkeypress="if(event.key==='Enter') searchModalMap(this.value)">
+                            <button type="button" 
+                                    id="search-btn" 
+                                    class="btn btn-outline-primary"
+                                    onclick="searchModalMap(document.getElementById('location-search').value)">
+                                <i class="bi bi-search"></i> Search
+                            </button>
+                        </div>
                     </div>
-                    <div id="modal-map" style="height: 400px; width: 100%;"></div>
-                    <div id="selected-location" class="mt-2 text-muted"></div>
+                    <div id="modal-map" style="height: 400px; width: 100%; background-color: #f0f0f0; border: 1px solid #ccc;"></div>
+                    <div id="selected-location" class="mt-2 text-muted">Click on the map or search for a location above</div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" id="confirm-location" class="btn btn-primary" disabled>Confirm Location</button>
+                    <button type="button" 
+                            id="confirm-location" 
+                            class="btn btn-primary" 
+                            disabled
+                            onclick="confirmLocation()">
+                        Confirm Location
+                    </button>
                 </div>
             </div>
         </div>
     </div>
+
+    <script>
+    function searchModalMap(query) {
+        console.log('Searching modal map for:', query);
+        
+        if (!query || !query.trim()) {
+            alert('Please enter a location to search for.');
+            return;
+        }
+        
+        // Make sure modal map exists
+        if (!modalMap) {
+            console.error('Modal map not initialized!');
+            initializeModalMap();
+            return;
+        }
+        
+        const cleanQuery = query.trim();
+        const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(cleanQuery)}&limit=1`;
+        
+        console.log('Search URL:', url);
+        
+        // Show loading state
+        const searchBtn = document.getElementById('search-btn');
+        const originalText = searchBtn ? searchBtn.innerHTML : 'Search';
+        if (searchBtn) {
+            searchBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Searching...';
+            searchBtn.disabled = true;
+        }
+        
+        fetch(url)
+            .then(response => {
+                console.log('Search response status:', response.status);
+                return response.json();
+            })
+            .then(data => {
+                console.log('Search results:', data);
+                
+                if (data && data.length > 0) {
+                    const result = data[0];
+                    const lat = parseFloat(result.lat);
+                    const lng = parseFloat(result.lon);
+                    
+                    console.log('Location found:', lat, lng, result.display_name);
+                    
+                    // Clear previous markers
+                    modalMap.eachLayer(layer => {
+                        if (layer instanceof L.Marker) {
+                            modalMap.removeLayer(layer);
+                        }
+                    });
+                    
+                    // Center map and add marker
+                    modalMap.setView([lat, lng], 15);
+                    const marker = L.marker([lat, lng]).addTo(modalMap);
+                    marker.bindPopup(`Found: ${result.display_name}`).openPopup();
+                    
+                    // Store selected location
+                    selectedLocation = { lat, lng };
+                    
+                    // Update display
+                    const selectedDiv = document.getElementById('selected-location');
+                    if (selectedDiv) {
+                        selectedDiv.innerHTML = `<strong>Found:</strong> ${result.display_name}`;
+                    }
+                    
+                    // Enable confirm button
+                    const confirmBtn = document.getElementById('confirm-location');
+                    if (confirmBtn) {
+                        confirmBtn.disabled = false;
+                    }
+                    
+                    console.log('Search successful, location set');
+                } else {
+                    console.log('No results found');
+                    alert('Location not found. Please try a different search term or click on the map.');
+                }
+            })
+            .catch(error => {
+                console.error('Search error:', error);
+                alert('Error searching for location. Please check your internet connection and try again.');
+            })
+            .finally(() => {
+                // Restore button state
+                if (searchBtn) {
+                    searchBtn.innerHTML = originalText;
+                    searchBtn.disabled = false;
+                }
+            });
+    }
+
+    function confirmLocation() {
+        if (selectedLocation) {
+            console.log('Location confirmed:', selectedLocation);
+            
+            // Set the hidden form fields properly
+            const latInput = document.getElementById('latitude');
+            const lngInput = document.getElementById('longitude');
+            
+            if (latInput && lngInput) {
+                latInput.value = selectedLocation.lat;
+                lngInput.value = selectedLocation.lng;
+                
+                console.log('Set coordinates in form:', selectedLocation.lat, selectedLocation.lng);
+                
+                // Show coordinates info
+                showCoordinatesInfo(selectedLocation.lat, selectedLocation.lng, 'manual selection');
+                
+                // Close modal
+                const modal = bootstrap.Modal.getInstance(document.getElementById('locationModal'));
+                if (modal) {
+                    modal.hide();
+                }
+                
+                // Update submit button visibility
+                updateSubmitButtonVisibility();
+            } else {
+                console.error('Could not find latitude/longitude inputs');
+            }
+        } else {
+            alert('Please select a location first by searching or clicking on the map.');
+        }
+    }
+    </script>
 </body>
 </html> 

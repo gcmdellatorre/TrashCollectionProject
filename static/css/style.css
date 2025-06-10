@@ -20,10 +20,20 @@
 
 /* MamaLand Brand Typography & Base Styles */
 body {
-    font-family: 'Rubik', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-family: 'Rubik', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
     background: linear-gradient(135deg, var(--pale-eggshell) 0%, var(--eggshell) 100%);
     color: var(--ebony);
     min-height: 100vh;
+}
+
+/* Ensure Rubik font is applied everywhere */
+* {
+    font-family: 'Rubik', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+}
+
+/* Specific overrides for common elements */
+.btn, .form-control, .form-select, .card, .navbar, .modal, input, select, textarea, label {
+    font-family: 'Rubik', sans-serif !important;
 }
 
 .brand-text {
@@ -62,7 +72,7 @@ body {
 /* Card Styling with Variations */
 .card {
     background: linear-gradient(145deg, #ffffff 0%, var(--pale-ash-gray) 100%);
-    border: 2px solid var(--myrtle-green);
+    border: none;
     box-shadow: 0 6px 20px rgba(44, 126, 120, 0.15);
     border-radius: 15px;
     backdrop-filter: blur(10px);
@@ -70,15 +80,14 @@ body {
 
 .card:nth-child(even) {
     background: linear-gradient(145deg, #ffffff 0%, var(--pale-sandy-brown) 100%);
-    border-color: var(--dark-cyan);
 }
 
 .card-header {
-    background: linear-gradient(135deg, var(--myrtle-green) 0%, var(--dark-cyan) 100%);
-    color: white;
+    background: linear-gradient(135deg, var(--pale-eggshell) 0%, var(--ash-gray) 100%);
+    color: var(--brown-sugar);
     border-bottom: none;
     font-weight: 600;
-    text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+    text-shadow: 1px 1px 2px rgba(255,255,255,0.5);
 }
 
 .card-body {
@@ -163,7 +172,7 @@ body {
 .search-section {
     padding: 25px;
     background: linear-gradient(135deg, var(--pale-sandy-brown) 0%, var(--pale-chamoisee) 100%);
-    border: 2px solid var(--chamoisee);
+    border: none;
     border-radius: 20px;
     margin-bottom: 25px;
     box-shadow: 0 8px 25px rgba(154, 131, 90, 0.15);
@@ -182,7 +191,7 @@ body {
 #map-container {
     height: 600px;
     width: 100%;
-    border: 3px solid var(--myrtle-green);
+    border: none;
     border-radius: 15px;
     box-shadow: 0 8px 30px rgba(44, 126, 120, 0.2);
     overflow: hidden;
@@ -243,13 +252,14 @@ h5 {
 /* Modal Styling */
 .modal-content {
     background: linear-gradient(145deg, #ffffff 0%, var(--pale-eggshell) 100%);
-    border: 2px solid var(--chamoisee);
+    border: none;
     border-radius: 15px;
+    box-shadow: 0 10px 40px rgba(44, 126, 120, 0.2);
 }
 
 .modal-header {
-    background: linear-gradient(135deg, var(--myrtle-green) 0%, var(--dark-cyan) 100%);
-    color: #fff;
+    background: linear-gradient(135deg, var(--pale-eggshell) 0%, var(--ash-gray) 100%);
+    color: var(--brown-sugar);
     border-bottom: none;
     border-radius: 13px 13px 0 0;
 }
@@ -311,50 +321,12 @@ a:hover {
     background: linear-gradient(145deg, #ffffff 0%, var(--pale-chamoisee) 100%);
 }
 
-/* MamaLand Corner Logo */
-.mamaland-logo-corner {
-    position: fixed;
-    bottom: 20px;
-    left: 20px;
-    z-index: 999;
-    opacity: 0.85;
-    transition: all 0.3s ease;
-    cursor: pointer;
-}
 
-.mamaland-logo-corner:hover {
-    opacity: 1;
-    transform: scale(1.05);
-}
-
-.corner-logo {
-    width: 80px;
-    height: 80px;
-    border-radius: 50%;
-    box-shadow: 0 4px 20px rgba(44, 126, 120, 0.3);
-    border: 3px solid var(--eggshell);
-    background: var(--eggshell);
-    object-fit: contain;
-    padding: 5px;
-}
-
-/* Mobile responsiveness for corner logo */
-@media (max-width: 768px) {
-    .mamaland-logo-corner {
-        bottom: 15px;
-        left: 15px;
-    }
-    
-    .corner-logo {
-        width: 60px;
-        height: 60px;
-    }
-}
 
 /* Navbar Logo Styling */
 .navbar-logo {
     border-radius: 50%;
-    border: 2px solid var(--brown-sugar);
+    border: none;
     box-shadow: 0 2px 8px rgba(44, 126, 120, 0.3);
     background: var(--eggshell);
     padding: 2px;
@@ -370,18 +342,18 @@ a:hover {
     padding: 20px;
     background: linear-gradient(135deg, var(--pale-eggshell) 0%, var(--eggshell) 100%);
     border-radius: 20px;
-    border: 2px solid var(--chamoisee);
+    border: none;
     box-shadow: 0 6px 25px rgba(154, 131, 90, 0.15);
 }
 
 .large-mamaland-logo {
-    width: 180px;
-    height: 180px;
-    border-radius: 20px;
-    border: 3px solid var(--brown-sugar);
-    box-shadow: 0 8px 30px rgba(181, 99, 63, 0.3);
+    width: 250px;
+    height: 250px;
+    border-radius: 25px;
+    border: none;
+    box-shadow: 0 10px 40px rgba(181, 99, 63, 0.3);
     background: var(--eggshell);
-    padding: 10px;
+    padding: 15px;
     object-fit: contain;
     transition: all 0.3s ease;
 }
@@ -399,8 +371,10 @@ a:hover {
     }
     
     .large-mamaland-logo {
-        width: 120px;
-        height: 120px;
-        padding: 8px;
+        width: 180px;
+        height: 180px;
+        padding: 12px;
     }
-} 
+}
+
+ 

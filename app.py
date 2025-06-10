@@ -20,6 +20,16 @@ async def lifespan(app: FastAPI):
     # Initialize database
     initialize_database()
     print("Database initialized")
+    
+    # Auto-seed with sample data if database is empty (good for demos)
+    reports = get_all_trash_reports()
+    if len(reports) == 0:
+        print("Database is empty - creating sample data for demo...")
+        await create_sample_data_internal(count=25)
+        print("✅ Sample data created successfully!")
+    else:
+        print(f"Database already has {len(reports)} reports - skipping auto-seed")
+    
     yield
 
 app = FastAPI(lifespan=lifespan)
@@ -38,10 +48,90 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 UPLOAD_FOLDER = "data/images"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
+async def create_sample_data_internal(count: int = 20):
+    """Internal function to create sample data (used by startup and API)"""
+    import random
+    from PIL import Image
+    import io
+    
+    # Create a minimal dummy image
+    dummy_image = Image.new('RGB', (1, 1), color='white')
+    img_bytes = io.BytesIO()
+    dummy_image.save(img_bytes, format='JPEG')
+    dummy_image_data = img_bytes.getvalue()
+    
+    # Sample data
+    trash_types = ['plastic', 'paper', 'metal', 'glass', 'organic', 'electronic']
+    sparcity_levels = ['low', 'medium', 'high']
+    cleanliness_levels = ['good', 'moderate', 'poor', 'very_poor']
+    
+    # Interesting locations around the world
+    locations = [
+        (40.7128, -74.0060, "New York"),
+        (51.5074, -0.1278, "London"), 
+        (48.8566, 2.3522, "Paris"),
+        (35.6762, 139.6503, "Tokyo"),
+        (-33.8688, 151.2093, "Sydney"),
+        (37.7749, -122.4194, "San Francisco"),
+        (52.5200, 13.4050, "Berlin"),
+        (25.7617, -80.1918, "Miami Beach"),
+        (34.0522, -118.2437, "Los Angeles"),
+        (41.9028, 12.4964, "Rome")
+    ]
+    
+    created_count = 0
+    
+    for i in range(count):
+        # Random location with slight variation
+        lat, lng, location_name = random.choice(locations)
+        lat += random.uniform(-0.01, 0.01)  # ~1km variation
+        lng += random.uniform(-0.01, 0.01)
+        
+        # Random trash data
+        trash_type = random.choice(trash_types)
+        estimated_kg = round(random.uniform(0.1, 10.0), 1)
+        sparcity = random.choice(sparcity_levels)
+        cleanliness = random.choice(cleanliness_levels)
+        
+        # Save to database
+        report_id = save_trash_report(
+            latitude=lat,
+            longitude=lng,
+            image_data=dummy_image_data,
+            filename=f"sample_{trash_type}_{i+1}.jpg",
+            trash_type=trash_type,
+            estimated_kg=estimated_kg,
+            sparcity=sparcity,
+            cleanliness=cleanliness
+        )
+        
+        created_count += 1
+    
+    return created_count
+
 @app.get("/", response_class=HTMLResponse)
 async def home():
     with open("static/index.html", "r") as file:
         return file.read()
+
+@app.post("/api/seed-database")
+async def seed_database(count: int = 20):
+    """Create sample test data for the production database"""
+    try:
+        created_count = await create_sample_data_internal(count)
+        
+        return JSONResponse(content={
+            "status": "success",
+            "message": f"Created {created_count} sample trash reports",
+            "count": created_count
+        })
+        
+    except Exception as e:
+        print(f"Error seeding database: {e}")
+        return JSONResponse(
+            status_code=500,
+            content={"status": "error", "message": str(e)}
+        )
 
 @app.post("/upload")
 async def upload_file(

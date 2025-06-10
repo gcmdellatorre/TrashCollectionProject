@@ -12,8 +12,8 @@ COPY . .
 # Create necessary directories
 RUN mkdir -p data/images static
 
-# Expose port
+# Expose port (Railway assigns this dynamically)
 EXPOSE 8000
 
-# Run the application
-CMD ["python", "app.py"] 
+# Run the application with uvicorn (PORT will be set by Railway)
+CMD ["sh", "-c", "uvicorn app:app --host 0.0.0.0 --port ${PORT:-8000}"]

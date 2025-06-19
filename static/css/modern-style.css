@@ -1,0 +1,601 @@
+/* Modern MamaLand Styles - Complementing Tailwind CSS */
+
+/* Custom animations and transitions */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideIn {
+    from { transform: translateX(-100%); }
+    to { transform: translateX(0); }
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+@keyframes loading {
+    0% { left: -100%; }
+    100% { left: 100%; }
+}
+
+/* Apply animations */
+.fade-in {
+    animation: fadeIn 0.3s ease-out;
+}
+
+.slide-in {
+    animation: slideIn 0.3s ease-out;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+    width: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f5f9;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+/* Enhanced form styling */
+.form-input-focus {
+    @apply ring-2 ring-primary-500 ring-offset-2;
+}
+
+/* Custom file upload styling */
+.file-upload-area {
+    transition: all 0.2s ease;
+}
+
+.file-upload-area:hover {
+    border-color: #0ea5e9;
+    background-color: #f0f9ff;
+}
+
+.file-upload-area.dragover {
+    border-color: #0ea5e9;
+    background-color: #e0f2fe;
+    transform: scale(1.02);
+}
+
+/* Enhanced button states */
+.btn-primary-modern {
+    background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+    transition: all 0.2s ease;
+}
+
+.btn-primary-modern:hover {
+    background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
+}
+
+.btn-primary-modern:active {
+    transform: translateY(0);
+}
+
+/* Card enhancements */
+.card-modern {
+    transition: all 0.2s ease;
+}
+
+.card-modern:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+/* Loading states */
+.loading {
+    position: relative;
+    overflow: hidden;
+}
+
+.loading::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+    animation: loading 1.5s infinite;
+}
+
+/* Map container enhancements */
+#map-container {
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+/* Modal enhancements */
+.modal-content {
+    border-radius: 16px;
+    border: none;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+.modal-header {
+    border-bottom: 1px solid #e5e7eb;
+    padding: 1.5rem;
+}
+
+.modal-body {
+    padding: 1.5rem;
+}
+
+.modal-footer {
+    border-top: 1px solid #e5e7eb;
+    padding: 1.5rem;
+}
+
+/* Enhanced search bar */
+.search-input {
+    transition: all 0.2s ease;
+}
+
+.search-input:focus {
+    box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+}
+
+/* Mobile-specific enhancements */
+@media (max-width: 768px) {
+    .mobile-full-width {
+        width: 100%;
+    }
+    
+    .mobile-stack {
+        flex-direction: column;
+    }
+    
+    .mobile-padding {
+        padding: 1rem;
+    }
+    
+    /* Touch-friendly buttons */
+    .btn-mobile {
+        min-height: 44px;
+        padding: 12px 16px;
+    }
+    
+    /* Mobile navigation */
+    .mobile-nav {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: white;
+        border-top: 1px solid #e5e7eb;
+        padding: 0.75rem;
+        z-index: 50;
+    }
+    
+    /* Mobile-specific map height */
+    #map-container {
+        height: 400px !important;
+    }
+    
+    /* Mobile form improvements */
+    .mobile-form {
+        padding: 1rem;
+    }
+    
+    .mobile-form input,
+    .mobile-form select,
+    .mobile-form textarea {
+        font-size: 16px; /* Prevents zoom on iOS */
+        padding: 12px;
+    }
+    
+    /* Mobile card spacing */
+    .mobile-card {
+        margin-bottom: 1rem;
+    }
+    
+    /* Mobile search improvements */
+    .mobile-search {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .mobile-search input {
+        border-radius: 8px;
+        margin-bottom: 0.5rem;
+    }
+    
+    .mobile-search button {
+        border-radius: 8px;
+        width: 100%;
+    }
+}
+
+/* Tablet-specific styles */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .tablet-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+    
+    #map-container {
+        height: 500px !important;
+    }
+}
+
+/* Dark mode support (if needed) */
+@media (prefers-color-scheme: dark) {
+    .dark-mode {
+        background-color: #1f2937;
+        color: #f9fafb;
+    }
+    
+    .dark-mode .bg-white {
+        background-color: #374151;
+    }
+    
+    .dark-mode .border-gray-200 {
+        border-color: #4b5563;
+    }
+}
+
+/* Accessibility improvements */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* Focus indicators for keyboard navigation */
+.focus-visible:focus {
+    outline: 2px solid #0ea5e9;
+    outline-offset: 2px;
+}
+
+/* Print styles */
+@media print {
+    .no-print {
+        display: none !important;
+    }
+    
+    .print-break {
+        page-break-before: always;
+    }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    .high-contrast {
+        border-width: 2px;
+    }
+    
+    .high-contrast .btn {
+        border-width: 2px;
+    }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* Custom utility classes */
+.text-gradient {
+    background: linear-gradient(135deg, #0ea5e9 0%, #22c55e 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.bg-gradient-primary {
+    background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+}
+
+.bg-gradient-accent {
+    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+}
+
+/* Enhanced shadows */
+.shadow-soft {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.shadow-medium {
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+}
+
+.shadow-strong {
+    box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+}
+
+/* Custom border radius */
+.rounded-soft {
+    border-radius: 8px;
+}
+
+.rounded-medium {
+    border-radius: 12px;
+}
+
+.rounded-strong {
+    border-radius: 16px;
+}
+
+/* Status indicators */
+.status-success {
+    background-color: #dcfce7;
+    color: #166534;
+    border: 1px solid #bbf7d0;
+}
+
+.status-warning {
+    background-color: #fef3c7;
+    color: #92400e;
+    border: 1px solid #fde68a;
+}
+
+.status-error {
+    background-color: #fee2e2;
+    color: #991b1b;
+    border: 1px solid #fecaca;
+}
+
+.status-info {
+    background-color: #dbeafe;
+    color: #1e40af;
+    border: 1px solid #bfdbfe;
+}
+
+/* Modern marker styles */
+.modern-marker {
+    transition: all 0.2s ease;
+}
+
+.modern-marker:hover {
+    transform: scale(1.2);
+}
+
+/* Modern popup styles */
+.modern-popup {
+    font-family: 'Inter', sans-serif;
+}
+
+.popup-header {
+    margin-bottom: 0.5rem;
+}
+
+.trash-type-badge {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.375rem;
+    color: white;
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-transform: uppercase;
+}
+
+.popup-content {
+    font-size: 0.875rem;
+}
+
+.popup-item {
+    margin-bottom: 0.25rem;
+}
+
+/* Mobile view specific styles */
+.mobile-view {
+    /* Add mobile-specific body styles */
+}
+
+.mobile-view .container {
+    padding: 1rem;
+}
+
+.mobile-view .card {
+    margin-bottom: 1rem;
+}
+
+/* Touch-friendly interactions */
+@media (hover: none) and (pointer: coarse) {
+    /* Touch device specific styles */
+    .btn:hover {
+        transform: none;
+    }
+    
+    .card:hover {
+        transform: none;
+    }
+    
+    /* Larger touch targets */
+    button, input, select, textarea {
+        min-height: 44px;
+    }
+    
+    /* Better touch feedback */
+    .btn:active {
+        transform: scale(0.98);
+    }
+}
+
+/* Landscape mobile optimization */
+@media (max-width: 768px) and (orientation: landscape) {
+    #map-container {
+        height: 300px !important;
+    }
+    
+    .mobile-landscape {
+        flex-direction: row;
+    }
+}
+
+/* Portrait mobile optimization */
+@media (max-width: 768px) and (orientation: portrait) {
+    .mobile-portrait {
+        flex-direction: column;
+    }
+}
+
+/* Modern location modal styles */
+.modal-content {
+    border-radius: 16px;
+    border: none;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+.modal-header {
+    border-bottom: 1px solid #e5e7eb;
+    padding: 1.5rem;
+}
+
+.modal-body {
+    padding: 1.5rem;
+}
+
+.modal-footer {
+    border-top: 1px solid #e5e7eb;
+    padding: 1.5rem;
+}
+
+/* Location modal specific enhancements */
+#locationModal .modal-dialog {
+    max-width: 800px;
+}
+
+#locationModal .modal-content {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
+#locationModal .modal-header {
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border-bottom: 1px solid #e2e8f0;
+    border-radius: 16px 16px 0 0;
+}
+
+#locationModal .modal-footer {
+    background: #f8fafc;
+    border-top: 1px solid #e2e8f0;
+    border-radius: 0 0 16px 16px;
+}
+
+/* Modal map container enhancements */
+#modal-map-container {
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    border: 2px solid #e5e7eb;
+}
+
+#modal-map-container:hover {
+    border-color: #0ea5e9;
+    transition: border-color 0.2s ease;
+}
+
+/* Selected location display animations */
+#selected-location-display {
+    transition: all 0.3s ease;
+}
+
+#selected-location-display.fade-in {
+    animation: fadeIn 0.3s ease-out;
+}
+
+/* Modal button enhancements */
+#locationModal .btn {
+    transition: all 0.2s ease;
+    font-weight: 500;
+}
+
+#locationModal .btn:hover {
+    transform: translateY(-1px);
+}
+
+#locationModal .btn:active {
+    transform: translateY(0);
+}
+
+/* Search input enhancements */
+#location-search {
+    transition: all 0.2s ease;
+}
+
+#location-search:focus {
+    box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+    border-color: #0ea5e9;
+}
+
+/* Modal close button */
+#locationModal .modal-header button[data-bs-dismiss="modal"] {
+    transition: all 0.2s ease;
+    border-radius: 8px;
+    padding: 4px;
+}
+
+#locationModal .modal-header button[data-bs-dismiss="modal"]:hover {
+    background-color: #f1f5f9;
+    transform: scale(1.1);
+}
+
+/* Modal icon enhancements */
+#locationModal .bi {
+    transition: all 0.2s ease;
+}
+
+/* Loading state for search button */
+#search-btn.loading {
+    pointer-events: none;
+}
+
+#search-btn.loading .bi {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+/* Mobile responsiveness for modal */
+@media (max-width: 768px) {
+    #locationModal .modal-dialog {
+        margin: 1rem;
+        max-width: calc(100% - 2rem);
+    }
+    
+    #modal-map-container {
+        height: 300px !important;
+    }
+    
+    #locationModal .modal-body {
+        padding: 1rem;
+    }
+    
+    #locationModal .modal-footer {
+        padding: 1rem;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    #locationModal .modal-footer button {
+        width: 100%;
+    }
+} 

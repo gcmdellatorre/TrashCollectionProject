@@ -6,59 +6,122 @@
     <title>MamaLand</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Rubik:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css">
-    <link rel="stylesheet" href="/static/css/style.css?v=2024061005">
-    <!-- Favicon will be added when logo is ready -->
-    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'sans': ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                        },
+                        secondary: {
+                            50: '#f8fafc',
+                            100: '#f1f5f9',
+                            500: '#64748b',
+                            600: '#475569',
+                            700: '#334155',
+                        },
+                        accent: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            500: '#22c55e',
+                            600: '#16a34a',
+                            700: '#15803d',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.css"/>
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="/static/css/modern-style.css">
 </head>
-<body>
-    <nav class="navbar navbar-dark bg-primary">
-        <div class="container">
-            <a class="navbar-brand d-flex align-items-center" href="/">
-                <img src="/static/images/Mamaland Beverage Logo - Fun Character Design.png" alt="MamaLand" height="40" class="me-2 navbar-logo">
-                <span class="brand-text">MamaLand</span>
-            </a>
+<body class="bg-gray-50 font-sans">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center space-x-3">
+                    <img src="/static/images/Mamaland Beverage Logo - Fun Character Design.png" alt="MamaLand" class="h-8 w-8 rounded-full">
+                    <span class="text-xl font-semibold text-gray-900">MamaLand</span>
+                </div>
+            </div>
         </div>
     </nav>
 
-    <div class="container mt-4">
-        <div class="row">
-            <div class="col-md-4">
-                <div class="card mb-4">
-                    <div class="card-header">
-                        <h5>Report Trash</h5>
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Left Column - Report Form -->
+            <div class="lg:col-span-1">
+                <!-- Report Form Card -->
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                    <div class="px-6 py-4 border-b border-gray-200">
+                        <h2 class="text-lg font-semibold text-gray-900">Report Trash</h2>
                     </div>
-                    <div class="card-body">
-                        <form id="upload-form" enctype="multipart/form-data">
-                            <div class="mb-3">
-                                <label for="file" class="form-label">Upload Image</label>
-                                <input type="file" class="form-control" id="file" name="file" accept="image/*" capture>
-                                <div id="preview-container" class="mt-2 d-none">
-                                    <img id="image-preview" class="img-fluid" src="" alt="Preview">
+                    <div class="p-6">
+                        <form id="upload-form" enctype="multipart/form-data" class="space-y-6">
+                            <!-- File Upload -->
+                            <div>
+                                <label for="file" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Upload Image
+                                </label>
+                                <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg hover:border-gray-400 transition-colors">
+                                    <div class="space-y-1 text-center">
+                                        <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                                            <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                        </svg>
+                                        <div class="flex text-sm text-gray-600">
+                                            <label for="file" class="relative cursor-pointer bg-white rounded-md font-medium text-primary-600 hover:text-primary-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-primary-500">
+                                                <span>Upload a file</span>
+                                                <input id="file" name="file" type="file" class="sr-only" accept="image/*" capture>
+                                            </label>
+                                            <p class="pl-1">or drag and drop</p>
+                                        </div>
+                                        <p class="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
+                                    </div>
+                                </div>
+                                <div id="preview-container" class="mt-4 hidden">
+                                    <img id="image-preview" class="w-full h-48 object-cover rounded-lg" src="" alt="Preview">
                                 </div>
                             </div>
                             
-                            <!-- Move hidden fields INSIDE the form -->
+                            <!-- Hidden Fields -->
                             <input type="hidden" id="latitude" name="latitude">
                             <input type="hidden" id="longitude" name="longitude">
                             
-                            <!-- Coordinates display area -->
-                            <div id="coordinates-info" class="d-none mb-3"></div>
+                            <!-- Coordinates Display -->
+                            <div id="coordinates-info" class="hidden p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                                <div class="flex items-center text-sm text-blue-700">
+                                    <i class="bi bi-geo-alt mr-2"></i>
+                                    <span id="coordinates-text">Location captured</span>
+                                </div>
+                            </div>
                             
-                            <div class="form-check mb-3">
-                                <input class="form-check-input" type="checkbox" id="fill-form-check">
-                                <label class="form-check-label" for="fill-form-check">
+                            <!-- Manual Details Toggle -->
+                            <div class="flex items-center">
+                                <input type="checkbox" id="fill-form-check" class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded">
+                                <label for="fill-form-check" class="ml-2 block text-sm text-gray-700">
                                     Add details manually
                                 </label>
                             </div>
                             
-                            <div id="details-form" class="d-none">
-                                <div class="mb-3">
-                                    <label for="trash-type" class="form-label">Trash Type</label>
-                                    <select class="form-select" id="trash-type" name="trash_type">
+                            <!-- Manual Details Form -->
+                            <div id="details-form" class="hidden space-y-4">
+                                <div>
+                                    <label for="trash-type" class="block text-sm font-medium text-gray-700 mb-1">Trash Type</label>
+                                    <select id="trash-type" name="trash_type" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
                                         <option value="">Select type</option>
                                         <option value="plastic">Plastic</option>
                                         <option value="paper">Paper</option>
@@ -69,14 +132,14 @@
                                     </select>
                                 </div>
                                 
-                                <div class="mb-3">
-                                    <label for="estimated-kg" class="form-label">Estimated Weight (kg)</label>
-                                    <input type="number" step="0.1" class="form-control" id="estimated-kg" name="estimated_kg">
+                                <div>
+                                    <label for="estimated-kg" class="block text-sm font-medium text-gray-700 mb-1">Estimated Weight (kg)</label>
+                                    <input type="number" step="0.1" id="estimated-kg" name="estimated_kg" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
                                 </div>
                                 
-                                <div class="mb-3">
-                                    <label for="sparcity" class="form-label">Sparcity</label>
-                                    <select class="form-select" id="sparcity" name="sparcity">
+                                <div>
+                                    <label for="sparcity" class="block text-sm font-medium text-gray-700 mb-1">Sparcity</label>
+                                    <select id="sparcity" name="sparcity" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
                                         <option value="">Select sparcity</option>
                                         <option value="low">Low</option>
                                         <option value="medium">Medium</option>
@@ -84,9 +147,9 @@
                                     </select>
                                 </div>
                                 
-                                <div class="mb-3">
-                                    <label for="cleanliness" class="form-label">Cleanliness</label>
-                                    <select class="form-select" id="cleanliness" name="cleanliness">
+                                <div>
+                                    <label for="cleanliness" class="block text-sm font-medium text-gray-700 mb-1">Cleanliness</label>
+                                    <select id="cleanliness" name="cleanliness" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
                                         <option value="">Select cleanliness</option>
                                         <option value="good">Good</option>
                                         <option value="moderate">Moderate</option>
@@ -96,123 +159,176 @@
                                 </div>
                             </div>
                             
-                            <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#locationModal">📍 Select Location</button>
-                            <button type="submit" id="submit-btn" class="btn btn-primary d-none">Submit Report</button>
+                            <!-- Action Buttons -->
+                            <div class="flex flex-col sm:flex-row gap-3">
+                                <button type="button" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500" data-bs-toggle="modal" data-bs-target="#locationModal">
+                                    <i class="bi bi-geo-alt mr-2"></i>
+                                    Select Location
+                                </button>
+                                <button type="submit" id="submit-btn" class="flex-1 px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 hidden">
+                                    Submit Report
+                                </button>
+                            </div>
                         </form>
                     </div>
                 </div>
                 
-                <!-- Large MamaLand Logo Display -->
-                <div class="large-logo-container">
-                    <img src="/static/images/Mamaland Beverage Logo - Fun Character Design.png" alt="MamaLand" class="large-mamaland-logo">
+                <!-- MamaLand Logo -->
+                <div class="mt-8 flex justify-center">
+                    <img src="/static/images/Mamaland Beverage Logo - Fun Character Design.png" alt="MamaLand" class="h-32 w-32 rounded-full shadow-lg">
                 </div>
             </div>
             
-            <div class="col-md-8">
-                <div class="card">
-                    <div class="card-header d-flex justify-content-between align-items-center">
-                        <h5>Trash Map</h5>
-                        <button id="refresh-map" class="btn btn-sm btn-outline-primary">Refresh Map</button>
+            <!-- Right Column - Map -->
+            <div class="lg:col-span-2">
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                    <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+                        <h2 class="text-lg font-semibold text-gray-900">Trash Map</h2>
+                        <button id="refresh-map" class="px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
+                            <i class="bi bi-arrow-clockwise mr-1"></i>
+                            Refresh
+                        </button>
                     </div>
-                    <div class="card-body p-0">
-                        <!-- Search bar for main map -->
-                        <div class="search-section mb-4">
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="input-group">
-                                        <input type="text" 
-                                               id="main-map-search" 
-                                               class="form-control" 
-                                               placeholder="Search for a location (e.g., 'New York', 'London', '123 Main St')"
-                                               onkeypress="if(event.key==='Enter') searchMainMap(this.value)">
-                                        <button class="btn btn-primary" 
-                                                type="button" 
-                                                id="main-map-search-btn"
-                                                onclick="searchMainMap(document.getElementById('main-map-search').value)">
-                                            <i class="bi bi-search"></i> Find Location
-                                        </button>
-                                    </div>
-                                </div>
-                                <div class="col-md-3">
-                                    <div class="input-group">
-                                        <span class="input-group-text">
-                                            <i class="bi bi-geo-alt"></i> Radius
-                                        </span>
-                                        <input type="number" 
-                                               id="search-radius" 
-                                               class="form-control" 
-                                               value="1" 
-                                               min="1" 
-                                               max="100" 
-                                               step="1"
-                                               title="Search radius in kilometers">
-                                        <span class="input-group-text">km</span>
-                                    </div>
-                                </div>
-                                <div class="col-md-3">
-                                    <button class="btn btn-success w-100" 
-                                            type="button" 
-                                            id="find-dirty-btn"
-                                            disabled
-                                            title="First search for a location, then click to find dirty places">
-                                        <i class="bi bi-trash"></i> Find Dirty Places
+                    
+                    <!-- Search Section -->
+                    <div class="p-6 bg-gray-50 border-b border-gray-200">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div class="md:col-span-2">
+                                <div class="flex">
+                                    <input type="text" 
+                                           id="main-map-search" 
+                                           class="flex-1 px-3 py-2 border border-gray-300 rounded-l-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500" 
+                                           placeholder="Search for a location...">
+                                    <button class="px-4 py-2 bg-primary-600 text-white rounded-r-lg hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500" 
+                                            id="main-map-search-btn"
+                                            onclick="searchMainMap(document.getElementById('main-map-search').value)">
+                                        <i class="bi bi-search"></i>
                                     </button>
                                 </div>
                             </div>
-                            <div class="row mt-2">
-                                <div class="col-12">
-                                    <small class="text-muted">
-                                        <i class="bi bi-info-circle"></i> 
-                                        First search for a location, set your radius (1-100km), then click "Find Dirty Places" to discover problematic areas nearby.
-                                    </small>
+                            <div class="flex gap-2">
+                                <div class="flex-1">
+                                    <div class="flex">
+                                        <span class="inline-flex items-center px-3 py-2 border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm rounded-l-lg">
+                                            <i class="bi bi-geo-alt"></i>
+                                        </span>
+                                        <input type="number" 
+                                               id="search-radius" 
+                                               class="flex-1 px-3 py-2 border border-gray-300 text-center" 
+                                               value="1" 
+                                               min="1" 
+                                               max="100" 
+                                               step="1">
+                                        <span class="inline-flex items-center px-3 py-2 border border-l-0 border-gray-300 bg-gray-50 text-gray-500 text-sm rounded-r-lg">
+                                            km
+                                        </span>
+                                    </div>
                                 </div>
+                                <button class="px-4 py-2 bg-accent-600 text-white rounded-lg hover:bg-accent-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent-500 disabled:opacity-50 disabled:cursor-not-allowed" 
+                                        id="find-dirty-btn"
+                                        disabled
+                                        title="First search for a location, then click to find dirty places">
+                                    <i class="bi bi-trash"></i>
+                                </button>
                             </div>
                         </div>
-                        <div id="map-container"></div>
+                        <div class="mt-3 text-sm text-gray-600">
+                            <i class="bi bi-info-circle mr-1"></i>
+                            First search for a location, set your radius (1-100km), then click "Find Dirty Places" to discover problematic areas nearby.
+                        </div>
                     </div>
+                    
+                    <!-- Map Container -->
+                    <div id="map-container" class="h-96 lg:h-[600px]"></div>
                 </div>
             </div>
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="/static/js/app.js?v=2024061001"></script>
-    <script src="/static/js/test_frontend.js?v=2024061001"></script>
-
     <!-- Location Modal -->
     <div class="modal fade" id="locationModal" tabindex="-1" aria-labelledby="locationModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="locationModalLabel">Select Your Location</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            <div class="modal-content bg-white rounded-xl shadow-lg border border-gray-200">
+                <!-- Modern Header -->
+                <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-8 h-8 bg-primary-100 rounded-lg flex items-center justify-center">
+                            <i class="bi bi-geo-alt text-primary-600"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-900">Select Your Location</h3>
+                            <p class="text-sm text-gray-500">Search for a location or click on the map</p>
+                        </div>
+                    </div>
+                    <button type="button" class="text-gray-400 hover:text-gray-600 transition-colors" data-bs-dismiss="modal" aria-label="Close">
+                        <i class="bi bi-x-lg text-xl"></i>
+                    </button>
                 </div>
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <div class="input-group">
+                
+                <!-- Modern Body -->
+                <div class="p-6">
+                    <!-- Search Section -->
+                    <div class="mb-6">
+                        <label for="location-search" class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="bi bi-search mr-1"></i>
+                            Search Location
+                        </label>
+                        <div class="flex space-x-2">
                             <input type="text" 
                                    id="location-search" 
-                                   class="form-control" 
-                                   placeholder="Search for a location (e.g., 'Central Park, New York')"
+                                   class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500" 
+                                   placeholder="e.g., 'Central Park, New York', 'Times Square', '123 Main St'"
                                    onkeypress="if(event.key==='Enter') searchModalMap(this.value)">
                             <button type="button" 
                                     id="search-btn" 
-                                    class="btn btn-outline-primary"
+                                    class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors"
                                     onclick="searchModalMap(document.getElementById('location-search').value)">
-                                <i class="bi bi-search"></i> Search
+                                <i class="bi bi-search mr-1"></i>
+                                Search
                             </button>
                         </div>
+                        <p class="text-xs text-gray-500 mt-2">
+                            <i class="bi bi-info-circle mr-1"></i>
+                            Type a location name and press Enter or click Search
+                        </p>
                     </div>
-                    <div id="modal-map" style="height: 400px; width: 100%; background-color: #f0f0f0; border: 1px solid #ccc;"></div>
-                    <div id="selected-location" class="mt-2 text-muted">Click on the map or search for a location above</div>
+                    
+                    <!-- Map Container -->
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="bi bi-map mr-1"></i>
+                            Interactive Map
+                        </label>
+                        <div id="modal-map-container" class="h-80 w-full rounded-lg border border-gray-200 overflow-hidden"></div>
+                        <p class="text-xs text-gray-500 mt-2">
+                            <i class="bi bi-mouse mr-1"></i>
+                            Click anywhere on the map to select a location
+                        </p>
+                    </div>
+                    
+                    <!-- Selected Location Display -->
+                    <div id="selected-location-display" class="hidden p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                        <div class="flex items-center">
+                            <i class="bi bi-check-circle text-blue-600 mr-2"></i>
+                            <span id="selected-location-text" class="text-sm text-blue-700">Location selected</span>
+                        </div>
+                    </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                
+                <!-- Modern Footer -->
+                <div class="px-6 py-4 border-t border-gray-200 flex justify-end space-x-3">
                     <button type="button" 
-                            id="confirm-location" 
-                            class="btn btn-primary" 
-                            disabled
-                            onclick="confirmLocation()">
+                            class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors" 
+                            data-bs-dismiss="modal">
+                        <i class="bi bi-x mr-1"></i>
+                        Cancel
+                    </button>
+                    <button type="button" 
+                            id="confirm-location-btn"
+                            class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            onclick="confirmLocation()"
+                            disabled>
+                        <i class="bi bi-check mr-1"></i>
                         Confirm Location
                     </button>
                 </div>
@@ -220,130 +336,9 @@
         </div>
     </div>
 
-    <script>
-    function searchModalMap(query) {
-        console.log('Searching modal map for:', query);
-        
-        if (!query || !query.trim()) {
-            alert('Please enter a location to search for.');
-            return;
-        }
-        
-        // Make sure modal map exists
-        if (!modalMap) {
-            console.error('Modal map not initialized!');
-            initializeModalMap();
-            return;
-        }
-        
-        const cleanQuery = query.trim();
-        const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(cleanQuery)}&limit=1`;
-        
-        console.log('Search URL:', url);
-        
-        // Show loading state
-        const searchBtn = document.getElementById('search-btn');
-        const originalText = searchBtn ? searchBtn.innerHTML : 'Search';
-        if (searchBtn) {
-            searchBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Searching...';
-            searchBtn.disabled = true;
-        }
-        
-        fetch(url)
-            .then(response => {
-                console.log('Search response status:', response.status);
-                return response.json();
-            })
-            .then(data => {
-                console.log('Search results:', data);
-                
-                if (data && data.length > 0) {
-                    const result = data[0];
-                    const lat = parseFloat(result.lat);
-                    const lng = parseFloat(result.lon);
-                    
-                    console.log('Location found:', lat, lng, result.display_name);
-                    
-                    // Clear previous markers
-                    modalMap.eachLayer(layer => {
-                        if (layer instanceof L.Marker) {
-                            modalMap.removeLayer(layer);
-                        }
-                    });
-                    
-                    // Center map and add marker
-                    modalMap.setView([lat, lng], 15);
-                    const marker = L.marker([lat, lng]).addTo(modalMap);
-                    marker.bindPopup(`Found: ${result.display_name}`).openPopup();
-                    
-                    // Store selected location
-                    selectedLocation = { lat, lng };
-                    
-                    // Update display
-                    const selectedDiv = document.getElementById('selected-location');
-                    if (selectedDiv) {
-                        selectedDiv.innerHTML = `<strong>Found:</strong> ${result.display_name}`;
-                    }
-                    
-                    // Enable confirm button
-                    const confirmBtn = document.getElementById('confirm-location');
-                    if (confirmBtn) {
-                        confirmBtn.disabled = false;
-                    }
-                    
-                    console.log('Search successful, location set');
-                } else {
-                    console.log('No results found');
-                    alert('Location not found. Please try a different search term or click on the map.');
-                }
-            })
-            .catch(error => {
-                console.error('Search error:', error);
-                alert('Error searching for location. Please check your internet connection and try again.');
-            })
-            .finally(() => {
-                // Restore button state
-                if (searchBtn) {
-                    searchBtn.innerHTML = originalText;
-                    searchBtn.disabled = false;
-                }
-            });
-    }
-
-    function confirmLocation() {
-        if (selectedLocation) {
-            console.log('Location confirmed:', selectedLocation);
-            
-            // Set the hidden form fields properly
-            const latInput = document.getElementById('latitude');
-            const lngInput = document.getElementById('longitude');
-            
-            if (latInput && lngInput) {
-                latInput.value = selectedLocation.lat;
-                lngInput.value = selectedLocation.lng;
-                
-                console.log('Set coordinates in form:', selectedLocation.lat, selectedLocation.lng);
-                
-                // Show coordinates info
-                showCoordinatesInfo(selectedLocation.lat, selectedLocation.lng, 'manual selection');
-                
-                // Close modal
-                const modal = bootstrap.Modal.getInstance(document.getElementById('locationModal'));
-                if (modal) {
-                    modal.hide();
-                }
-                
-                // Update submit button visibility
-                updateSubmitButtonVisibility();
-            } else {
-                console.error('Could not find latitude/longitude inputs');
-            }
-        } else {
-            alert('Please select a location first by searching or clicking on the map.');
-        }
-    }
-    </script>
-
-
+    <!-- Bootstrap JS for Modal -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/static/js/modern-app.js?v=2024061001"></script>
+    <script src="/static/js/test_frontend.js?v=2024061001"></script>
 </body>
 </html> 

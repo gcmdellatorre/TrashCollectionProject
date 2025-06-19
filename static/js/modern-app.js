@@ -994,21 +994,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const file = event.target.files[0];
         if (file) {
             console.log('File selected:', file.name, 'Size:', file.size, 'Type:', file.type);
-            
-            // Show preview
-            const previewContainer = document.getElementById('preview-container');
-            const imagePreview = document.getElementById('image-preview');
-            
-            if (previewContainer && imagePreview) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    imagePreview.src = e.target.result;
-                    previewContainer.classList.remove('hidden');
-                    previewContainer.classList.add('fade-in');
-                };
-                reader.readAsDataURL(file);
-            }
-            
             handlePhotoCapture(file);
         } else {
             console.log('No file selected');
@@ -1732,15 +1717,6 @@ document.addEventListener('DOMContentLoaded', function() {
         if (retakePhotoBtn) {
             retakePhotoBtn.addEventListener('click', function() {
                 resetPhotoCapture();
-            });
-        }
-        
-        // File input change (for upload)
-        if (fileInput) {
-            fileInput.addEventListener('change', function(e) {
-                if (e.target.files && e.target.files[0]) {
-                    handlePhotoCapture(e.target.files[0]);
-                }
             });
         }
         

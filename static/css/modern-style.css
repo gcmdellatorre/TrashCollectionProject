@@ -497,27 +497,50 @@
     border-radius: 0 0 16px 16px;
     display: flex !important;
     visibility: visible !important;
+    opacity: 1 !important;
+    position: relative !important;
+    z-index: 1000 !important;
 }
 
 #locationModal .modal-footer button {
     display: block !important;
     visibility: visible !important;
     opacity: 1 !important;
+    position: relative !important;
+    z-index: 1001 !important;
 }
 
 #confirm-location-btn {
     display: block !important;
     visibility: visible !important;
+    opacity: 1 !important;
+    position: relative !important;
+    z-index: 1001 !important;
 }
 
 #confirm-location-btn:disabled {
     opacity: 0.5 !important;
     cursor: not-allowed !important;
+    display: block !important;
+    visibility: visible !important;
 }
 
 #confirm-location-btn:not(:disabled) {
     opacity: 1 !important;
     cursor: pointer !important;
+    display: block !important;
+    visibility: visible !important;
+}
+
+/* Force modal footer to always be visible */
+#locationModal .modal-footer,
+#locationModal .modal-footer * {
+    display: block !important;
+    visibility: visible !important;
+}
+
+#locationModal .modal-footer {
+    display: flex !important;
 }
 
 /* Modal map container enhancements */

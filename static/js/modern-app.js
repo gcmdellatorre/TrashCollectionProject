@@ -176,7 +176,39 @@ function updateModalLocationDisplay(locationText) {
     }
 }
 
-// Function to enable/disable confirm button
+// Function to ensure modal buttons are always visible and functional
+function ensureModalButtonsVisible() {
+    const modalFooter = document.querySelector('#locationModal .modal-footer');
+    const confirmBtn = document.getElementById('confirm-location-btn');
+    const cancelBtn = document.querySelector('#locationModal button[data-bs-dismiss="modal"]');
+    
+    console.log('Ensuring modal buttons are visible...');
+    
+    if (modalFooter) {
+        modalFooter.style.display = 'flex';
+        modalFooter.style.visibility = 'visible';
+        modalFooter.style.opacity = '1';
+    }
+    
+    if (confirmBtn) {
+        confirmBtn.style.display = 'block';
+        confirmBtn.style.visibility = 'visible';
+        confirmBtn.style.opacity = '1';
+        console.log('Confirm button ensured visible');
+    } else {
+        console.error('Confirm button not found!');
+    }
+    
+    if (cancelBtn) {
+        cancelBtn.style.display = 'block';
+        cancelBtn.style.visibility = 'visible';
+        cancelBtn.style.opacity = '1';
+        console.log('Cancel button ensured visible');
+    } else {
+        console.error('Cancel button not found!');
+    }
+}
+
 function enableConfirmButton() {
     const confirmBtn = document.getElementById('confirm-location-btn');
     if (confirmBtn) {
@@ -185,6 +217,10 @@ function enableConfirmButton() {
         confirmBtn.classList.remove('opacity-50', 'cursor-not-allowed');
         confirmBtn.style.display = 'block'; // Ensure button is visible
         confirmBtn.style.visibility = 'visible';
+        confirmBtn.style.opacity = '1';
+        
+        // Also ensure the modal footer is visible
+        ensureModalButtonsVisible();
     } else {
         console.error('Confirm button not found!');
     }
@@ -251,6 +287,11 @@ window.searchModalMap = function(query) {
                 console.log('Location found, enabling confirm button...');
                 enableConfirmButton();
                 
+                // Ensure buttons are visible after a short delay
+                setTimeout(() => {
+                    ensureModalButtonsVisible();
+                }, 100);
+                
                 // Debug: Check button state after enabling
                 setTimeout(() => {
                     const confirmBtn = document.getElementById('confirm-location-btn');
@@ -267,7 +308,13 @@ window.searchModalMap = function(query) {
                         display: cancelBtn?.style.display,
                         visibility: cancelBtn?.style.visibility
                     });
-                }, 100);
+                    
+                    // If buttons are still not visible, force them to be visible
+                    if (confirmBtn && (confirmBtn.style.display === 'none' || confirmBtn.style.visibility === 'hidden')) {
+                        console.log('Forcing confirm button to be visible');
+                        ensureModalButtonsVisible();
+                    }
+                }, 200);
                 
                 window.showNotification(`Location selected: ${result.display_name}`, 'success');
             } else {
@@ -1109,7 +1156,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             locationStatus.classList.remove('bg-blue-50', 'border-blue-200', 'bg-yellow-50', 'border-yellow-200');
                             locationStatus.classList.add('bg-green-50', 'border-green-200');
                             
-                            // Hide manual location section
+                            // Hide manual location section (no need for manual location)
                             manualLocationSection.classList.add('hidden');
                             
                             // Show success notification
@@ -1126,7 +1173,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             locationStatus.classList.remove('bg-blue-50', 'border-blue-200', 'bg-green-50', 'border-green-200');
                             locationStatus.classList.add('bg-yellow-50', 'border-yellow-200');
                             
-                            // Show manual location section
+                            // Show manual location section with Select Location button
                             manualLocationSection.classList.remove('hidden');
                             manualLocationSection.classList.add('fade-in');
                             
@@ -1140,7 +1187,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         locationStatus.classList.remove('bg-blue-50', 'border-blue-200', 'bg-green-50', 'border-green-200');
                         locationStatus.classList.add('bg-yellow-50', 'border-yellow-200');
                         
-                        // Show manual location section
+                        // Show manual location section with Select Location button
                         manualLocationSection.classList.remove('hidden');
                         manualLocationSection.classList.add('fade-in');
                         

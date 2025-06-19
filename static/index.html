@@ -306,7 +306,7 @@
     <!-- Location Selector Page (now a true page overlay) -->
     <div class="location-selector-page" id="locationSelectorPage">
         <!-- Same Header as Main App -->
-        <nav class="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
+        <nav class="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50 location-selector-header">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="flex justify-between items-center h-16">
                     <div class="flex items-center space-x-3">
@@ -321,9 +321,9 @@
         </nav>
         
         <!-- Page Content -->
-        <div class="flex-1 flex flex-col overflow-hidden">
+        <div class="flex-1 flex flex-col overflow-hidden location-selector-content">
             <!-- Page Header -->
-            <div class="px-4 sm:px-6 py-4 border-b border-gray-200 bg-gray-50">
+            <div class="px-4 sm:px-6 py-4 border-b border-gray-200 bg-gray-50 location-selector-subheader">
                 <div class="max-w-7xl mx-auto">
                     <div class="flex items-center space-x-3">
                         <div class="w-8 h-8 bg-primary-100 rounded-lg flex items-center justify-center">
@@ -338,7 +338,7 @@
             </div>
             
             <!-- Scrollable Content -->
-            <div class="flex-1 overflow-y-auto">
+            <div class="flex-1 overflow-y-auto location-selector-scrollable">
                 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
                     <div class="max-w-2xl mx-auto">
                         <div class="location-selector-search mb-6">
@@ -389,7 +389,7 @@
             </div>
             
             <!-- Sticky Footer -->
-            <div class="border-t border-gray-200 bg-gray-50 px-4 sm:px-6 py-4">
+            <div class="border-t border-gray-200 bg-gray-50 px-4 sm:px-6 py-4 location-selector-footer">
                 <div class="max-w-7xl mx-auto">
                     <div class="flex justify-end space-x-3">
                         <button type="button" class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors text-sm font-medium" onclick="closeLocationSelector()">

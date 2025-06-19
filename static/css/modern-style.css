@@ -1054,20 +1054,50 @@
     display: flex;
 }
 
-.location-selector-page nav {
+/* Header - Fixed at top */
+.location-selector-header {
     flex-shrink: 0;
+    position: sticky;
+    top: 0;
+    z-index: 60;
+    background: white;
 }
 
-.location-selector-page .flex-1 {
+/* Content container */
+.location-selector-content {
     flex: 1;
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    height: calc(100vh - 64px); /* Subtract header height */
 }
 
-.location-selector-page .overflow-y-auto {
+/* Sub-header - Fixed below main header */
+.location-selector-subheader {
+    flex-shrink: 0;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: #f9fafb;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+/* Scrollable Content Area */
+.location-selector-scrollable {
+    flex: 1;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
+    padding-bottom: 0;
+}
+
+/* Footer - Fixed at bottom */
+.location-selector-footer {
+    flex-shrink: 0;
+    position: sticky;
+    bottom: 0;
+    z-index: 50;
+    background: #f9fafb;
+    border-top: 1px solid #e5e7eb;
 }
 
 .location-selector-map {
@@ -1075,20 +1105,25 @@
     overflow: hidden;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
     border: 1px solid #e5e7eb;
-    height: 300px;
-    min-height: 200px;
-    max-height: 350px;
+    height: 400px;
+    min-height: 300px;
+    max-height: 500px;
 }
 
 @media (max-width: 768px) {
-    .location-selector-page .overflow-y-auto {
-        padding-bottom: env(safe-area-inset-bottom);
+    .location-selector-scrollable {
+        padding-bottom: 0;
     }
     
     .location-selector-map {
         height: 300px;
         min-height: 200px;
         max-height: 350px;
+    }
+    
+    /* Ensure footer stays visible on mobile */
+    .location-selector-footer {
+        padding-bottom: max(1rem, env(safe-area-inset-bottom));
     }
 }
 

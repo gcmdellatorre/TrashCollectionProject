@@ -8,6 +8,7 @@ let currentSearchLocation = null;
 let currentSearchRadius = null;
 let searchMarkers = [];
 let searchRadiusCircle = null; // Add this to track the radius circle
+let browserLocation = null; // Store user's browser location
 
 // Global notification system
 window.showNotification = function(message, type = 'info') {
@@ -82,8 +83,17 @@ window.searchMainMap = function(query) {
     
     const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1`;
     
-    fetch(url)
-        .then(response => response.json())
+    fetch(url, {
+        headers: {
+            'User-Agent': 'MamaLand Trash Collection App/1.0'
+        }
+    })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
         .then(data => {
             if (data && data.length > 0) {
                 const result = data[0];
@@ -185,6 +195,48 @@ window.initializeModalMap = function() {
         });
     }
 };
+
+// Function to show a custom confirmation prompt
+function showLocationConfirmation(title, message, onConfirm, onDecline) {
+    const prompt = document.getElementById('location-confirmation-prompt');
+    const titleEl = document.getElementById('confirmation-title');
+    const messageEl = document.getElementById('confirmation-message');
+    const confirmBtn = document.getElementById('confirmation-confirm-btn');
+    const declineBtn = document.getElementById('confirmation-decline-btn');
+
+    if (!prompt || !titleEl || !messageEl || !confirmBtn || !declineBtn) {
+        console.error('Confirmation prompt elements not found!');
+        // Fallback to native confirm
+        if (window.confirm(message)) {
+            onConfirm();
+        } else {
+            onDecline();
+        }
+        return;
+    }
+
+    titleEl.textContent = title;
+    messageEl.textContent = message;
+
+    // Clone and replace buttons to remove old event listeners
+    const newConfirmBtn = confirmBtn.cloneNode(true);
+    confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
+
+    const newDeclineBtn = declineBtn.cloneNode(true);
+    declineBtn.parentNode.replaceChild(newDeclineBtn, declineBtn);
+
+    newConfirmBtn.addEventListener('click', () => {
+        prompt.classList.add('hidden');
+        onConfirm();
+    });
+
+    newDeclineBtn.addEventListener('click', () => {
+        prompt.classList.add('hidden');
+        onDecline();
+    });
+
+    prompt.classList.remove('hidden');
+}
 
 // Show location selector page overlay
 window.showLocationSelector = function() {
@@ -291,8 +343,17 @@ window.searchLocation = function(query) {
     
     const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1`;
     
-    fetch(url)
-        .then(response => response.json())
+    fetch(url, {
+        headers: {
+            'User-Agent': 'MamaLand Trash Collection App/1.0'
+        }
+    })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
         .then(data => {
             if (data && data.length > 0) {
                 const result = data[0];
@@ -613,6 +674,7 @@ document.addEventListener('DOMContentLoaded', function() {
     setupEventListeners();
     setupMobileFeatures();
     setupPhotoCapture(); // Add photo capture setup
+    requestUserLocationOnLoad(); // Ask for user's location
     
     // Initialize map with modern styling
     function initMap() {
@@ -1554,75 +1616,69 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Process photo to extract location
         function processPhotoForLocation(file) {
-            console.log('Processing photo for location extraction:', file.name, file.size);
+            const locationStatusText = document.getElementById('location-status-text');
+            const manualLocationSection = document.getElementById('manual-location-section');
+
+            const setLocation = (lat, lng, source) => {
+                document.getElementById('latitude').value = lat;
+                document.getElementById('longitude').value = lng;
+                
+                const locationStatus = document.getElementById('location-status');
+                locationStatusText.textContent = `Location from ${source}: ${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+                locationStatus.className = 'p-3 rounded-lg border bg-green-50 border-green-200 text-green-700 text-sm flex items-center gap-2';
+                
+                manualLocationSection.classList.add('hidden');
+                window.showNotification(`Location set using ${source}!`, 'success');
+                window.updateSubmitButtonVisibility();
+                showManualDetailsSection();
+            };
+
+            const promptForAlternativeLocation = () => {
+                if (browserLocation) {
+                    showLocationConfirmation(
+                        'Use Current Location?',
+                        'Would you like to use your current device location for this report?',
+                        () => { // onConfirm
+                            setLocation(browserLocation.lat, browserLocation.lng, 'your device');
+                        },
+                        () => { // onDecline
+                            locationStatusText.textContent = 'Please select a location for your report.';
+                            manualLocationSection.classList.remove('hidden');
+                            showLocationSelector();
+                        }
+                    );
+                } else {
+                    locationStatusText.textContent = 'Please select a location for your report.';
+                    manualLocationSection.classList.remove('hidden');
+                    showLocationSelector();
+                }
+            };
             
-            // First, try to extract GPS data from the image
             const reader = new FileReader();
             reader.onload = function(e) {
-                const arrayBuffer = e.target.result;
-                
-                extractCoordinatesFromImage(arrayBuffer)
-                    .then(coordinates => {
-                        console.log('GPS extraction result:', coordinates);
-                        
-                        if (coordinates && coordinates.latitude && coordinates.longitude) {
-                            // GPS found in photo
-                            console.log('GPS coordinates found in photo:', coordinates);
-                            
-                            // Update form fields
-                            document.getElementById('latitude').value = coordinates.latitude;
-                            document.getElementById('longitude').value = coordinates.longitude;
-                            
-                            // Update location status
-                            locationStatusText.textContent = `Location found: ${coordinates.latitude.toFixed(6)}, ${coordinates.longitude.toFixed(6)}`;
-                            locationStatus.classList.remove('bg-blue-50', 'border-blue-200', 'bg-yellow-50', 'border-yellow-200');
-                            locationStatus.classList.add('bg-green-50', 'border-green-200');
-                            
-                            // Hide manual location section (no need for manual location)
-                            manualLocationSection.classList.add('hidden');
-                            
-                            // Show success notification
-                            window.showNotification('Location automatically extracted from photo!', 'success');
-                            
-                            // Show manual details section after photo is processed
-                            showManualDetailsSection();
-                            
-                            // Update submit button visibility
-                            window.updateSubmitButtonVisibility();
-                            
+                extractCoordinatesFromImage(e.target.result)
+                    .then(exifCoords => {
+                        if (exifCoords) {
+                            // GPS found in photo, ask for confirmation
+                            showLocationConfirmation(
+                                'Photo Location Found',
+                                `Your photo's location data says it was taken near ${exifCoords.latitude.toFixed(4)}, ${exifCoords.longitude.toFixed(4)}. Is this where the trash is?`,
+                                () => { // onConfirm
+                                    setLocation(exifCoords.latitude, exifCoords.longitude, 'photo GPS');
+                                },
+                                () => { // onDecline
+                                    promptForAlternativeLocation();
+                                }
+                            );
                         } else {
-                            // No GPS in photo - show manual location option
-                            console.log('No GPS coordinates found in photo - showing manual option');
-                            
-                            locationStatusText.textContent = 'No location data found in photo. Please select location manually.';
-                            locationStatus.classList.remove('bg-blue-50', 'border-blue-200', 'bg-green-50', 'border-green-200');
-                            locationStatus.classList.add('bg-yellow-50', 'border-yellow-200');
-                            
-                            // Show manual location section with Select Location button
-                            manualLocationSection.classList.remove('hidden');
-                            manualLocationSection.classList.add('fade-in');
-                            
-                            // Show manual details section after photo is processed
-                            showManualDetailsSection();
-                            
-                            window.showNotification('No location data found. Please select location manually.', 'warning');
+                            // No GPS in photo, try browser location
+                             promptForAlternativeLocation();
                         }
                     })
                     .catch(error => {
                         console.error('Error processing photo for location:', error);
-                        
-                        locationStatusText.textContent = 'Error processing photo. Please select location manually.';
-                        locationStatus.classList.remove('bg-blue-50', 'border-blue-200', 'bg-green-50', 'border-green-200');
-                        locationStatus.classList.add('bg-yellow-50', 'border-yellow-200');
-                        
-                        // Show manual location section with Select Location button
-                        manualLocationSection.classList.remove('hidden');
-                        manualLocationSection.classList.add('fade-in');
-                        
-                        // Show manual details section after photo is processed
-                        showManualDetailsSection();
-                        
-                        window.showNotification('Error processing photo. Please select location manually.', 'error');
+                        window.showNotification('Error processing photo. Please proceed with manual location selection.', 'error');
+                        promptForAlternativeLocation();
                     });
             };
             reader.readAsArrayBuffer(file);
@@ -1685,6 +1741,28 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Update submit button
             window.updateSubmitButtonVisibility();
+        }
+    }
+
+    // Request user's location on page load
+    function requestUserLocationOnLoad() {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    browserLocation = {
+                        lat: position.coords.latitude,
+                        lng: position.coords.longitude
+                    };
+                    console.log('Browser location obtained:', browserLocation);
+                    window.showNotification('Successfully fetched your current location!', 'success');
+                },
+                (error) => {
+                    console.warn(`Could not get browser location: ${error.message}`);
+                    window.showNotification('Could not get your location. You may need to select it manually.', 'warning');
+                }
+            );
+        } else {
+            console.log('Geolocation is not supported by this browser.');
         }
     }
 }); 

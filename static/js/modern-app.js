@@ -180,16 +180,27 @@ function updateModalLocationDisplay(locationText) {
 function enableConfirmButton() {
     const confirmBtn = document.getElementById('confirm-location-btn');
     if (confirmBtn) {
+        console.log('Enabling confirm button');
         confirmBtn.disabled = false;
         confirmBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+        confirmBtn.style.display = 'block'; // Ensure button is visible
+        confirmBtn.style.visibility = 'visible';
+    } else {
+        console.error('Confirm button not found!');
     }
 }
 
 function disableConfirmButton() {
     const confirmBtn = document.getElementById('confirm-location-btn');
     if (confirmBtn) {
+        console.log('Disabling confirm button');
         confirmBtn.disabled = true;
         confirmBtn.classList.add('opacity-50', 'cursor-not-allowed');
+        // Don't hide the button, just disable it
+        confirmBtn.style.display = 'block';
+        confirmBtn.style.visibility = 'visible';
+    } else {
+        console.error('Confirm button not found!');
     }
 }
 
@@ -237,7 +248,26 @@ window.searchModalMap = function(query) {
                 
                 // Update UI
                 updateModalLocationDisplay(`Found: ${result.display_name}`);
+                console.log('Location found, enabling confirm button...');
                 enableConfirmButton();
+                
+                // Debug: Check button state after enabling
+                setTimeout(() => {
+                    const confirmBtn = document.getElementById('confirm-location-btn');
+                    const cancelBtn = document.querySelector('#locationModal button[data-bs-dismiss="modal"]');
+                    console.log('Confirm button state:', {
+                        exists: !!confirmBtn,
+                        disabled: confirmBtn?.disabled,
+                        display: confirmBtn?.style.display,
+                        visibility: confirmBtn?.style.visibility,
+                        classes: confirmBtn?.className
+                    });
+                    console.log('Cancel button state:', {
+                        exists: !!cancelBtn,
+                        display: cancelBtn?.style.display,
+                        visibility: cancelBtn?.style.visibility
+                    });
+                }, 100);
                 
                 window.showNotification(`Location selected: ${result.display_name}`, 'success');
             } else {
@@ -626,9 +656,64 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Simple coordinate extraction (placeholder)
     function extractCoordinatesFromImage(arrayBuffer) {
-        // This is a placeholder - implement proper EXIF extraction
-        // For now, return null to indicate no coordinates found
-        return null;
+        return new Promise((resolve, reject) => {
+            try {
+                // Convert array buffer to base64 for EXIF extraction
+                const bytes = new Uint8Array(arrayBuffer);
+                let binary = '';
+                for (let i = 0; i < bytes.byteLength; i++) {
+                    binary += String.fromCharCode(bytes[i]);
+                }
+                const base64 = btoa(binary);
+                
+                // Try to extract EXIF data using a simple approach
+                // Look for GPS coordinates in the image data
+                const gpsLatitudeMatch = base64.match(/GPSLatitude[^}]*?([0-9]+\.[0-9]+)/i);
+                const gpsLongitudeMatch = base64.match(/GPSLongitude[^}]*?([0-9]+\.[0-9]+)/i);
+                
+                if (gpsLatitudeMatch && gpsLongitudeMatch) {
+                    const lat = parseFloat(gpsLatitudeMatch[1]);
+                    const lng = parseFloat(gpsLongitudeMatch[1]);
+                    
+                    if (!isNaN(lat) && !isNaN(lng)) {
+                        console.log('GPS coordinates found in image:', { lat, lng });
+                        resolve({ latitude: lat, longitude: lng });
+                        return;
+                    }
+                }
+                
+                // If no GPS found, try to use the backend API
+                console.log('No GPS found in image, trying backend extraction...');
+                
+                // Create a blob and send to backend for EXIF extraction
+                const blob = new Blob([arrayBuffer], { type: 'image/jpeg' });
+                const formData = new FormData();
+                formData.append('file', blob, 'photo.jpg');
+                
+                fetch('/api/check-coordinates', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Backend coordinate extraction result:', data);
+                    if (data.latitude && data.longitude) {
+                        resolve({ latitude: data.latitude, longitude: data.longitude });
+                    } else {
+                        console.log('No coordinates found by backend either');
+                        resolve(null);
+                    }
+                })
+                .catch(error => {
+                    console.error('Backend coordinate extraction failed:', error);
+                    resolve(null);
+                });
+                
+            } catch (error) {
+                console.error('Error extracting coordinates:', error);
+                resolve(null);
+            }
+        });
     }
     
     // Modern form submission
@@ -1000,36 +1085,58 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Process photo to extract location
         function processPhotoForLocation(file) {
+            console.log('Processing photo for location extraction:', file.name, file.size);
+            
             // First, try to extract GPS data from the image
-            extractCoordinatesFromImage(file)
-                .then(coordinates => {
-                    if (coordinates && coordinates.latitude && coordinates.longitude) {
-                        // GPS found in photo
-                        console.log('GPS coordinates found in photo:', coordinates);
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const arrayBuffer = e.target.result;
+                
+                extractCoordinatesFromImage(arrayBuffer)
+                    .then(coordinates => {
+                        console.log('GPS extraction result:', coordinates);
                         
-                        // Update form fields
-                        document.getElementById('latitude').value = coordinates.latitude;
-                        document.getElementById('longitude').value = coordinates.longitude;
+                        if (coordinates && coordinates.latitude && coordinates.longitude) {
+                            // GPS found in photo
+                            console.log('GPS coordinates found in photo:', coordinates);
+                            
+                            // Update form fields
+                            document.getElementById('latitude').value = coordinates.latitude;
+                            document.getElementById('longitude').value = coordinates.longitude;
+                            
+                            // Update location status
+                            locationStatusText.textContent = `Location found: ${coordinates.latitude.toFixed(6)}, ${coordinates.longitude.toFixed(6)}`;
+                            locationStatus.classList.remove('bg-blue-50', 'border-blue-200', 'bg-yellow-50', 'border-yellow-200');
+                            locationStatus.classList.add('bg-green-50', 'border-green-200');
+                            
+                            // Hide manual location section
+                            manualLocationSection.classList.add('hidden');
+                            
+                            // Show success notification
+                            window.showNotification('Location automatically extracted from photo!', 'success');
+                            
+                            // Update submit button visibility
+                            window.updateSubmitButtonVisibility();
+                            
+                        } else {
+                            // No GPS in photo - show manual location option
+                            console.log('No GPS coordinates found in photo - showing manual option');
+                            
+                            locationStatusText.textContent = 'No location data found in photo. Please select location manually.';
+                            locationStatus.classList.remove('bg-blue-50', 'border-blue-200', 'bg-green-50', 'border-green-200');
+                            locationStatus.classList.add('bg-yellow-50', 'border-yellow-200');
+                            
+                            // Show manual location section
+                            manualLocationSection.classList.remove('hidden');
+                            manualLocationSection.classList.add('fade-in');
+                            
+                            window.showNotification('No location data found. Please select location manually.', 'warning');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error processing photo for location:', error);
                         
-                        // Update location status
-                        locationStatusText.textContent = `Location found: ${coordinates.latitude.toFixed(6)}, ${coordinates.longitude.toFixed(6)}`;
-                        locationStatus.classList.remove('bg-blue-50', 'border-blue-200', 'bg-yellow-50', 'border-yellow-200');
-                        locationStatus.classList.add('bg-green-50', 'border-green-200');
-                        
-                        // Hide manual location section
-                        manualLocationSection.classList.add('hidden');
-                        
-                        // Show success notification
-                        window.showNotification('Location automatically extracted from photo!', 'success');
-                        
-                        // Update submit button visibility
-                        window.updateSubmitButtonVisibility();
-                        
-                    } else {
-                        // No GPS in photo - show manual location option
-                        console.log('No GPS coordinates found in photo');
-                        
-                        locationStatusText.textContent = 'No location data found in photo';
+                        locationStatusText.textContent = 'Error processing photo. Please select location manually.';
                         locationStatus.classList.remove('bg-blue-50', 'border-blue-200', 'bg-green-50', 'border-green-200');
                         locationStatus.classList.add('bg-yellow-50', 'border-yellow-200');
                         
@@ -1037,22 +1144,10 @@ document.addEventListener('DOMContentLoaded', function() {
                         manualLocationSection.classList.remove('hidden');
                         manualLocationSection.classList.add('fade-in');
                         
-                        window.showNotification('No location data found. Please select location manually.', 'warning');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error processing photo for location:', error);
-                    
-                    locationStatusText.textContent = 'Error processing photo. Please select location manually.';
-                    locationStatus.classList.remove('bg-blue-50', 'border-blue-200', 'bg-green-50', 'border-green-200');
-                    locationStatus.classList.add('bg-yellow-50', 'border-yellow-200');
-                    
-                    // Show manual location section
-                    manualLocationSection.classList.remove('hidden');
-                    manualLocationSection.classList.add('fade-in');
-                    
-                    window.showNotification('Error processing photo. Please select location manually.', 'error');
-                });
+                        window.showNotification('Error processing photo. Please select location manually.', 'error');
+                    });
+            };
+            reader.readAsArrayBuffer(file);
         }
         
         // Reset photo capture

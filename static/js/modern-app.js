@@ -1510,7 +1510,20 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Handle photo capture and processing
     function handlePhotoCapture(file) {
-        console.log('handlePhotoCapture called with file:', file.name);
+        console.log('handlePhotoCapture called with file:', file.name, 'size:', file.size);
+
+        // Attach file to the form's file input
+        const fileInput = document.getElementById('file');
+        if (fileInput) {
+            try {
+                const dataTransfer = new DataTransfer();
+                dataTransfer.items.add(file);
+                fileInput.files = dataTransfer.files;
+                console.log('File attached to form input:', fileInput.files[0].name, 'size:', fileInput.files[0].size);
+            } catch (err) {
+                console.error('Error attaching file to input:', err);
+            }
+        }
         
         // Hide manual details section initially
         const fillFormCheck = document.getElementById('fill-form-check');

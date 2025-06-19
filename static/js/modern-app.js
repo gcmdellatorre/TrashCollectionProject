@@ -629,6 +629,42 @@ window.searchModalMap = function(query) {
         });
 };
 
+// Global test function to manually show manual details form
+window.testShowManualDetails = function() {
+    console.log('Testing manual details form display...');
+    const fillFormCheck = document.getElementById('fill-form-check');
+    const detailsForm = document.getElementById('details-form');
+    const manualDetailsToggle = document.getElementById('manual-details-toggle');
+    const submitBtn = document.getElementById('submit-btn');
+    
+    console.log('Elements found:', { 
+        fillFormCheck: !!fillFormCheck, 
+        detailsForm: !!detailsForm, 
+        manualDetailsToggle: !!manualDetailsToggle,
+        submitBtn: !!submitBtn 
+    });
+    
+    if (manualDetailsToggle) {
+        manualDetailsToggle.classList.remove('hidden');
+        console.log('✓ Manual details toggle shown');
+    }
+    
+    if (detailsForm) {
+        detailsForm.classList.remove('hidden');
+        console.log('✓ Details form shown');
+    }
+    
+    if (fillFormCheck) {
+        fillFormCheck.checked = true;
+        console.log('✓ Checkbox checked');
+    }
+    
+    if (submitBtn) {
+        submitBtn.classList.remove('hidden');
+        console.log('✓ Submit button shown');
+    }
+};
+
 document.addEventListener('DOMContentLoaded', function() {
     console.log('=== MODERN APP INITIALIZATION ===');
     
@@ -1539,7 +1575,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Handle photo capture and processing
         function handlePhotoCapture(file) {
-            console.log('Processing photo:', file.name);
+            console.log('handlePhotoCapture called with file:', file.name);
             
             // Hide manual details section initially
             const fillFormCheck = document.getElementById('fill-form-check');
@@ -1581,6 +1617,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Process photo to extract location
         function processPhotoForLocation(file) {
+            console.log('processPhotoForLocation called with file:', file.name);
             const locationStatusText = document.getElementById('location-status-text');
             const manualLocationSection = document.getElementById('manual-location-section');
 
@@ -1595,9 +1632,18 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 manualLocationSection.classList.add('hidden');
                 window.showNotification(`Location set using ${source}!`, 'success');
-                window.updateSubmitButtonVisibility();
+                
                 console.log('About to call showManualDetailsSection');
-                showManualDetailsSection();
+                try {
+                    showManualDetailsSection();
+                } catch (error) {
+                    console.error('Error in showManualDetailsSection:', error);
+                }
+                
+                // Update submit button visibility after showing manual details
+                setTimeout(() => {
+                    window.updateSubmitButtonVisibility();
+                }, 500);
             };
 
             const promptForAlternativeLocation = () => {

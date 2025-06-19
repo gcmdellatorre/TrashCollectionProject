@@ -851,6 +851,16 @@
     #locationModal .modal-dialog {
         margin: 0.5rem;
         max-width: calc(100% - 1rem);
+        max-height: 90vh;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    #locationModal .modal-content {
+        max-height: 90vh;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
     }
     
     #modal-map-container {
@@ -861,10 +871,14 @@
     
     #locationModal .modal-body {
         padding: 0.75rem;
+        flex: 1;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
     }
     
     #locationModal .modal-header {
         padding: 0.75rem 1rem;
+        flex-shrink: 0;
     }
     
     #locationModal .modal-header h3 {
@@ -875,9 +889,9 @@
         font-size: 0.75rem;
     }
     
-    /* Mobile-specific button fixes */
+    /* Mobile-specific button fixes - positioned above keyboard */
     #locationModal .modal-footer {
-        position: fixed !important;
+        position: sticky !important;
         bottom: 0 !important;
         left: 0 !important;
         right: 0 !important;
@@ -891,6 +905,8 @@
         min-height: 70px !important;
         align-items: center !important;
         justify-content: space-between !important;
+        flex-shrink: 0;
+        margin-top: auto;
     }
     
     #locationModal .modal-footer button {
@@ -925,7 +941,43 @@
         pointer-events: auto !important;
     }
     
+    /* Ensure modal content is scrollable */
     #locationModal .modal-content {
-        padding-bottom: 80px !important;
+        padding-bottom: 0 !important;
+        max-height: 90vh !important;
+        overflow: hidden !important;
+    }
+    
+    /* Add safe area padding for devices with notches */
+    #locationModal .modal-footer {
+        padding-bottom: max(1rem, env(safe-area-inset-bottom)) !important;
+    }
+}
+
+/* Tablet responsiveness */
+@media (min-width: 769px) and (max-width: 1024px) {
+    #locationModal .modal-dialog {
+        max-width: 700px;
+        margin: 2rem auto;
+    }
+    
+    #modal-map-container {
+        height: 350px !important;
+        min-height: 300px !important;
+        max-height: 450px !important;
+    }
+}
+
+/* Desktop responsiveness */
+@media (min-width: 1025px) {
+    #locationModal .modal-dialog {
+        max-width: 900px;
+        margin: 3rem auto;
+    }
+    
+    #modal-map-container {
+        height: 400px !important;
+        min-height: 350px !important;
+        max-height: 500px !important;
     }
 } 

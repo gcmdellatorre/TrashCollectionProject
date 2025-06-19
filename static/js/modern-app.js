@@ -213,17 +213,21 @@ function ensureModalButtonsVisible() {
         modalFooter.style.display = 'flex';
         modalFooter.style.visibility = 'visible';
         modalFooter.style.opacity = '1';
-        modalFooter.style.position = 'relative';
         modalFooter.style.zIndex = '1003';
         modalFooter.style.pointerEvents = 'auto';
         
-        // On mobile, make it fixed at bottom
+        // On mobile, use sticky positioning to stay above keyboard
         if (window.innerWidth <= 768) {
-            modalFooter.style.position = 'fixed';
+            modalFooter.style.position = 'sticky';
             modalFooter.style.bottom = '0';
             modalFooter.style.left = '0';
             modalFooter.style.right = '0';
             modalFooter.style.zIndex = '9999';
+            modalFooter.style.flexShrink = '0';
+            modalFooter.style.marginTop = 'auto';
+            modalFooter.style.paddingBottom = 'max(1rem, env(safe-area-inset-bottom))';
+        } else {
+            modalFooter.style.position = 'relative';
         }
         
         console.log('Modal footer styles applied');
@@ -387,12 +391,23 @@ window.searchModalMap = function(query) {
                     // On mobile, ensure the footer is at the bottom
                     if (window.innerWidth <= 768) {
                         if (modalFooter) {
-                            modalFooter.style.position = 'fixed';
+                            modalFooter.style.position = 'sticky';
                             modalFooter.style.bottom = '0';
                             modalFooter.style.left = '0';
                             modalFooter.style.right = '0';
                             modalFooter.style.zIndex = '9999';
-                            console.log('Mobile footer positioned at bottom');
+                            modalFooter.style.flexShrink = '0';
+                            modalFooter.style.marginTop = 'auto';
+                            console.log('Mobile footer positioned sticky at bottom');
+                            
+                            // Ensure modal body is scrollable
+                            const modalBody = document.querySelector('#locationModal .modal-body');
+                            if (modalBody) {
+                                modalBody.style.flex = '1';
+                                modalBody.style.overflowY = 'auto';
+                                modalBody.style.webkitOverflowScrolling = 'touch';
+                                console.log('Modal body made scrollable');
+                            }
                         }
                     }
                 }, 200);
@@ -1056,9 +1071,25 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Ensure modal is properly sized
             const modalDialog = locationModal.querySelector('.modal-dialog');
+            const modalContent = locationModal.querySelector('.modal-content');
+            const modalBody = locationModal.querySelector('.modal-body');
+            
             if (modalDialog) {
                 modalDialog.style.margin = '1rem auto';
                 modalDialog.style.maxHeight = '90vh';
+            }
+            
+            if (modalContent) {
+                modalContent.style.maxHeight = '90vh';
+                modalContent.style.display = 'flex';
+                modalContent.style.flexDirection = 'column';
+                modalContent.style.overflow = 'hidden';
+            }
+            
+            if (modalBody) {
+                modalBody.style.flex = '1';
+                modalBody.style.overflowY = 'auto';
+                modalBody.style.webkitOverflowScrolling = 'touch';
             }
             
             // Initialize map after a short delay to ensure DOM is ready
@@ -1089,6 +1120,31 @@ document.addEventListener('DOMContentLoaded', function() {
             setTimeout(() => {
                 ensureModalButtonsVisible();
             }, 300);
+            
+            // Handle mobile keyboard appearance
+            if (window.innerWidth <= 768) {
+                // Listen for viewport changes (keyboard appearance)
+                const handleViewportChange = () => {
+                    console.log('Viewport changed, adjusting modal');
+                    const modalFooter = locationModal.querySelector('.modal-footer');
+                    if (modalFooter) {
+                        // Ensure footer stays visible above keyboard
+                        modalFooter.style.position = 'sticky';
+                        modalFooter.style.bottom = '0';
+                        modalFooter.style.zIndex = '9999';
+                    }
+                };
+                
+                // Use ResizeObserver to detect viewport changes
+                if (window.ResizeObserver) {
+                    const resizeObserver = new ResizeObserver(handleViewportChange);
+                    resizeObserver.observe(document.body);
+                } else {
+                    // Fallback for older browsers
+                    window.addEventListener('resize', handleViewportChange);
+                    window.addEventListener('orientationchange', handleViewportChange);
+                }
+            }
         });
         
         locationModal.addEventListener('hidden.bs.modal', function() {

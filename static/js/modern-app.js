@@ -1585,6 +1585,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const manualLocationSection = document.getElementById('manual-location-section');
 
             const setLocation = (lat, lng, source) => {
+                console.log('setLocation called with:', { lat, lng, source });
                 document.getElementById('latitude').value = lat;
                 document.getElementById('longitude').value = lng;
                 
@@ -1595,6 +1596,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 manualLocationSection.classList.add('hidden');
                 window.showNotification(`Location set using ${source}!`, 'success');
                 window.updateSubmitButtonVisibility();
+                console.log('About to call showManualDetailsSection');
                 showManualDetailsSection();
             };
 
@@ -1651,21 +1653,42 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Function to show manual details section
         function showManualDetailsSection() {
+            console.log('showManualDetailsSection called');
             const fillFormCheck = document.getElementById('fill-form-check');
             const detailsForm = document.getElementById('details-form');
             const manualDetailsToggle = document.getElementById('manual-details-toggle');
             
+            console.log('Elements found:', { fillFormCheck, detailsForm, manualDetailsToggle });
+            
             // Add a small delay for smoother transition
             setTimeout(() => {
                 if (manualDetailsToggle) {
+                    console.log('Showing manual details toggle');
                     manualDetailsToggle.classList.remove('hidden');
                     manualDetailsToggle.classList.add('fade-in');
+                } else {
+                    console.log('manualDetailsToggle not found');
+                }
+                
+                // Automatically show the details form
+                if (detailsForm) {
+                    console.log('Automatically showing details form');
+                    detailsForm.classList.remove('hidden');
+                    detailsForm.classList.add('fade-in');
+                    
+                    // Also show the submit button
+                    const submitBtn = document.getElementById('submit-btn');
+                    if (submitBtn) {
+                        submitBtn.classList.remove('hidden');
+                    }
                 }
                 
                 // Add event listener for checkbox if not already added
                 if (fillFormCheck && !fillFormCheck.hasAttribute('data-listener-added')) {
                     fillFormCheck.setAttribute('data-listener-added', 'true');
+                    fillFormCheck.checked = true; // Auto-check the checkbox
                     fillFormCheck.addEventListener('change', function() {
+                        console.log('Checkbox changed:', this.checked);
                         if (this.checked) {
                             detailsForm.classList.remove('hidden');
                             detailsForm.classList.add('fade-in');
@@ -1720,6 +1743,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 function(position) {
                     console.log('Device location obtained:', position.coords);
                     // Store for later use
+                    browserLocation = {
+                        lat: position.coords.latitude,
+                        lng: position.coords.longitude
+                    };
                     window.deviceLocation = {
                         latitude: position.coords.latitude,
                         longitude: position.coords.longitude

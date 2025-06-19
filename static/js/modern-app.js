@@ -69,7 +69,7 @@ window.updateSubmitButtonVisibility = function() {
 
 // Global functions accessible from HTML
 window.searchMainMap = function() {
-    const query = document.getElementById('main-map-search-input').value;
+    const query = document.getElementById('main-map-search').value;
     if (!query) return;
 
     const searchUrl = `/api/search-location?q=${encodeURIComponent(query)}`;
@@ -307,7 +307,7 @@ function initializeLocationMap() {
 
 // Search location in the page overlay
 window.searchLocation = function() {
-    const query = document.getElementById('location-search-input').value;
+    const query = document.getElementById('location-search').value;
     if (!query) {
         console.log("Search query is empty.");
         return;
@@ -658,23 +658,18 @@ document.addEventListener('DOMContentLoaded', function() {
         fetch('/api/trash-data')
             .then(response => response.json())
             .then(data => {
-                // Clear existing markers
-                map.eachLayer(layer => {
-                    if (layer instanceof L.Marker) {
-                        map.removeLayer(layer);
-                    }
-                });
+                // Handle the new API response format
+                const reports = data.data || data; // Support both new format (data.data) and old format (data)
                 
-                const validEntries = data.filter(point => point.latitude && point.longitude);
-                
-                if (validEntries.length > 0) {
-                    validEntries.forEach(point => {
-                        addModernMarker(point);
-                    });
-                    console.log(`Loaded ${validEntries.length} trash data points`);
-                } else {
-                    console.log('No valid data points with coordinates found');
+                if (!Array.isArray(reports)) {
+                    console.error('Invalid data format received:', data);
+                    return;
                 }
+                
+                reports.forEach(report => {
+                    addModernMarker(report);
+                });
+                console.log(`Loaded ${reports.length} trash data points`);
             })
             .catch(error => {
                 console.error('Error loading map data:', error);
@@ -1711,21 +1706,35 @@ document.addEventListener('DOMContentLoaded', function() {
     function requestUserLocationOnLoad() {
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
-                (position) => {
-                    browserLocation = {
-                        lat: position.coords.latitude,
-                        lng: position.coords.longitude
+                function(position) {
+                    console.log('Device location obtained:', position.coords);
+                    // Store for later use
+                    window.deviceLocation = {
+                        latitude: position.coords.latitude,
+                        longitude: position.coords.longitude
                     };
-                    console.log('Browser location obtained:', browserLocation);
-                    window.showNotification('Successfully fetched your current location!', 'success');
                 },
-                (error) => {
-                    console.warn(`Could not get browser location: ${error.message}`);
-                    window.showNotification('Could not get your location. You may need to select it manually.', 'warning');
+                function(error) {
+                    if (error.code === error.PERMISSION_DENIED) {
+                        console.log('Location permission denied by user');
+                    } else if (error.code === error.POSITION_UNAVAILABLE) {
+                        console.log('Location information unavailable');
+                    } else if (error.code === error.TIMEOUT) {
+                        console.log('Location request timed out');
+                    } else if (error.message && error.message.includes('secure origins')) {
+                        console.log('Geolocation requires HTTPS or localhost. Using http://0.0.0.0:8000 may cause this issue.');
+                    } else {
+                        console.log('Could not get browser location:', error.message);
+                    }
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                    maximumAge: 300000 // 5 minutes
                 }
             );
         } else {
-            console.log('Geolocation is not supported by this browser.');
+            console.log('Geolocation not supported by this browser');
         }
     }
 }); 

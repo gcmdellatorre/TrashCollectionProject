@@ -477,18 +477,29 @@
 /* Location modal specific enhancements */
 #locationModal .modal-dialog {
     max-width: 800px;
+    margin: 1rem auto;
 }
 
 #locationModal .modal-content {
     background: white;
     border-radius: 16px;
     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
 }
 
 #locationModal .modal-header {
     background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
     border-bottom: 1px solid #e2e8f0;
     border-radius: 16px 16px 0 0;
+    flex-shrink: 0;
+}
+
+#locationModal .modal-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1rem;
 }
 
 #locationModal .modal-footer {
@@ -500,14 +511,36 @@
     opacity: 1 !important;
     position: relative !important;
     z-index: 1000 !important;
+    flex-shrink: 0;
+    padding: 1rem 1.5rem;
 }
 
+/* Modal map container enhancements */
+#modal-map-container {
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    border: 2px solid #e5e7eb;
+    height: 300px !important;
+    min-height: 250px !important;
+    max-height: 400px !important;
+}
+
+#modal-map-container:hover {
+    border-color: #0ea5e9;
+    transition: border-color 0.2s ease;
+}
+
+/* Ensure modal footer buttons are always visible */
 #locationModal .modal-footer button {
     display: block !important;
     visibility: visible !important;
     opacity: 1 !important;
     position: relative !important;
     z-index: 1001 !important;
+    min-height: 44px;
+    font-size: 0.875rem;
+    font-weight: 500;
 }
 
 #confirm-location-btn {
@@ -543,17 +576,74 @@
     display: flex !important;
 }
 
-/* Modal map container enhancements */
-#modal-map-container {
-    border-radius: 12px;
-    overflow: hidden;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-    border: 2px solid #e5e7eb;
+/* Mobile responsiveness for modal */
+@media (max-width: 768px) {
+    #locationModal .modal-dialog {
+        margin: 0.5rem;
+        max-width: calc(100% - 1rem);
+    }
+    
+    #modal-map-container {
+        height: 250px !important;
+        min-height: 200px !important;
+        max-height: 300px !important;
+    }
+    
+    #locationModal .modal-body {
+        padding: 0.75rem;
+    }
+    
+    #locationModal .modal-footer {
+        padding: 0.75rem 1rem;
+        flex-direction: row;
+        gap: 0.5rem;
+    }
+    
+    #locationModal .modal-footer button {
+        flex: 1;
+        min-height: 48px;
+        font-size: 0.875rem;
+    }
+    
+    #locationModal .modal-header {
+        padding: 0.75rem 1rem;
+    }
+    
+    #locationModal .modal-header h3 {
+        font-size: 1rem;
+    }
+    
+    #locationModal .modal-header p {
+        font-size: 0.75rem;
+    }
 }
 
-#modal-map-container:hover {
-    border-color: #0ea5e9;
-    transition: border-color 0.2s ease;
+/* Tablet responsiveness */
+@media (min-width: 769px) and (max-width: 1024px) {
+    #locationModal .modal-dialog {
+        max-width: 700px;
+        margin: 2rem auto;
+    }
+    
+    #modal-map-container {
+        height: 350px !important;
+        min-height: 300px !important;
+        max-height: 450px !important;
+    }
+}
+
+/* Desktop responsiveness */
+@media (min-width: 1025px) {
+    #locationModal .modal-dialog {
+        max-width: 900px;
+        margin: 3rem auto;
+    }
+    
+    #modal-map-container {
+        height: 400px !important;
+        min-height: 350px !important;
+        max-height: 500px !important;
+    }
 }
 
 /* Selected location display animations */
@@ -618,32 +708,6 @@
 @keyframes spin {
     from { transform: rotate(0deg); }
     to { transform: rotate(360deg); }
-}
-
-/* Mobile responsiveness for modal */
-@media (max-width: 768px) {
-    #locationModal .modal-dialog {
-        margin: 1rem;
-        max-width: calc(100% - 2rem);
-    }
-    
-    #modal-map-container {
-        height: 300px !important;
-    }
-    
-    #locationModal .modal-body {
-        padding: 1rem;
-    }
-    
-    #locationModal .modal-footer {
-        padding: 1rem;
-        flex-direction: column;
-        gap: 0.5rem;
-    }
-    
-    #locationModal .modal-footer button {
-        width: 100%;
-    }
 }
 
 /* Ensure modal is hidden by default */

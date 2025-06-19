@@ -306,28 +306,28 @@
 
     <!-- Location Modal -->
     <div class="modal fade" id="locationModal" tabindex="-1" aria-labelledby="locationModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content bg-white rounded-xl shadow-lg border border-gray-200">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content bg-white rounded-xl shadow-lg border border-gray-200 max-h-[90vh] flex flex-col">
                 <!-- Modern Header -->
-                <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
-                    <div class="flex items-center space-x-3">
-                        <div class="w-8 h-8 bg-primary-100 rounded-lg flex items-center justify-center">
-                            <i class="bi bi-geo-alt text-primary-600"></i>
+                <div class="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200 flex justify-between items-center flex-shrink-0">
+                    <div class="flex items-center space-x-2 sm:space-x-3">
+                        <div class="w-6 h-6 sm:w-8 sm:h-8 bg-primary-100 rounded-lg flex items-center justify-center">
+                            <i class="bi bi-geo-alt text-primary-600 text-sm sm:text-base"></i>
                         </div>
                         <div>
-                            <h3 class="text-lg font-semibold text-gray-900">Select Your Location</h3>
-                            <p class="text-sm text-gray-500">Search for a location or click on the map</p>
+                            <h3 class="text-base sm:text-lg font-semibold text-gray-900">Select Your Location</h3>
+                            <p class="text-xs sm:text-sm text-gray-500">Search for a location or click on the map</p>
                         </div>
                     </div>
-                    <button type="button" class="text-gray-400 hover:text-gray-600 transition-colors" data-bs-dismiss="modal" aria-label="Close">
-                        <i class="bi bi-x-lg text-xl"></i>
+                    <button type="button" class="text-gray-400 hover:text-gray-600 transition-colors p-1" data-bs-dismiss="modal" aria-label="Close">
+                        <i class="bi bi-x-lg text-lg sm:text-xl"></i>
                     </button>
                 </div>
                 
-                <!-- Modern Body -->
-                <div class="p-6">
+                <!-- Modern Body - Scrollable -->
+                <div class="p-4 sm:p-6 flex-1 overflow-y-auto">
                     <!-- Search Section -->
-                    <div class="mb-6">
+                    <div class="mb-4 sm:mb-6">
                         <label for="location-search" class="block text-sm font-medium text-gray-700 mb-2">
                             <i class="bi bi-search mr-1"></i>
                             Search Location
@@ -335,15 +335,15 @@
                         <div class="flex space-x-2">
                             <input type="text" 
                                    id="location-search" 
-                                   class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500" 
+                                   class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-sm" 
                                    placeholder="e.g., 'Central Park, New York', 'Times Square', '123 Main St'"
                                    onkeypress="if(event.key==='Enter') searchModalMap(this.value)">
                             <button type="button" 
                                     id="search-btn" 
-                                    class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors"
+                                    class="px-3 sm:px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors text-sm"
                                     onclick="searchModalMap(document.getElementById('location-search').value)">
                                 <i class="bi bi-search mr-1"></i>
-                                Search
+                                <span class="hidden sm:inline">Search</span>
                             </button>
                         </div>
                         <p class="text-xs text-gray-500 mt-2">
@@ -352,13 +352,13 @@
                         </p>
                     </div>
                     
-                    <!-- Map Container -->
-                    <div class="mb-6">
+                    <!-- Map Container - Responsive Height -->
+                    <div class="mb-4 sm:mb-6">
                         <label class="block text-sm font-medium text-gray-700 mb-2">
                             <i class="bi bi-map mr-1"></i>
                             Interactive Map
                         </label>
-                        <div id="modal-map-container" class="h-80 w-full rounded-lg border border-gray-200 overflow-hidden"></div>
+                        <div id="modal-map-container" class="w-full rounded-lg border border-gray-200 overflow-hidden" style="height: 300px; min-height: 250px; max-height: 400px;"></div>
                         <p class="text-xs text-gray-500 mt-2">
                             <i class="bi bi-mouse mr-1"></i>
                             Click anywhere on the map to select a location
@@ -366,7 +366,7 @@
                     </div>
                     
                     <!-- Selected Location Display -->
-                    <div id="selected-location-display" class="hidden p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                    <div id="selected-location-display" class="hidden p-3 sm:p-4 bg-blue-50 border border-blue-200 rounded-lg mb-4">
                         <div class="flex items-center">
                             <i class="bi bi-check-circle text-blue-600 mr-2"></i>
                             <span id="selected-location-text" class="text-sm text-blue-700">Location selected</span>
@@ -374,17 +374,17 @@
                     </div>
                 </div>
                 
-                <!-- Modern Footer -->
-                <div class="px-6 py-4 border-t border-gray-200 flex justify-end space-x-3">
+                <!-- Modern Footer - Always Visible -->
+                <div class="px-4 sm:px-6 py-3 sm:py-4 border-t border-gray-200 flex justify-end space-x-2 sm:space-x-3 flex-shrink-0 bg-gray-50">
                     <button type="button" 
-                            class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors" 
+                            class="px-3 sm:px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors text-sm font-medium" 
                             data-bs-dismiss="modal">
                         <i class="bi bi-x mr-1"></i>
                         Cancel
                     </button>
                     <button type="button" 
                             id="confirm-location-btn"
-                            class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            class="px-3 sm:px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
                             onclick="confirmLocation()"
                             disabled>
                         <i class="bi bi-check mr-1"></i>

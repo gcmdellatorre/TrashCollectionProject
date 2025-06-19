@@ -133,6 +133,19 @@ window.searchMainMap = function(query) {
 // Global function to initialize modal map
 window.initializeModalMap = function() {
     if (!modalMap) {
+        // Get the modal map container
+        const mapContainer = document.getElementById('modal-map-container');
+        if (!mapContainer) {
+            console.error('Modal map container not found');
+            return;
+        }
+        
+        // Ensure the container has proper dimensions
+        mapContainer.style.height = '300px';
+        mapContainer.style.minHeight = '250px';
+        mapContainer.style.maxHeight = '400px';
+        
+        // Initialize the map
         modalMap = L.map('modal-map-container').setView([0, 0], 2);
         
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -160,6 +173,15 @@ window.initializeModalMap = function() {
             // Update UI
             updateModalLocationDisplay(`Manual selection: ${lat.toFixed(6)}, ${lng.toFixed(6)}`);
             enableConfirmButton();
+        });
+        
+        // Ensure the map doesn't interfere with modal scrolling
+        modalMap.on('load', function() {
+            console.log('Modal map loaded successfully');
+            // Force a resize to ensure proper rendering
+            setTimeout(() => {
+                modalMap.invalidateSize();
+            }, 100);
         });
     }
 };
@@ -972,7 +994,26 @@ document.addEventListener('DOMContentLoaded', function() {
         
         locationModal.addEventListener('shown.bs.modal', function() {
             console.log('Modal shown event triggered');
-            setTimeout(window.initializeModalMap, 100);
+            
+            // Ensure modal is properly sized
+            const modalDialog = locationModal.querySelector('.modal-dialog');
+            if (modalDialog) {
+                modalDialog.style.margin = '1rem auto';
+                modalDialog.style.maxHeight = '90vh';
+            }
+            
+            // Initialize map after a short delay to ensure DOM is ready
+            setTimeout(() => {
+                window.initializeModalMap();
+                
+                // Force map resize after initialization
+                if (modalMap) {
+                    setTimeout(() => {
+                        modalMap.invalidateSize();
+                    }, 200);
+                }
+            }, 100);
+            
             // Reset modal state
             selectedLocation = null;
             disableConfirmButton();
@@ -984,6 +1025,11 @@ document.addEventListener('DOMContentLoaded', function() {
             if (searchInput) {
                 searchInput.value = '';
             }
+            
+            // Ensure buttons are visible
+            setTimeout(() => {
+                ensureModalButtonsVisible();
+            }, 300);
         });
         
         locationModal.addEventListener('hidden.bs.modal', function() {

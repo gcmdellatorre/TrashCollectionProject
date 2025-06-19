@@ -50,12 +50,14 @@ window.updateSubmitButtonVisibility = function() {
     const submitBtn = document.getElementById('submit-btn');
     const fileInput = document.getElementById('file');
     const latInput = document.getElementById('latitude');
+    const photoPreviewContainer = document.getElementById('photo-preview-container');
     
     if (submitBtn && fileInput && latInput) {
         const hasFile = fileInput.files.length > 0;
         const hasCoordinates = latInput.value && latInput.value.trim() !== '';
+        const hasPhotoPreview = photoPreviewContainer && !photoPreviewContainer.classList.contains('hidden');
         
-        if (hasFile && hasCoordinates) {
+        if ((hasFile || hasPhotoPreview) && hasCoordinates) {
             submitBtn.classList.remove('hidden');
             submitBtn.classList.add('fade-in');
         } else {
@@ -269,6 +271,21 @@ window.confirmLocation = function() {
             coordinatesInfo.classList.add('fade-in');
         }
         
+        // Hide manual location section since location is now confirmed
+        const manualLocationSection = document.getElementById('manual-location-section');
+        if (manualLocationSection) {
+            manualLocationSection.classList.add('hidden');
+        }
+        
+        // Update location status to show confirmed
+        const locationStatus = document.getElementById('location-status');
+        const locationStatusText = document.getElementById('location-status-text');
+        if (locationStatus && locationStatusText) {
+            locationStatusText.textContent = `Location confirmed: ${selectedLocation.lat.toFixed(6)}, ${selectedLocation.lng.toFixed(6)}`;
+            locationStatus.classList.remove('bg-yellow-50', 'border-yellow-200', 'bg-blue-50', 'border-blue-200');
+            locationStatus.classList.add('bg-green-50', 'border-green-200');
+        }
+        
         // Close modal
         const modal = bootstrap.Modal.getInstance(document.getElementById('locationModal'));
         if (modal) {
@@ -285,10 +302,11 @@ window.confirmLocation = function() {
 document.addEventListener('DOMContentLoaded', function() {
     console.log('=== MODERN APP INITIALIZATION ===');
     
-    // Initialize the application
+    // Initialize all functionality
     initMap();
     setupEventListeners();
     setupMobileFeatures();
+    setupPhotoCapture(); // Add photo capture setup
     
     // Initialize map with modern styling
     function initMap() {
@@ -667,7 +685,26 @@ document.addEventListener('DOMContentLoaded', function() {
             if (data.status === 'success') {
                 window.showNotification('Report submitted successfully!', 'success');
                 event.target.reset();
-                document.getElementById('preview-container').classList.add('hidden');
+                
+                // Reset photo preview
+                const photoPreviewContainer = document.getElementById('photo-preview-container');
+                const manualLocationSection = document.getElementById('manual-location-section');
+                if (photoPreviewContainer) {
+                    photoPreviewContainer.classList.add('hidden');
+                }
+                if (manualLocationSection) {
+                    manualLocationSection.classList.add('hidden');
+                }
+                
+                // Reset location status
+                const locationStatus = document.getElementById('location-status');
+                const locationStatusText = document.getElementById('location-status-text');
+                if (locationStatus && locationStatusText) {
+                    locationStatus.classList.remove('bg-green-50', 'border-green-200', 'bg-yellow-50', 'border-yellow-200', 'bg-blue-50', 'border-blue-200');
+                    locationStatus.classList.add('bg-gray-50', 'border-gray-200');
+                    locationStatusText.textContent = 'Checking photo for location data...';
+                }
+                
                 document.getElementById('coordinates-info').classList.add('hidden');
                 document.getElementById('details-form').classList.add('hidden');
                 document.getElementById('fill-form-check').checked = false;
@@ -795,7 +832,14 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize modal when it's shown
     const locationModal = document.getElementById('locationModal');
     if (locationModal) {
+        console.log('Location modal found, setting up event listeners');
+        
+        // Ensure modal is hidden by default
+        locationModal.classList.remove('show');
+        locationModal.style.display = 'none';
+        
         locationModal.addEventListener('shown.bs.modal', function() {
+            console.log('Modal shown event triggered');
             setTimeout(window.initializeModalMap, 100);
             // Reset modal state
             selectedLocation = null;
@@ -811,6 +855,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         
         locationModal.addEventListener('hidden.bs.modal', function() {
+            console.log('Modal hidden event triggered');
             // Clean up when modal is closed
             if (modalMap) {
                 modalMap.eachLayer(layer => {
@@ -820,6 +865,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
             }
         });
+        
+        // Debug: Check if modal is accidentally shown
+        setTimeout(() => {
+            if (locationModal.classList.contains('show') || locationModal.style.display === 'block') {
+                console.warn('Modal appears to be shown by default - hiding it');
+                locationModal.classList.remove('show');
+                locationModal.style.display = 'none';
+            }
+        }, 1000);
+    } else {
+        console.error('Location modal not found!');
     }
     
     // PWA Service Worker Registration
@@ -859,4 +915,163 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     console.log('=== MODERN APP INITIALIZATION COMPLETE ===');
+
+    // Photo capture and processing functionality
+    function setupPhotoCapture() {
+        const takePhotoBtn = document.getElementById('take-photo-btn');
+        const uploadPhotoBtn = document.getElementById('upload-photo-btn');
+        const retakePhotoBtn = document.getElementById('retake-photo-btn');
+        const fileInput = document.getElementById('file');
+        const photoPreviewContainer = document.getElementById('photo-preview-container');
+        const photoPreview = document.getElementById('photo-preview');
+        const locationStatus = document.getElementById('location-status');
+        const locationStatusText = document.getElementById('location-status-text');
+        const manualLocationSection = document.getElementById('manual-location-section');
+        
+        // Take Photo button - opens camera
+        if (takePhotoBtn) {
+            takePhotoBtn.addEventListener('click', function() {
+                // Create a temporary file input for camera capture
+                const cameraInput = document.createElement('input');
+                cameraInput.type = 'file';
+                cameraInput.accept = 'image/*';
+                cameraInput.capture = 'environment'; // Use back camera
+                
+                cameraInput.addEventListener('change', function(e) {
+                    if (e.target.files && e.target.files[0]) {
+                        handlePhotoCapture(e.target.files[0]);
+                    }
+                });
+                
+                cameraInput.click();
+            });
+        }
+        
+        // Upload Photo button - opens file picker
+        if (uploadPhotoBtn) {
+            uploadPhotoBtn.addEventListener('click', function() {
+                fileInput.click();
+            });
+        }
+        
+        // Retake Photo button
+        if (retakePhotoBtn) {
+            retakePhotoBtn.addEventListener('click', function() {
+                resetPhotoCapture();
+            });
+        }
+        
+        // File input change (for upload)
+        if (fileInput) {
+            fileInput.addEventListener('change', function(e) {
+                if (e.target.files && e.target.files[0]) {
+                    handlePhotoCapture(e.target.files[0]);
+                }
+            });
+        }
+        
+        // Handle photo capture and processing
+        function handlePhotoCapture(file) {
+            console.log('Processing photo:', file.name);
+            
+            // Show photo preview
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                photoPreview.src = e.target.result;
+                photoPreviewContainer.classList.remove('hidden');
+                photoPreviewContainer.classList.add('fade-in');
+                
+                // Update location status
+                locationStatusText.textContent = 'Extracting location from photo...';
+                locationStatus.classList.remove('bg-green-50', 'border-green-200', 'bg-yellow-50', 'border-yellow-200');
+                locationStatus.classList.add('bg-blue-50', 'border-blue-200');
+                
+                // Process the photo for location data
+                processPhotoForLocation(file);
+            };
+            reader.readAsDataURL(file);
+            
+            // Update the hidden file input
+            fileInput.files = new DataTransfer().files;
+            const dt = new DataTransfer();
+            dt.items.add(file);
+            fileInput.files = dt.files;
+        }
+        
+        // Process photo to extract location
+        function processPhotoForLocation(file) {
+            // First, try to extract GPS data from the image
+            extractCoordinatesFromImage(file)
+                .then(coordinates => {
+                    if (coordinates && coordinates.latitude && coordinates.longitude) {
+                        // GPS found in photo
+                        console.log('GPS coordinates found in photo:', coordinates);
+                        
+                        // Update form fields
+                        document.getElementById('latitude').value = coordinates.latitude;
+                        document.getElementById('longitude').value = coordinates.longitude;
+                        
+                        // Update location status
+                        locationStatusText.textContent = `Location found: ${coordinates.latitude.toFixed(6)}, ${coordinates.longitude.toFixed(6)}`;
+                        locationStatus.classList.remove('bg-blue-50', 'border-blue-200', 'bg-yellow-50', 'border-yellow-200');
+                        locationStatus.classList.add('bg-green-50', 'border-green-200');
+                        
+                        // Hide manual location section
+                        manualLocationSection.classList.add('hidden');
+                        
+                        // Show success notification
+                        window.showNotification('Location automatically extracted from photo!', 'success');
+                        
+                        // Update submit button visibility
+                        window.updateSubmitButtonVisibility();
+                        
+                    } else {
+                        // No GPS in photo - show manual location option
+                        console.log('No GPS coordinates found in photo');
+                        
+                        locationStatusText.textContent = 'No location data found in photo';
+                        locationStatus.classList.remove('bg-blue-50', 'border-blue-200', 'bg-green-50', 'border-green-200');
+                        locationStatus.classList.add('bg-yellow-50', 'border-yellow-200');
+                        
+                        // Show manual location section
+                        manualLocationSection.classList.remove('hidden');
+                        manualLocationSection.classList.add('fade-in');
+                        
+                        window.showNotification('No location data found. Please select location manually.', 'warning');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error processing photo for location:', error);
+                    
+                    locationStatusText.textContent = 'Error processing photo. Please select location manually.';
+                    locationStatus.classList.remove('bg-blue-50', 'border-blue-200', 'bg-green-50', 'border-green-200');
+                    locationStatus.classList.add('bg-yellow-50', 'border-yellow-200');
+                    
+                    // Show manual location section
+                    manualLocationSection.classList.remove('hidden');
+                    manualLocationSection.classList.add('fade-in');
+                    
+                    window.showNotification('Error processing photo. Please select location manually.', 'error');
+                });
+        }
+        
+        // Reset photo capture
+        function resetPhotoCapture() {
+            photoPreviewContainer.classList.add('hidden');
+            manualLocationSection.classList.add('hidden');
+            locationStatus.classList.remove('bg-green-50', 'border-green-200', 'bg-yellow-50', 'border-yellow-200', 'bg-blue-50', 'border-blue-200');
+            locationStatus.classList.add('bg-gray-50', 'border-gray-200');
+            locationStatusText.textContent = 'Checking photo for location data...';
+            
+            // Clear file input
+            fileInput.value = '';
+            
+            // Clear coordinates
+            document.getElementById('latitude').value = '';
+            document.getElementById('longitude').value = '';
+            
+            // Update submit button
+            window.updateSubmitButtonVisibility();
+        }
+    }
 }); 

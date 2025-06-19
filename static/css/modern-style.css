@@ -598,4 +598,108 @@
     #locationModal .modal-footer button {
         width: 100%;
     }
+}
+
+/* Ensure modal is hidden by default */
+.modal {
+    display: none !important;
+}
+
+.modal.show {
+    display: block !important;
+}
+
+/* Specific location modal visibility control */
+#locationModal {
+    display: none !important;
+}
+
+#locationModal.show {
+    display: block !important;
+}
+
+/* Additional Bootstrap modal overrides */
+.modal-backdrop {
+    display: none !important;
+}
+
+.modal-backdrop.show {
+    display: block !important;
+}
+
+/* Photo capture interface styles */
+#photo-preview-container {
+    transition: all 0.3s ease;
+}
+
+#photo-preview-container.fade-in {
+    animation: fadeIn 0.3s ease-out;
+}
+
+#photo-preview {
+    transition: all 0.2s ease;
+}
+
+#photo-preview:hover {
+    transform: scale(1.02);
+}
+
+#retake-photo-btn {
+    transition: all 0.2s ease;
+}
+
+#retake-photo-btn:hover {
+    transform: scale(1.1);
+}
+
+/* Location status styles */
+#location-status {
+    transition: all 0.3s ease;
+}
+
+#location-status.bg-green-50 {
+    background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+}
+
+#location-status.bg-yellow-50 {
+    background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+}
+
+#location-status.bg-blue-50 {
+    background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+}
+
+/* Manual location section styles */
+#manual-location-section {
+    transition: all 0.3s ease;
+}
+
+#manual-location-section.fade-in {
+    animation: slideIn 0.3s ease-out;
+}
+
+/* Photo capture buttons */
+#take-photo-btn, #upload-photo-btn {
+    transition: all 0.2s ease;
+}
+
+#take-photo-btn:hover, #upload-photo-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+#take-photo-btn:active, #upload-photo-btn:active {
+    transform: translateY(0);
+}
+
+/* Mobile optimizations for photo capture */
+@media (max-width: 768px) {
+    #photo-preview {
+        height: 200px !important;
+    }
+    
+    #take-photo-btn, #upload-photo-btn {
+        padding: 1rem 0.75rem;
+        font-size: 1rem;
+    }
 } 

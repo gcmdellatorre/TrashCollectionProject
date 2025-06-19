@@ -205,17 +205,36 @@ function ensureModalButtonsVisible() {
     const cancelBtn = document.querySelector('#locationModal button[data-bs-dismiss="modal"]');
     
     console.log('Ensuring modal buttons are visible...');
+    console.log('Modal footer found:', !!modalFooter);
+    console.log('Confirm button found:', !!confirmBtn);
+    console.log('Cancel button found:', !!cancelBtn);
     
     if (modalFooter) {
         modalFooter.style.display = 'flex';
         modalFooter.style.visibility = 'visible';
         modalFooter.style.opacity = '1';
+        modalFooter.style.position = 'relative';
+        modalFooter.style.zIndex = '1003';
+        modalFooter.style.pointerEvents = 'auto';
+        
+        // On mobile, make it fixed at bottom
+        if (window.innerWidth <= 768) {
+            modalFooter.style.position = 'fixed';
+            modalFooter.style.bottom = '0';
+            modalFooter.style.left = '0';
+            modalFooter.style.right = '0';
+            modalFooter.style.zIndex = '9999';
+        }
+        
+        console.log('Modal footer styles applied');
     }
     
     if (confirmBtn) {
         confirmBtn.style.display = 'block';
         confirmBtn.style.visibility = 'visible';
         confirmBtn.style.opacity = '1';
+        confirmBtn.style.pointerEvents = 'auto';
+        confirmBtn.style.zIndex = '1004';
         console.log('Confirm button ensured visible');
     } else {
         console.error('Confirm button not found!');
@@ -225,9 +244,16 @@ function ensureModalButtonsVisible() {
         cancelBtn.style.display = 'block';
         cancelBtn.style.visibility = 'visible';
         cancelBtn.style.opacity = '1';
+        cancelBtn.style.pointerEvents = 'auto';
+        cancelBtn.style.zIndex = '1004';
         console.log('Cancel button ensured visible');
     } else {
         console.error('Cancel button not found!');
+    }
+    
+    // Force a reflow to ensure styles are applied
+    if (modalFooter) {
+        modalFooter.offsetHeight;
     }
 }
 
@@ -314,27 +340,60 @@ window.searchModalMap = function(query) {
                     ensureModalButtonsVisible();
                 }, 100);
                 
+                // Multiple attempts to ensure buttons are visible (especially for mobile)
+                setTimeout(() => {
+                    ensureModalButtonsVisible();
+                    console.log('Second attempt to ensure buttons visible');
+                }, 300);
+                
+                setTimeout(() => {
+                    ensureModalButtonsVisible();
+                    console.log('Third attempt to ensure buttons visible');
+                }, 500);
+                
                 // Debug: Check button state after enabling
                 setTimeout(() => {
                     const confirmBtn = document.getElementById('confirm-location-btn');
                     const cancelBtn = document.querySelector('#locationModal button[data-bs-dismiss="modal"]');
+                    const modalFooter = document.querySelector('#locationModal .modal-footer');
+                    
                     console.log('Confirm button state:', {
                         exists: !!confirmBtn,
                         disabled: confirmBtn?.disabled,
                         display: confirmBtn?.style.display,
                         visibility: confirmBtn?.style.visibility,
-                        classes: confirmBtn?.className
+                        classes: confirmBtn?.className,
+                        offsetHeight: confirmBtn?.offsetHeight
                     });
                     console.log('Cancel button state:', {
                         exists: !!cancelBtn,
                         display: cancelBtn?.style.display,
-                        visibility: cancelBtn?.style.visibility
+                        visibility: cancelBtn?.style.visibility,
+                        offsetHeight: cancelBtn?.offsetHeight
+                    });
+                    console.log('Modal footer state:', {
+                        exists: !!modalFooter,
+                        display: modalFooter?.style.display,
+                        visibility: modalFooter?.style.visibility,
+                        offsetHeight: modalFooter?.offsetHeight
                     });
                     
                     // If buttons are still not visible, force them to be visible
-                    if (confirmBtn && (confirmBtn.style.display === 'none' || confirmBtn.style.visibility === 'hidden')) {
+                    if (confirmBtn && (confirmBtn.style.display === 'none' || confirmBtn.style.visibility === 'hidden' || confirmBtn.offsetHeight === 0)) {
                         console.log('Forcing confirm button to be visible');
                         ensureModalButtonsVisible();
+                    }
+                    
+                    // On mobile, ensure the footer is at the bottom
+                    if (window.innerWidth <= 768) {
+                        if (modalFooter) {
+                            modalFooter.style.position = 'fixed';
+                            modalFooter.style.bottom = '0';
+                            modalFooter.style.left = '0';
+                            modalFooter.style.right = '0';
+                            modalFooter.style.zIndex = '9999';
+                            console.log('Mobile footer positioned at bottom');
+                        }
                     }
                 }, 200);
                 

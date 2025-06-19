@@ -477,7 +477,10 @@
 /* Location modal specific enhancements */
 #locationModal .modal-dialog {
     max-width: 800px;
-    margin: 1rem auto;
+    margin: 1rem auto !important;
+    position: relative !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
 }
 
 #locationModal .modal-content {
@@ -487,6 +490,7 @@
     max-height: 90vh;
     display: flex;
     flex-direction: column;
+    position: relative !important;
 }
 
 #locationModal .modal-header {
@@ -494,25 +498,32 @@
     border-bottom: 1px solid #e2e8f0;
     border-radius: 16px 16px 0 0;
     flex-shrink: 0;
+    position: relative !important;
+    z-index: 1002 !important;
 }
 
 #locationModal .modal-body {
     flex: 1;
     overflow-y: auto;
     padding: 1rem;
+    position: relative !important;
+    z-index: 1001 !important;
 }
 
 #locationModal .modal-footer {
-    background: #f8fafc;
-    border-top: 1px solid #e2e8f0;
-    border-radius: 0 0 16px 16px;
+    background: #f8fafc !important;
+    border-top: 1px solid #e2e8f0 !important;
+    border-radius: 0 0 16px 16px !important;
     display: flex !important;
     visibility: visible !important;
     opacity: 1 !important;
     position: relative !important;
-    z-index: 1000 !important;
+    z-index: 1003 !important;
     flex-shrink: 0;
-    padding: 1rem 1.5rem;
+    padding: 1rem 1.5rem !important;
+    min-height: 60px !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
 }
 
 /* Modal map container enhancements */
@@ -537,10 +548,12 @@
     visibility: visible !important;
     opacity: 1 !important;
     position: relative !important;
-    z-index: 1001 !important;
+    z-index: 1004 !important;
     min-height: 44px;
     font-size: 0.875rem;
     font-weight: 500;
+    pointer-events: auto !important;
+    cursor: pointer !important;
 }
 
 #confirm-location-btn {
@@ -548,7 +561,8 @@
     visibility: visible !important;
     opacity: 1 !important;
     position: relative !important;
-    z-index: 1001 !important;
+    z-index: 1004 !important;
+    pointer-events: auto !important;
 }
 
 #confirm-location-btn:disabled {
@@ -556,6 +570,7 @@
     cursor: not-allowed !important;
     display: block !important;
     visibility: visible !important;
+    pointer-events: auto !important;
 }
 
 #confirm-location-btn:not(:disabled) {
@@ -563,6 +578,7 @@
     cursor: pointer !important;
     display: block !important;
     visibility: visible !important;
+    pointer-events: auto !important;
 }
 
 /* Force modal footer to always be visible */
@@ -570,51 +586,67 @@
 #locationModal .modal-footer * {
     display: block !important;
     visibility: visible !important;
+    pointer-events: auto !important;
 }
 
 #locationModal .modal-footer {
     display: flex !important;
+    pointer-events: auto !important;
 }
 
-/* Mobile responsiveness for modal */
+/* Mobile-specific button fixes */
 @media (max-width: 768px) {
-    #locationModal .modal-dialog {
-        margin: 0.5rem;
-        max-width: calc(100% - 1rem);
-    }
-    
-    #modal-map-container {
-        height: 250px !important;
-        min-height: 200px !important;
-        max-height: 300px !important;
-    }
-    
-    #locationModal .modal-body {
-        padding: 0.75rem;
-    }
-    
     #locationModal .modal-footer {
-        padding: 0.75rem 1rem;
-        flex-direction: row;
-        gap: 0.5rem;
+        position: fixed !important;
+        bottom: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        background: #f8fafc !important;
+        border-top: 2px solid #e2e8f0 !important;
+        padding: 1rem !important;
+        z-index: 9999 !important;
+        display: flex !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        min-height: 70px !important;
+        align-items: center !important;
+        justify-content: space-between !important;
     }
     
     #locationModal .modal-footer button {
-        flex: 1;
-        min-height: 48px;
-        font-size: 0.875rem;
+        flex: 1 !important;
+        margin: 0 0.25rem !important;
+        min-height: 50px !important;
+        font-size: 1rem !important;
+        font-weight: 600 !important;
+        border-radius: 8px !important;
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        pointer-events: auto !important;
+        z-index: 10000 !important;
     }
     
-    #locationModal .modal-header {
-        padding: 0.75rem 1rem;
+    #confirm-location-btn {
+        background: #0ea5e9 !important;
+        color: white !important;
+        border: none !important;
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        pointer-events: auto !important;
     }
     
-    #locationModal .modal-header h3 {
-        font-size: 1rem;
+    #confirm-location-btn:disabled {
+        background: #94a3b8 !important;
+        opacity: 0.5 !important;
+        display: block !important;
+        visibility: visible !important;
+        pointer-events: auto !important;
     }
     
-    #locationModal .modal-header p {
-        font-size: 0.75rem;
+    #locationModal .modal-content {
+        padding-bottom: 80px !important;
     }
 }
 
@@ -811,5 +843,89 @@
     #take-photo-btn, #upload-photo-btn {
         padding: 1rem 0.75rem;
         font-size: 1rem;
+    }
+}
+
+/* Mobile responsiveness for modal */
+@media (max-width: 768px) {
+    #locationModal .modal-dialog {
+        margin: 0.5rem;
+        max-width: calc(100% - 1rem);
+    }
+    
+    #modal-map-container {
+        height: 250px !important;
+        min-height: 200px !important;
+        max-height: 300px !important;
+    }
+    
+    #locationModal .modal-body {
+        padding: 0.75rem;
+    }
+    
+    #locationModal .modal-header {
+        padding: 0.75rem 1rem;
+    }
+    
+    #locationModal .modal-header h3 {
+        font-size: 1rem;
+    }
+    
+    #locationModal .modal-header p {
+        font-size: 0.75rem;
+    }
+    
+    /* Mobile-specific button fixes */
+    #locationModal .modal-footer {
+        position: fixed !important;
+        bottom: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        background: #f8fafc !important;
+        border-top: 2px solid #e2e8f0 !important;
+        padding: 1rem !important;
+        z-index: 9999 !important;
+        display: flex !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        min-height: 70px !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+    }
+    
+    #locationModal .modal-footer button {
+        flex: 1 !important;
+        margin: 0 0.25rem !important;
+        min-height: 50px !important;
+        font-size: 1rem !important;
+        font-weight: 600 !important;
+        border-radius: 8px !important;
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        pointer-events: auto !important;
+        z-index: 10000 !important;
+    }
+    
+    #confirm-location-btn {
+        background: #0ea5e9 !important;
+        color: white !important;
+        border: none !important;
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        pointer-events: auto !important;
+    }
+    
+    #confirm-location-btn:disabled {
+        background: #94a3b8 !important;
+        opacity: 0.5 !important;
+        display: block !important;
+        visibility: visible !important;
+        pointer-events: auto !important;
+    }
+    
+    #locationModal .modal-content {
+        padding-bottom: 80px !important;
     }
 } 

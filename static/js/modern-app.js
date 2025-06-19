@@ -1199,8 +1199,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 // Hide the manual details checkbox section
                 const fillFormCheck = document.getElementById('fill-form-check');
+                const manualDetailsToggle = document.getElementById('manual-details-toggle');
                 if (fillFormCheck) {
-                    fillFormCheck.closest('.flex.items-center').classList.add('hidden');
+                    fillFormCheck.checked = false;
+                }
+                if (manualDetailsToggle) {
+                    manualDetailsToggle.classList.add('hidden');
                 }
                 
                 window.updateSubmitButtonVisibility();
@@ -1540,9 +1544,12 @@ document.addEventListener('DOMContentLoaded', function() {
             // Hide manual details section initially
             const fillFormCheck = document.getElementById('fill-form-check');
             const detailsForm = document.getElementById('details-form');
+            const manualDetailsToggle = document.getElementById('manual-details-toggle');
             if (fillFormCheck) {
                 fillFormCheck.checked = false;
-                fillFormCheck.closest('.flex.items-center').classList.add('hidden');
+            }
+            if (manualDetailsToggle) {
+                manualDetailsToggle.classList.add('hidden');
             }
             if (detailsForm) {
                 detailsForm.classList.add('hidden');
@@ -1646,12 +1653,13 @@ document.addEventListener('DOMContentLoaded', function() {
         function showManualDetailsSection() {
             const fillFormCheck = document.getElementById('fill-form-check');
             const detailsForm = document.getElementById('details-form');
+            const manualDetailsToggle = document.getElementById('manual-details-toggle');
             
             // Add a small delay for smoother transition
             setTimeout(() => {
-                if (fillFormCheck) {
-                    fillFormCheck.closest('.flex.items-center').classList.remove('hidden');
-                    fillFormCheck.closest('.flex.items-center').classList.add('fade-in');
+                if (manualDetailsToggle) {
+                    manualDetailsToggle.classList.remove('hidden');
+                    manualDetailsToggle.classList.add('fade-in');
                 }
                 
                 // Add event listener for checkbox if not already added
@@ -1677,9 +1685,12 @@ document.addEventListener('DOMContentLoaded', function() {
             // Hide manual details section
             const fillFormCheck = document.getElementById('fill-form-check');
             const detailsForm = document.getElementById('details-form');
+            const manualDetailsToggle = document.getElementById('manual-details-toggle');
             if (fillFormCheck) {
                 fillFormCheck.checked = false;
-                fillFormCheck.closest('.flex.items-center').classList.add('hidden');
+            }
+            if (manualDetailsToggle) {
+                manualDetailsToggle.classList.add('hidden');
             }
             if (detailsForm) {
                 detailsForm.classList.add('hidden');

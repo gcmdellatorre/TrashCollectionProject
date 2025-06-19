@@ -365,15 +365,8 @@ async def find_dirty_places_endpoint(
     limit: int = 5,
     max_distance: float = 25  # This should be the radius parameter
 ):
-    try:
-        dirty_places = find_closest_dirty_places(lat, lng, limit=limit, max_distance_km=max_distance)
-        return JSONResponse(content={"status": "success", "dirty_places": dirty_places})
-    except Exception as e:
-        print(f"Error finding dirty places: {e}")
-        return JSONResponse(
-            status_code=500,
-            content={"status": "error", "message": f"Error finding dirty places: {str(e)}"}
-        )
+    dirty_places = find_closest_dirty_places(lat, lng, limit=limit, max_distance=max_distance)
+    return JSONResponse(content={"status": "success", "dirty_places": dirty_places})
 
 @app.get("/api/location-summary")
 async def location_summary(lat: float, lng: float, radius: float = 5.0):

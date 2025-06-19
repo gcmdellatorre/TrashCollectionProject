@@ -1275,7 +1275,7 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(response => response.json())
             .then(data => {
                 // Handle the correct response format from backend
-                const places = data.dirty_places || [];
+                const places = data.dirty_places?.dirty_places || data.dirty_places || [];
                 const success = places.length > 0;
                 
                 if (success) {
@@ -1317,7 +1317,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     window.showNotification(`Found ${places.length} dirty areas nearby`, 'success');
                 } else {
                     // Show summary message if available
-                    const message = data.summary?.message || 'No dirty areas found in the specified radius';
+                    const message = data.dirty_places?.summary?.message || data.summary?.message || 'No dirty areas found in the specified radius';
                     window.showNotification(message, 'info');
                 }
             })

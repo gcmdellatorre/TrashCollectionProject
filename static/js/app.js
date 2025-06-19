@@ -193,8 +193,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 this.innerHTML = '<i class="bi bi-arrow-clockwise animate-spin mr-1"></i>Refreshing...';
                 
                 setTimeout(() => {
-                    clearSearchResults();
-                    loadMapData();
+                clearSearchResults();
+                loadMapData();
                     this.classList.remove('loading');
                     this.innerHTML = '<i class="bi bi-arrow-clockwise mr-1"></i>Refresh';
                 }, 500);
@@ -254,8 +254,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 map.invalidateSize();
             }
         });
-    }
-    
+        }
+        
     // Mobile navigation setup
     function setupMobileNavigation() {
         // Add mobile-specific classes
@@ -301,7 +301,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     // Enable find dirty places button
                     const findDirtyBtn = document.getElementById('find-dirty-btn');
                     if (findDirtyBtn) {
-                        findDirtyBtn.disabled = false;
+                    findDirtyBtn.disabled = false;
                         findDirtyBtn.classList.remove('opacity-50', 'cursor-not-allowed');
                     }
                     
@@ -339,7 +339,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <button onclick="this.parentElement.parentElement.remove()" class="ml-2 text-white hover:text-gray-200">
                     <i class="bi bi-x"></i>
                 </button>
-            </div>
+                            </div>
         `;
         
         document.body.appendChild(notification);
@@ -355,7 +355,7 @@ document.addEventListener('DOMContentLoaded', function() {
             setTimeout(() => notification.remove(), 300);
         }, 5000);
     }
-    
+        
     // Modern file handling
     function handleFileInputChange(event) {
         const file = event.target.files[0];
@@ -378,7 +378,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Check for coordinates
         checkCoordinatesSimple(file);
     }
-    
+
     // Enhanced coordinate checking
     function checkCoordinatesSimple(file) {
         const reader = new FileReader();
@@ -403,7 +403,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                     
                     updateSubmitButtonVisibility();
-                }
+            }
             } catch (error) {
                 console.log('No coordinates found in image');
             }
@@ -417,12 +417,12 @@ document.addEventListener('DOMContentLoaded', function() {
         // For now, return null to indicate no coordinates found
         return null;
     }
-    
+
     // Update submit button visibility
     function updateSubmitButtonVisibility() {
-        const submitBtn = document.getElementById('submit-btn');
+            const submitBtn = document.getElementById('submit-btn');
         const fileInput = document.getElementById('file');
-        const latInput = document.getElementById('latitude');
+            const latInput = document.getElementById('latitude');
         
         if (submitBtn && fileInput && latInput) {
             const hasFile = fileInput.files.length > 0;
@@ -549,7 +549,7 @@ document.addEventListener('DOMContentLoaded', function() {
             .finally(() => {
                 findDirtyBtn.innerHTML = '<i class="bi bi-trash"></i>';
                 findDirtyBtn.disabled = false;
-            });
+        });
     }
     
     // Initialize modal map
@@ -560,7 +560,7 @@ document.addEventListener('DOMContentLoaded', function() {
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '© OpenStreetMap contributors'
             }).addTo(modalMap);
-        }
+    }
     }
     
     // Search modal map
@@ -606,8 +606,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 console.error('Search error:', error);
                 showNotification('Error searching for location', 'error');
             });
-    }
-    
+        }
+        
     // Confirm location
     function confirmLocation() {
         if (selectedLocation) {
@@ -641,8 +641,8 @@ document.addEventListener('DOMContentLoaded', function() {
     if (locationModal) {
         locationModal.addEventListener('shown.bs.modal', function() {
             setTimeout(initializeModalMap, 100);
-        });
-    }
+            });
+        }
     
     console.log('=== MODERN APP INITIALIZATION COMPLETE ===');
 });

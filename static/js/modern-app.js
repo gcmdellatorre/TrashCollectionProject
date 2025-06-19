@@ -186,6 +186,162 @@ window.initializeModalMap = function() {
     }
 };
 
+// Show location selector page overlay
+window.showLocationSelector = function() {
+    const page = document.getElementById('locationSelectorPage');
+    if (page) {
+        page.classList.add('show');
+        document.body.style.overflow = 'hidden';
+        initializeLocationMap();
+    }
+};
+
+// Close location selector page overlay
+window.closeLocationSelector = function() {
+    const page = document.getElementById('locationSelectorPage');
+    if (page) {
+        page.classList.remove('show');
+        document.body.style.overflow = '';
+        selectedLocation = null;
+        
+        // Clear the map
+        if (locationMap) {
+            locationMap.eachLayer(layer => {
+                if (layer instanceof L.Marker) {
+                    locationMap.removeLayer(layer);
+                }
+            });
+        }
+        
+        // Reset UI
+        document.getElementById('location-search').value = '';
+        const display = document.getElementById('selected-location-display');
+        if (display) {
+            display.classList.add('hidden');
+        }
+        disableConfirmButton();
+    }
+};
+
+// Initialize location map for the page overlay
+let locationMap = null;
+function initializeLocationMap() {
+    if (!locationMap) {
+        const mapContainer = document.getElementById('location-map');
+        if (!mapContainer) {
+            console.error('Location map container not found');
+            return;
+        }
+        
+        // Initialize the map
+        locationMap = L.map('location-map').setView([0, 0], 2);
+        
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(locationMap);
+        
+        // Add click handler for manual location selection
+        locationMap.on('click', function(e) {
+            const lat = e.latlng.lat;
+            const lng = e.latlng.lng;
+            
+            // Clear previous markers
+            locationMap.eachLayer(layer => {
+                if (layer instanceof L.Marker) {
+                    locationMap.removeLayer(layer);
+                }
+            });
+            
+            // Add marker at clicked location
+            const marker = L.marker([lat, lng]).addTo(locationMap);
+            marker.bindPopup(`Selected: ${lat.toFixed(6)}, ${lng.toFixed(6)}`).openPopup();
+            
+            selectedLocation = { lat, lng };
+            
+            // Update UI
+            updateLocationDisplay(`Manual selection: ${lat.toFixed(6)}, ${lng.toFixed(6)}`);
+            enableConfirmButton();
+        });
+    }
+    
+    // Force a resize to ensure proper rendering
+    setTimeout(() => {
+        locationMap.invalidateSize();
+    }, 100);
+}
+
+// Search location in the page overlay
+window.searchLocation = function(query) {
+    if (!locationMap) {
+        initializeLocationMap();
+    }
+    
+    if (!query.trim()) {
+        window.showNotification('Please enter a location to search', 'warning');
+        return;
+    }
+    
+    const searchBtn = document.getElementById('search-btn');
+    const originalText = searchBtn.innerHTML;
+    
+    // Show loading state
+    searchBtn.innerHTML = '<i class="bi bi-hourglass-split animate-spin mr-1"></i>Searching...';
+    searchBtn.disabled = true;
+    searchBtn.classList.add('loading');
+    
+    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1`;
+    
+    fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            if (data && data.length > 0) {
+                const result = data[0];
+                const lat = parseFloat(result.lat);
+                const lng = parseFloat(result.lon);
+                
+                // Clear previous markers
+                locationMap.eachLayer(layer => {
+                    if (layer instanceof L.Marker) {
+                        locationMap.removeLayer(layer);
+                    }
+                });
+                
+                // Center map and add marker
+                locationMap.setView([lat, lng], 15);
+                const marker = L.marker([lat, lng]).addTo(locationMap);
+                marker.bindPopup(`Found: ${result.display_name}`).openPopup();
+                
+                selectedLocation = { lat, lng };
+                
+                // Update UI
+                updateLocationDisplay(`Found: ${result.display_name}`);
+                enableConfirmButton();
+            } else {
+                window.showNotification('Location not found. Please try a different search term.', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Search error:', error);
+            window.showNotification('Error searching for location. Please check your connection.', 'error');
+        })
+        .finally(() => {
+            searchBtn.innerHTML = originalText;
+            searchBtn.disabled = false;
+            searchBtn.classList.remove('loading');
+        });
+};
+
+// Update location display
+function updateLocationDisplay(locationText) {
+    const display = document.getElementById('selected-location-display');
+    const text = document.getElementById('selected-location-text');
+    
+    if (display && text) {
+        text.textContent = locationText;
+        display.classList.remove('hidden');
+    }
+}
+
 // Function to update the selected location display in modal
 function updateModalLocationDisplay(locationText) {
     const display = document.getElementById('selected-location-display');
@@ -261,36 +417,55 @@ function ensureModalButtonsVisible() {
     }
 }
 
+// Enable confirm button
 function enableConfirmButton() {
     const confirmBtn = document.getElementById('confirm-location-btn');
     if (confirmBtn) {
-        console.log('Enabling confirm button');
         confirmBtn.disabled = false;
         confirmBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-        confirmBtn.style.display = 'block'; // Ensure button is visible
-        confirmBtn.style.visibility = 'visible';
-        confirmBtn.style.opacity = '1';
-        
-        // Also ensure the modal footer is visible
-        ensureModalButtonsVisible();
-    } else {
-        console.error('Confirm button not found!');
     }
 }
 
+// Disable confirm button
 function disableConfirmButton() {
     const confirmBtn = document.getElementById('confirm-location-btn');
     if (confirmBtn) {
-        console.log('Disabling confirm button');
         confirmBtn.disabled = true;
         confirmBtn.classList.add('opacity-50', 'cursor-not-allowed');
-        // Don't hide the button, just disable it
-        confirmBtn.style.display = 'block';
-        confirmBtn.style.visibility = 'visible';
-    } else {
-        console.error('Confirm button not found!');
     }
 }
+
+// Confirm location selection
+window.confirmLocation = function() {
+    if (selectedLocation) {
+        // Update form fields
+        document.getElementById('latitude').value = selectedLocation.lat;
+        document.getElementById('longitude').value = selectedLocation.lng;
+        
+        // Update coordinates display
+        const coordinatesInfo = document.getElementById('coordinates-info');
+        const coordinatesText = document.getElementById('coordinates-text');
+        if (coordinatesInfo && coordinatesText) {
+            coordinatesText.textContent = `Location: ${selectedLocation.lat.toFixed(6)}, ${selectedLocation.lng.toFixed(6)}`;
+            coordinatesInfo.classList.remove('hidden');
+        }
+        
+        // Hide manual location section
+        const manualSection = document.getElementById('manual-location-section');
+        if (manualSection) {
+            manualSection.classList.add('hidden');
+        }
+        
+        // Close the location selector
+        closeLocationSelector();
+        
+        // Show success notification
+        window.showNotification('Location selected successfully!', 'success');
+        
+        // Update submit button visibility
+        window.updateSubmitButtonVisibility();
+    }
+};
 
 window.searchModalMap = function(query) {
     if (!modalMap) {
@@ -428,48 +603,6 @@ window.searchModalMap = function(query) {
             searchBtn.disabled = false;
             searchBtn.classList.remove('loading');
         });
-};
-
-window.confirmLocation = function() {
-    if (selectedLocation) {
-        document.getElementById('latitude').value = selectedLocation.lat;
-        document.getElementById('longitude').value = selectedLocation.lng;
-        
-        const coordinatesInfo = document.getElementById('coordinates-info');
-        const coordinatesText = document.getElementById('coordinates-text');
-        
-        if (coordinatesInfo && coordinatesText) {
-            coordinatesText.textContent = `Location: ${selectedLocation.lat.toFixed(6)}, ${selectedLocation.lng.toFixed(6)}`;
-            coordinatesInfo.classList.remove('hidden');
-            coordinatesInfo.classList.add('fade-in');
-        }
-        
-        // Hide manual location section since location is now confirmed
-        const manualLocationSection = document.getElementById('manual-location-section');
-        if (manualLocationSection) {
-            manualLocationSection.classList.add('hidden');
-        }
-        
-        // Update location status to show confirmed
-        const locationStatus = document.getElementById('location-status');
-        const locationStatusText = document.getElementById('location-status-text');
-        if (locationStatus && locationStatusText) {
-            locationStatusText.textContent = `Location confirmed: ${selectedLocation.lat.toFixed(6)}, ${selectedLocation.lng.toFixed(6)}`;
-            locationStatus.classList.remove('bg-yellow-50', 'border-yellow-200', 'bg-blue-50', 'border-blue-200');
-            locationStatus.classList.add('bg-green-50', 'border-green-200');
-        }
-        
-        // Close modal
-        const modal = bootstrap.Modal.getInstance(document.getElementById('locationModal'));
-        if (modal) {
-            modal.hide();
-        }
-        
-        window.updateSubmitButtonVisibility();
-        window.showNotification('Location confirmed!', 'success');
-    } else {
-        window.showNotification('Please select a location first', 'warning');
-    }
 };
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -677,12 +810,69 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
         
-        // Find dirty places button
+        // Custom tooltip for find-dirty-btn
         const findDirtyBtn = document.getElementById('find-dirty-btn');
         if (findDirtyBtn) {
+            let tooltip = null;
+            
+            findDirtyBtn.addEventListener('mouseenter', function(e) {
+                // Remove existing tooltip if any
+                if (tooltip) {
+                    tooltip.remove();
+                }
+                
+                // Get button position
+                const rect = this.getBoundingClientRect();
+                
+                // Create tooltip
+                tooltip = document.createElement('div');
+                tooltip.textContent = 'Discover trash hotspots';
+                tooltip.style.cssText = `
+                    position: fixed;
+                    background: rgba(55, 65, 81, 0.95);
+                    color: white;
+                    padding: 6px 10px;
+                    border-radius: 6px;
+                    font-size: 12px;
+                    white-space: nowrap;
+                    z-index: 999999;
+                    pointer-events: none;
+                    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+                    left: ${rect.left + (rect.width / 2)}px;
+                    top: ${rect.top - 8}px;
+                    transform: translateX(-50%) translateY(-100%);
+                    opacity: 0;
+                    transition: opacity 0.2s ease-out;
+                `;
+                
+                document.body.appendChild(tooltip);
+                
+                // Trigger fade in
+                setTimeout(() => {
+                    if (tooltip) {
+                        tooltip.style.opacity = '1';
+                    }
+                }, 10);
+            });
+            
+            findDirtyBtn.addEventListener('mouseleave', function() {
+                if (tooltip) {
+                    tooltip.style.opacity = '0';
+                    setTimeout(() => {
+                        if (tooltip) {
+                            tooltip.remove();
+                            tooltip = null;
+                        }
+                    }, 200);
+                }
+            });
+            
+            // Click event for finding dirty places
             findDirtyBtn.addEventListener('click', function() {
-                if (currentSearchLocation) {
+                if (currentSearchLocation && currentSearchRadius) {
                     findClosestDirtyPlaces(currentSearchLocation.lat, currentSearchLocation.lng, currentSearchRadius);
+                } else {
+                    window.showNotification('Please search for a location first and set a radius', 'warning');
                 }
             });
         }
@@ -882,35 +1072,85 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
-        if (!latitude || !longitude) {
-            window.showNotification('Please select a location', 'error');
+        // Validate coordinates - ensure they are valid numbers
+        const latNum = parseFloat(latitude);
+        const lngNum = parseFloat(longitude);
+        
+        if (!latitude || !longitude || isNaN(latNum) || isNaN(lngNum)) {
+            window.showNotification('Please select a valid location', 'error');
             return;
         }
         
-        // Add fill_form parameter if manual details are enabled
+        // Create a new FormData with properly typed values
+        const cleanFormData = new FormData();
+        
+        // Add the file
+        cleanFormData.append('file', file);
+        
+        // Add coordinates as numbers
+        cleanFormData.append('latitude', latNum.toString());
+        cleanFormData.append('longitude', lngNum.toString());
+        
+        // Handle manual form data
         const fillFormCheckbox = document.getElementById('fill-form-check');
         if (fillFormCheckbox && fillFormCheckbox.checked) {
-            formData.set('fill_form', 'true');
+            cleanFormData.append('fill_form', 'true');
+            
+            // Get manual fields and ensure they are strings (even if empty)
+            const trashType = formData.get('trash_type') || '';
+            const estimatedKg = formData.get('estimated_kg') || '';
+            const sparcity = formData.get('sparcity') || '';
+            const cleanliness = formData.get('cleanliness') || '';
+            
+            cleanFormData.append('trash_type', trashType);
+            
+            // Only append estimated_kg if it's a valid number
+            if (estimatedKg && estimatedKg.trim() !== '') {
+                const kgNum = parseFloat(estimatedKg);
+                if (!isNaN(kgNum)) {
+                    cleanFormData.append('estimated_kg', kgNum.toString());
+                }
+            }
+            
+            cleanFormData.append('sparcity', sparcity);
+            cleanFormData.append('cleanliness', cleanliness);
+        } else {
+            // If manual details are not enabled, set empty values
+            cleanFormData.append('fill_form', 'false');
+            cleanFormData.append('trash_type', '');
+            // Don't append estimated_kg at all when manual form is not enabled
+            cleanFormData.append('sparcity', '');
+            cleanFormData.append('cleanliness', '');
         }
         
         // Show loading state
         submitBtn.innerHTML = '<i class="bi bi-hourglass-split animate-spin mr-2"></i>Submitting...';
         submitBtn.disabled = true;
         
+        console.log('Final form data being sent:');
+        for (let [key, value] of cleanFormData.entries()) {
+            console.log(`${key}: ${value}`);
+        }
+        
         fetch('/upload', {
             method: 'POST',
-            body: formData
+            body: cleanFormData
         })
         .then(response => {
             console.log('Response status:', response.status);
+            console.log('Response headers:', response.headers);
+            
             if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+                return response.text().then(text => {
+                    console.error('Error response text:', text);
+                    throw new Error(`HTTP error! status: ${response.status}, message: ${text}`);
+                });
             }
             return response.json();
         })
         .then(data => {
             console.log('Response data:', data);
-            if (data.status === 'success') {
+            if (data.status === 'success' || data.success) {
                 window.showNotification('Report submitted successfully!', 'success');
                 event.target.reset();
                 
@@ -936,17 +1176,27 @@ document.addEventListener('DOMContentLoaded', function() {
                 document.getElementById('coordinates-info').classList.add('hidden');
                 document.getElementById('details-form').classList.add('hidden');
                 document.getElementById('fill-form-check').checked = false;
+                
+                // Hide the manual details checkbox section
+                const fillFormCheck = document.getElementById('fill-form-check');
+                if (fillFormCheck) {
+                    fillFormCheck.closest('.flex.items-center').classList.add('hidden');
+                }
+                
                 window.updateSubmitButtonVisibility();
                 
                 // Refresh map data
                 loadMapData();
             } else {
-                window.showNotification(data.message || 'Error submitting report', 'error');
+                const errorMessage = data.message || data.error || 'Error submitting report';
+                console.error('Server error:', errorMessage);
+                window.showNotification(errorMessage, 'error');
             }
         })
         .catch(error => {
             console.error('Upload error:', error);
-            window.showNotification('Error submitting report. Please try again.', 'error');
+            const errorMessage = error.message || 'Error submitting report. Please try again.';
+            window.showNotification(errorMessage, 'error');
         })
         .finally(() => {
             submitBtn.innerHTML = 'Submit Report';
@@ -1267,6 +1517,17 @@ document.addEventListener('DOMContentLoaded', function() {
         function handlePhotoCapture(file) {
             console.log('Processing photo:', file.name);
             
+            // Hide manual details section initially
+            const fillFormCheck = document.getElementById('fill-form-check');
+            const detailsForm = document.getElementById('details-form');
+            if (fillFormCheck) {
+                fillFormCheck.checked = false;
+                fillFormCheck.closest('.flex.items-center').classList.add('hidden');
+            }
+            if (detailsForm) {
+                detailsForm.classList.add('hidden');
+            }
+            
             // Show photo preview
             const reader = new FileReader();
             reader.onload = function(e) {
@@ -1323,6 +1584,9 @@ document.addEventListener('DOMContentLoaded', function() {
                             // Show success notification
                             window.showNotification('Location automatically extracted from photo!', 'success');
                             
+                            // Show manual details section after photo is processed
+                            showManualDetailsSection();
+                            
                             // Update submit button visibility
                             window.updateSubmitButtonVisibility();
                             
@@ -1338,6 +1602,9 @@ document.addEventListener('DOMContentLoaded', function() {
                             manualLocationSection.classList.remove('hidden');
                             manualLocationSection.classList.add('fade-in');
                             
+                            // Show manual details section after photo is processed
+                            showManualDetailsSection();
+                            
                             window.showNotification('No location data found. Please select location manually.', 'warning');
                         }
                     })
@@ -1352,16 +1619,58 @@ document.addEventListener('DOMContentLoaded', function() {
                         manualLocationSection.classList.remove('hidden');
                         manualLocationSection.classList.add('fade-in');
                         
+                        // Show manual details section after photo is processed
+                        showManualDetailsSection();
+                        
                         window.showNotification('Error processing photo. Please select location manually.', 'error');
                     });
             };
             reader.readAsArrayBuffer(file);
         }
         
+        // Function to show manual details section
+        function showManualDetailsSection() {
+            const fillFormCheck = document.getElementById('fill-form-check');
+            const detailsForm = document.getElementById('details-form');
+            
+            // Add a small delay for smoother transition
+            setTimeout(() => {
+                if (fillFormCheck) {
+                    fillFormCheck.closest('.flex.items-center').classList.remove('hidden');
+                    fillFormCheck.closest('.flex.items-center').classList.add('fade-in');
+                }
+                
+                // Add event listener for checkbox if not already added
+                if (fillFormCheck && !fillFormCheck.hasAttribute('data-listener-added')) {
+                    fillFormCheck.setAttribute('data-listener-added', 'true');
+                    fillFormCheck.addEventListener('change', function() {
+                        if (this.checked) {
+                            detailsForm.classList.remove('hidden');
+                            detailsForm.classList.add('fade-in');
+                        } else {
+                            detailsForm.classList.add('hidden');
+                        }
+                    });
+                }
+            }, 300); // 300ms delay for smoother transition
+        }
+        
         // Reset photo capture
         function resetPhotoCapture() {
             photoPreviewContainer.classList.add('hidden');
             manualLocationSection.classList.add('hidden');
+            
+            // Hide manual details section
+            const fillFormCheck = document.getElementById('fill-form-check');
+            const detailsForm = document.getElementById('details-form');
+            if (fillFormCheck) {
+                fillFormCheck.checked = false;
+                fillFormCheck.closest('.flex.items-center').classList.add('hidden');
+            }
+            if (detailsForm) {
+                detailsForm.classList.add('hidden');
+            }
+            
             locationStatus.classList.remove('bg-green-50', 'border-green-200', 'bg-yellow-50', 'border-yellow-200', 'bg-blue-50', 'border-blue-200');
             locationStatus.classList.add('bg-gray-50', 'border-gray-200');
             locationStatusText.textContent = 'Checking photo for location data...';
@@ -1369,9 +1678,10 @@ document.addEventListener('DOMContentLoaded', function() {
             // Clear file input
             fileInput.value = '';
             
-            // Clear coordinates
-            document.getElementById('latitude').value = '';
-            document.getElementById('longitude').value = '';
+            // Don't clear coordinates - let them remain if they were previously set
+            // This prevents 422 errors when submitting forms
+            // document.getElementById('latitude').value = '';
+            // document.getElementById('longitude').value = '';
             
             // Update submit button
             window.updateSubmitButtonVisibility();

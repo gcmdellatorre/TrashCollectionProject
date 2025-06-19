@@ -980,4 +980,118 @@
         min-height: 350px !important;
         max-height: 500px !important;
     }
-} 
+}
+
+/* Full-page location modal style */
+.location-modal-fullheight,
+#locationModal .modal-dialog {
+    height: 100vh !important;
+    max-height: 100vh !important;
+    margin: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: stretch !important;
+}
+
+#locationModal .modal-content {
+    height: 100vh !important;
+    max-height: 100vh !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+}
+
+#locationModal .modal-body {
+    flex: 1 1 auto !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    min-height: 0 !important;
+}
+
+#locationModal .modal-footer {
+    position: sticky !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    background: #f8fafc !important;
+    border-top: 2px solid #e2e8f0 !important;
+    z-index: 10 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    flex-shrink: 0 !important;
+    margin-top: auto !important;
+    padding: 1rem !important;
+}
+
+@media (max-width: 768px) {
+    .location-modal-fullheight,
+    #locationModal .modal-dialog,
+    #locationModal .modal-content {
+        height: 100vh !important;
+        max-height: 100vh !important;
+    }
+    #locationModal .modal-footer {
+        padding-bottom: max(1rem, env(safe-area-inset-bottom)) !important;
+    }
+}
+
+/* Full-page location selector overlay */
+.location-selector-page {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: #fff;
+    z-index: 99999;
+    display: none;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.location-selector-page.show {
+    display: flex;
+}
+
+.location-selector-page nav {
+    flex-shrink: 0;
+}
+
+.location-selector-page .flex-1 {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.location-selector-page .overflow-y-auto {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.location-selector-map {
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    border: 1px solid #e5e7eb;
+    height: 300px;
+    min-height: 200px;
+    max-height: 350px;
+}
+
+@media (max-width: 768px) {
+    .location-selector-page .overflow-y-auto {
+        padding-bottom: env(safe-area-inset-bottom);
+    }
+    
+    .location-selector-map {
+        height: 300px;
+        min-height: 200px;
+        max-height: 350px;
+    }
+}
+
+/* Custom tooltip for trash discovery button - REMOVED (using JavaScript instead) */
+
+/* Custom tooltip for trash discovery button - REMOVED (using JavaScript instead) */ 

@@ -151,8 +151,7 @@
                                         </p>
                                         <button type="button" 
                                                 class="px-4 py-2 bg-yellow-600 text-white rounded-lg text-sm font-medium hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 transition-colors"
-                                                data-bs-toggle="modal" 
-                                                data-bs-target="#locationModal">
+                                                onclick="showLocationSelector()">
                                             <i class="bi bi-geo-alt mr-2"></i>
                                             Select Location Manually
                                         </button>
@@ -173,7 +172,7 @@
                             </div>
                             
                             <!-- Manual Details Toggle -->
-                            <div class="flex items-center">
+                            <div class="flex items-center hidden">
                                 <input type="checkbox" id="fill-form-check" class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded">
                                 <label for="fill-form-check" class="ml-2 block text-sm text-gray-700">
                                     Add details manually
@@ -260,7 +259,7 @@
                                            placeholder="Search for a location...">
                                     <button class="px-4 py-2 bg-primary-600 text-white rounded-r-lg hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500" 
                                             id="main-map-search-btn"
-                                            onclick="searchMainMap(document.getElementById('main-map-search').value)">
+                                            onclick="window.searchMainMap(document.getElementById('main-map-search').value)">
                                         <i class="bi bi-search"></i>
                                     </button>
                                 </div>
@@ -286,7 +285,7 @@
                                 <button class="px-4 py-2 bg-accent-600 text-white rounded-lg hover:bg-accent-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent-500 disabled:opacity-50 disabled:cursor-not-allowed" 
                                         id="find-dirty-btn"
                                         disabled
-                                        title="First search for a location, then click to find dirty places">
+                                        data-tooltip="Discover trash hotspots">
                                     <i class="bi bi-trash"></i>
                                 </button>
                             </div>
@@ -304,92 +303,104 @@
         </div>
     </div>
 
-    <!-- Location Modal -->
-    <div class="modal fade" id="locationModal" tabindex="-1" aria-labelledby="locationModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg modal-dialog-centered">
-            <div class="modal-content bg-white rounded-xl shadow-lg border border-gray-200 max-h-[90vh] flex flex-col">
-                <!-- Modern Header -->
-                <div class="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200 flex justify-between items-center flex-shrink-0">
-                    <div class="flex items-center space-x-2 sm:space-x-3">
-                        <div class="w-6 h-6 sm:w-8 sm:h-8 bg-primary-100 rounded-lg flex items-center justify-center">
-                            <i class="bi bi-geo-alt text-primary-600 text-sm sm:text-base"></i>
+    <!-- Location Selector Page (now a true page overlay) -->
+    <div class="location-selector-page" id="locationSelectorPage">
+        <!-- Same Header as Main App -->
+        <nav class="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between items-center h-16">
+                    <div class="flex items-center space-x-3">
+                        <img src="/static/images/Mamaland Beverage Logo - Fun Character Design.png" alt="MamaLand" class="h-8 w-8 rounded-full">
+                        <span class="text-xl font-semibold text-gray-900">MamaLand</span>
+                    </div>
+                    <button type="button" class="text-gray-400 hover:text-gray-600 transition-colors p-2 rounded-lg hover:bg-gray-100" onclick="closeLocationSelector()">
+                        <i class="bi bi-x-lg text-xl"></i>
+                    </button>
+                </div>
+            </div>
+        </nav>
+        
+        <!-- Page Content -->
+        <div class="flex-1 flex flex-col overflow-hidden">
+            <!-- Page Header -->
+            <div class="px-4 sm:px-6 py-4 border-b border-gray-200 bg-gray-50">
+                <div class="max-w-7xl mx-auto">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-8 h-8 bg-primary-100 rounded-lg flex items-center justify-center">
+                            <i class="bi bi-geo-alt text-primary-600"></i>
                         </div>
                         <div>
-                            <h3 class="text-base sm:text-lg font-semibold text-gray-900">Select Your Location</h3>
-                            <p class="text-xs sm:text-sm text-gray-500">Search for a location or click on the map</p>
+                            <h2 class="text-lg font-semibold text-gray-900">Select Your Location</h2>
+                            <p class="text-sm text-gray-500">Search for a location or click on the map</p>
                         </div>
                     </div>
-                    <button type="button" class="text-gray-400 hover:text-gray-600 transition-colors p-1" data-bs-dismiss="modal" aria-label="Close">
-                        <i class="bi bi-x-lg text-lg sm:text-xl"></i>
-                    </button>
                 </div>
-                
-                <!-- Modern Body - Scrollable -->
-                <div class="p-4 sm:p-6 flex-1 overflow-y-auto">
-                    <!-- Search Section -->
-                    <div class="mb-4 sm:mb-6">
-                        <label for="location-search" class="block text-sm font-medium text-gray-700 mb-2">
-                            <i class="bi bi-search mr-1"></i>
-                            Search Location
-                        </label>
-                        <div class="flex space-x-2">
-                            <input type="text" 
-                                   id="location-search" 
-                                   class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-sm" 
-                                   placeholder="e.g., 'Central Park, New York', 'Times Square', '123 Main St'"
-                                   onkeypress="if(event.key==='Enter') searchModalMap(this.value)">
-                            <button type="button" 
-                                    id="search-btn" 
-                                    class="px-3 sm:px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors text-sm"
-                                    onclick="searchModalMap(document.getElementById('location-search').value)">
+            </div>
+            
+            <!-- Scrollable Content -->
+            <div class="flex-1 overflow-y-auto">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+                    <div class="max-w-2xl mx-auto">
+                        <div class="location-selector-search mb-6">
+                            <label for="location-search" class="block text-sm font-medium text-gray-700 mb-2">
                                 <i class="bi bi-search mr-1"></i>
-                                <span class="hidden sm:inline">Search</span>
-                            </button>
+                                Search Location
+                            </label>
+                            <div class="flex space-x-2">
+                                <input type="text" 
+                                       id="location-search" 
+                                       class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-sm" 
+                                       placeholder="e.g., 'Central Park, New York', 'Times Square', '123 Main St'"
+                                       onkeypress="if(event.key==='Enter') searchLocation(this.value)">
+                                <button type="button" 
+                                        id="search-btn" 
+                                        class="px-3 sm:px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors text-sm"
+                                        onclick="searchLocation(document.getElementById('location-search').value)">
+                                    <i class="bi bi-search mr-1"></i>
+                                    <span class="hidden sm:inline">Search</span>
+                                </button>
+                            </div>
+                            <p class="text-xs text-gray-500 mt-2">
+                                <i class="bi bi-info-circle mr-1"></i>
+                                Type a location name and press Enter or click Search
+                            </p>
                         </div>
-                        <p class="text-xs text-gray-500 mt-2">
-                            <i class="bi bi-info-circle mr-1"></i>
-                            Type a location name and press Enter or click Search
-                        </p>
-                    </div>
-                    
-                    <!-- Map Container - Responsive Height -->
-                    <div class="mb-4 sm:mb-6">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">
-                            <i class="bi bi-map mr-1"></i>
-                            Interactive Map
-                        </label>
-                        <div id="modal-map-container" class="w-full rounded-lg border border-gray-200 overflow-hidden" style="height: 300px; min-height: 250px; max-height: 400px;"></div>
-                        <p class="text-xs text-gray-500 mt-2">
-                            <i class="bi bi-mouse mr-1"></i>
-                            Click anywhere on the map to select a location
-                        </p>
-                    </div>
-                    
-                    <!-- Selected Location Display -->
-                    <div id="selected-location-display" class="hidden p-3 sm:p-4 bg-blue-50 border border-blue-200 rounded-lg mb-4">
-                        <div class="flex items-center">
-                            <i class="bi bi-check-circle text-blue-600 mr-2"></i>
-                            <span id="selected-location-text" class="text-sm text-blue-700">Location selected</span>
+                        
+                        <div class="mb-6">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                <i class="bi bi-map mr-1"></i>
+                                Interactive Map
+                            </label>
+                            <div id="location-map" class="location-selector-map"></div>
+                            <p class="text-xs text-gray-500 mt-2">
+                                <i class="bi bi-mouse mr-1"></i>
+                                Click anywhere on the map to select a location
+                            </p>
+                        </div>
+                        
+                        <div id="selected-location-display" class="hidden p-4 bg-blue-50 border border-blue-200 rounded-lg mb-6">
+                            <div class="flex items-center">
+                                <i class="bi bi-check-circle text-blue-600 mr-2"></i>
+                                <span id="selected-location-text" class="text-sm text-blue-700">Location selected</span>
+                            </div>
                         </div>
                     </div>
                 </div>
-                
-                <!-- Modern Footer - Always Visible -->
-                <div class="px-4 sm:px-6 py-3 sm:py-4 border-t border-gray-200 flex justify-end space-x-2 sm:space-x-3 flex-shrink-0 bg-gray-50">
-                    <button type="button" 
-                            class="px-3 sm:px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors text-sm font-medium" 
-                            data-bs-dismiss="modal">
-                        <i class="bi bi-x mr-1"></i>
-                        Cancel
-                    </button>
-                    <button type="button" 
-                            id="confirm-location-btn"
-                            class="px-3 sm:px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
-                            onclick="confirmLocation()"
-                            disabled>
-                        <i class="bi bi-check mr-1"></i>
-                        Confirm Location
-                    </button>
+            </div>
+            
+            <!-- Sticky Footer -->
+            <div class="border-t border-gray-200 bg-gray-50 px-4 sm:px-6 py-4">
+                <div class="max-w-7xl mx-auto">
+                    <div class="flex justify-end space-x-3">
+                        <button type="button" class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors text-sm font-medium" onclick="closeLocationSelector()">
+                            <i class="bi bi-x mr-1"></i>
+                            Cancel
+                        </button>
+                        <button type="button" id="confirm-location-btn" class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium" onclick="confirmLocation()" disabled>
+                            <i class="bi bi-check mr-1"></i>
+                            Confirm Location
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>

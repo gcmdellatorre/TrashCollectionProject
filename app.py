@@ -1,5 +1,5 @@
 # app.py
-from fastapi import FastAPI, UploadFile, File, Form, Request
+from fastapi import FastAPI, UploadFile, File, Form, Request, HTTPException
 from fastapi.responses import JSONResponse, HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -15,6 +15,7 @@ import time
 from contextlib import asynccontextmanager
 from utils.geo_functions import find_closest_dirty_places, get_location_summary, geocode_location
 from utils.blob_storage import blob_service
+import httpx
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -46,6 +47,31 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.get("/api/search-location")
+async def search_location_proxy(q: str):
+    """Proxy for Nominatim search to avoid CORS issues."""
+    nominatim_url = f"https://nominatim.openstreetmap.org/search"
+    params = {
+        "q": q,
+        "format": "json",
+        "limit": 1
+    }
+    headers = {
+        "User-Agent": "MamaLand Trash Collection App/1.0"
+    }
+
+    async with httpx.AsyncClient() as client:
+        try:
+            response = await client.get(nominatim_url, params=params, headers=headers)
+            response.raise_for_status()  # Raise an exception for 4xx or 5xx status codes
+            return JSONResponse(content=response.json())
+        except httpx.HTTPStatusError as e:
+            # Forward the status code and detail from Nominatim's error
+            raise HTTPException(status_code=e.response.status_code, detail=f"Error from Nominatim: {e.response.text}")
+        except httpx.RequestError as e:
+            # Handle network errors
+            raise HTTPException(status_code=503, detail=f"Service unavailable: Could not connect to Nominatim. {e}")
 
 # Mount static files directory
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -141,8 +167,8 @@ async def seed_database(count: int = 20):
 @app.post("/upload")
 async def upload_file(
     file: UploadFile = File(...),
-    latitude: float = Form(None),
-    longitude: float = Form(None),
+    latitude: str = Form(None),
+    longitude: str = Form(None),
     fill_form: str = Form(None),
     trash_type: str = Form(None),
     estimated_kg: float = Form(None),
@@ -170,8 +196,8 @@ async def upload_file(
         if ('latitude' not in metadata or 'longitude' not in metadata):
             if latitude and longitude:
                 print(f"Using form coordinates: lat={latitude}, lng={longitude}")
-                final_latitude = latitude
-                final_longitude = longitude
+                final_latitude = float(latitude)
+                final_longitude = float(longitude)
             else:
                 raise ValueError("No GPS coordinates found in image and none provided in form")
         else:
@@ -219,8 +245,8 @@ async def upload_file(
 
 @app.post("/test-data")
 async def add_test_data(
-    latitude: float = Form(...),
-    longitude: float = Form(...),
+    latitude: str = Form(...),
+    longitude: str = Form(...),
     timestamp: str = Form(None),
     trash_type: str = Form(None),
     estimated_kg: float = Form(None),
@@ -241,8 +267,8 @@ async def add_test_data(
         
         # Save to new database system
         report_id = save_trash_report(
-            latitude=latitude,
-            longitude=longitude,
+            latitude=float(latitude),
+            longitude=float(longitude),
             image_data=dummy_image_data,
             filename="test_data.jpg",
             trash_type=form_data.get('trash_type'),
@@ -252,17 +278,17 @@ async def add_test_data(
         )
         
         return JSONResponse(content={
-            "status": "success", 
+            "status": "success",
             "report_id": report_id,
             "metadata": {
-                "latitude": latitude,
-                "longitude": longitude,
+                "latitude": float(latitude),
+                "longitude": float(longitude),
                 **form_data
             }
         })
         
     except Exception as e:
-        print(f"Test data error: {e}")
+        print(f"Error creating test data: {e}")
         return JSONResponse(
             status_code=500,
             content={"status": "error", "message": str(e)}
@@ -270,86 +296,67 @@ async def add_test_data(
 
 @app.get("/map", response_class=HTMLResponse)
 async def get_map():
-    from utils.map_utils import generate_map
-    map_html = generate_map()
-    return map_html
-
+    with open("static/map.html", "r") as file:
+        return file.read()
+    
 @app.get("/api/trash-data")
 async def get_trash_data():
+    """
+    Endpoint to get all trash reports from the database.
+    """
     try:
         reports = get_all_trash_reports()
-        # Convert to format expected by frontend
-        entries = []
-        for report in reports:
-            entry = {
-                "latitude": report["latitude"],
-                "longitude": report["longitude"],
-                "timestamp": report["timestamp"],
-                "file_path": f"blob:{report['image_blob_id']}",  # Indicate it's a blob reference
-                "trash_type": report.get("trash_type"),
-                "estimated_kg": report.get("estimated_kg"),
-                "sparcity": report.get("sparcity"),
-                "cleanliness": report.get("cleanliness")
-            }
-            entries.append(entry)
-        
-        return JSONResponse(content=entries)
+        return JSONResponse(content={"status": "success", "data": reports})
     except Exception as e:
-        print(f"Error getting trash data: {e}")
-        return JSONResponse(content=[])
+        print(f"Error fetching trash data: {e}")
+        return JSONResponse(
+            status_code=500,
+            content={"status": "error", "message": "Could not retrieve trash data"}
+        )
 
 @app.post("/api/check-coordinates")
 async def check_coordinates(file: UploadFile = File(...)):
-    """Check if uploaded image has GPS coordinates"""
+    """
+    Endpoint to check if an image has GPS coordinates.
+    """
     try:
-        # Save file temporarily
-        temp_path = f"temp_{file.filename}"
-        with open(temp_path, "wb") as buffer:
-            content = await file.read()
-            buffer.write(content)
+        # Save temporarily to extract GPS data
+        temp_path = f"temp_{uuid.uuid4()}"
+        with open(temp_path, "wb") as temp_file:
+            temp_file.write(await file.read())
         
-        # Extract metadata
         metadata = extract_metadata(temp_path)
-        
-        # Clean up temp file
         os.remove(temp_path)
+
+        has_gps = 'latitude' in metadata and 'longitude' in metadata
         
-        # Check if coordinates exist
-        has_coordinates = 'latitude' in metadata and 'longitude' in metadata
-        
-        response = {
-            "has_coordinates": has_coordinates
-        }
-        
-        if has_coordinates:
-            response["latitude"] = metadata["latitude"]
-            response["longitude"] = metadata["longitude"]
-        
-        return JSONResponse(content=response)
-        
+        return JSONResponse(content={
+            "status": "success",
+            "has_gps": has_gps,
+            "coordinates": {
+                "latitude": metadata.get('latitude'),
+                "longitude": metadata.get('longitude')
+            }
+        })
+
     except Exception as e:
         print(f"Error checking coordinates: {e}")
-        return JSONResponse(content={"has_coordinates": False})
+        return JSONResponse(
+            status_code=500,
+            content={"status": "error", "message": str(e)}
+        )
 
-# Add endpoint to serve images from blob storage
 @app.get("/api/image/{blob_id}")
 async def get_image(blob_id: str, thumbnail: bool = False):
-    """Serve images from blob storage"""
+    """
+    Retrieve an image from Azure Blob Storage.
+    If 'thumbnail' is true, it returns a smaller version of the image.
+    """
     try:
-        image_data = blob_service.get_image(blob_id, thumbnail=thumbnail)
-        
-        from fastapi.responses import Response
-        return Response(
-            content=image_data,
-            media_type="image/jpeg",
-            headers={"Cache-Control": "max-age=3600"}
-        )
+        image_data, mime_type = blob_service.get_blob(blob_id, thumbnail=thumbnail)
+        return HTMLResponse(content=image_data, media_type=mime_type)
     except Exception as e:
-        print(f"Error serving image: {e}")
-        return JSONResponse(
-            status_code=404,
-            content={"error": "Image not found"}
-        )
+        return JSONResponse(status_code=404, content={"message": str(e)})
 
 @app.get("/api/find-dirty-places")
 async def find_dirty_places_endpoint(
@@ -358,32 +365,36 @@ async def find_dirty_places_endpoint(
     limit: int = 5,
     max_distance: float = 25  # This should be the radius parameter
 ):
-    """Find closest dirty places to a location"""
-    try:
-        result = find_closest_dirty_places(lat, lng, limit, max_distance)
-        return JSONResponse(content=result)
-    except Exception as e:
-        print(f"Error finding dirty places: {e}")
-        return JSONResponse(
-            content={"error": "Failed to find dirty places"}, 
-            status_code=500
-        )
+    dirty_places = find_closest_dirty_places(lat, lng, limit=limit, max_distance=max_distance)
+    return JSONResponse(content={"status": "success", "dirty_places": dirty_places})
 
 @app.get("/api/location-summary")
 async def location_summary(lat: float, lng: float, radius: float = 5.0):
-    """Get summary of trash situation around a location"""
-    try:
-        summary = get_location_summary(lat, lng, radius)
-        return JSONResponse(content=summary)
-    except Exception as e:
-        print(f"Error getting location summary: {e}")
-        return JSONResponse(
-            status_code=500,
-            content={"error": str(e)}
-        )
+    summary = get_location_summary(lat, lng, radius)
+    return JSONResponse(content=summary)
 
+@app.get("/api/geocode")
+async def geocode(q: str):
+    """Geocode a location string into coordinates."""
+    try:
+        result = geocode_location(q)
+        if result:
+            return JSONResponse(content={"status": "success", "data": result})
+        else:
+            return JSONResponse(status_code=404, content={"status": "error", "message": "Location not found"})
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"status": "error", "message": str(e)})
+        
 if __name__ == "__main__":
     import os
-    port = int(os.getenv("PORT", 8000))
-    uvicorn.run(app, host="0.0.0.0", port=port)
+    
+    # Get port from environment variable or default to 8000
+    port = int(os.environ.get("PORT", 8000))
+    
+    # Get host from environment variable (for Render deployment)
+    host = os.environ.get("RENDER_HOST", "0.0.0.0")
+
+    print(f"Starting server at {host}:{port}")
+    
+    uvicorn.run("app:app", host=host, port=port, reload=True)
 

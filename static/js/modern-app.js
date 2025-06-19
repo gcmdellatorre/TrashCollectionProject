@@ -68,76 +68,59 @@ window.updateSubmitButtonVisibility = function() {
 };
 
 // Global functions accessible from HTML
-window.searchMainMap = function(query) {
-    if (!query.trim()) {
-        window.showNotification('Please enter a location to search', 'warning');
-        return;
-    }
-    
-    const searchBtn = document.getElementById('main-map-search-btn');
-    const originalText = searchBtn.innerHTML;
-    
-    // Show loading state
-    searchBtn.innerHTML = '<i class="bi bi-hourglass-split animate-spin"></i>';
-    searchBtn.disabled = true;
-    
-    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1`;
-    
-    fetch(url, {
-        headers: {
-            'User-Agent': 'MamaLand Trash Collection App/1.0'
+window.searchMainMap = function() {
+    const query = document.getElementById('main-map-search-input').value;
+    if (!query) return;
+
+    const searchUrl = `/api/search-location?q=${encodeURIComponent(query)}`;
+
+    fetch(searchUrl)
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data && data.length > 0) {
+            const result = data[0];
+            const lat = parseFloat(result.lat);
+            const lng = parseFloat(result.lon);
+            
+            currentSearchLocation = { lat, lng };
+            currentSearchRadius = parseInt(document.getElementById('search-radius').value) || 1;
+            
+            // Center map with smooth animation
+            map.setView([lat, lng], 12, { animate: true });
+            
+            // Add radius circle visualization
+            if (searchRadiusCircle) {
+                map.removeLayer(searchRadiusCircle);
+            }
+            searchRadiusCircle = L.circle([lat, lng], {
+                radius: currentSearchRadius * 1000, // Convert km to meters
+                color: '#0ea5e9',
+                fillColor: '#0ea5e9',
+                fillOpacity: 0.1,
+                weight: 2
+            }).addTo(map);
+            
+            // Enable find dirty places button
+            const findDirtyBtn = document.getElementById('find-dirty-btn');
+            if (findDirtyBtn) {
+                findDirtyBtn.disabled = false;
+                findDirtyBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+            
+            window.showNotification(`Found: ${result.display_name}`, 'success');
+        } else {
+            window.showNotification('Location not found. Please try a different search term.', 'error');
         }
     })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            return response.json();
-        })
-        .then(data => {
-            if (data && data.length > 0) {
-                const result = data[0];
-                const lat = parseFloat(result.lat);
-                const lng = parseFloat(result.lon);
-                
-                currentSearchLocation = { lat, lng };
-                currentSearchRadius = parseInt(document.getElementById('search-radius').value) || 1;
-                
-                // Center map with smooth animation
-                map.setView([lat, lng], 12, { animate: true });
-                
-                // Add radius circle visualization
-                if (searchRadiusCircle) {
-                    map.removeLayer(searchRadiusCircle);
-                }
-                searchRadiusCircle = L.circle([lat, lng], {
-                    radius: currentSearchRadius * 1000, // Convert km to meters
-                    color: '#0ea5e9',
-                    fillColor: '#0ea5e9',
-                    fillOpacity: 0.1,
-                    weight: 2
-                }).addTo(map);
-                
-                // Enable find dirty places button
-                const findDirtyBtn = document.getElementById('find-dirty-btn');
-                if (findDirtyBtn) {
-                    findDirtyBtn.disabled = false;
-                    findDirtyBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-                }
-                
-                window.showNotification(`Found: ${result.display_name}`, 'success');
-            } else {
-                window.showNotification('Location not found. Please try a different search term.', 'error');
-            }
-        })
-        .catch(error => {
-            console.error('Search error:', error);
-            window.showNotification('Error searching for location. Please check your connection.', 'error');
-        })
-        .finally(() => {
-            searchBtn.innerHTML = originalText;
-            searchBtn.disabled = false;
-        });
+    .catch(error => {
+        console.error('Search error:', error);
+        window.showNotification('Error searching for location. Please check your connection.', 'error');
+    });
 };
 
 // Global function to initialize modal map
@@ -323,73 +306,53 @@ function initializeLocationMap() {
 }
 
 // Search location in the page overlay
-window.searchLocation = function(query) {
-    if (!locationMap) {
-        initializeLocationMap();
-    }
-    
-    if (!query.trim()) {
-        window.showNotification('Please enter a location to search', 'warning');
+window.searchLocation = function() {
+    const query = document.getElementById('location-search-input').value;
+    if (!query) {
+        console.log("Search query is empty.");
         return;
     }
-    
-    const searchBtn = document.getElementById('search-btn');
-    const originalText = searchBtn.innerHTML;
-    
-    // Show loading state
-    searchBtn.innerHTML = '<i class="bi bi-hourglass-split animate-spin mr-1"></i>Searching...';
-    searchBtn.disabled = true;
-    searchBtn.classList.add('loading');
-    
-    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1`;
-    
-    fetch(url, {
-        headers: {
-            'User-Agent': 'MamaLand Trash Collection App/1.0'
+
+    const searchUrl = `/api/search-location?q=${encodeURIComponent(query)}`;
+
+    fetch(searchUrl)
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`Network response was not ok: ${response.statusText}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data && data.length > 0) {
+            const result = data[0];
+            const lat = parseFloat(result.lat);
+            const lng = parseFloat(result.lon);
+            
+            // Clear previous markers
+            locationMap.eachLayer(layer => {
+                if (layer instanceof L.Marker) {
+                    locationMap.removeLayer(layer);
+                }
+            });
+            
+            // Center map and add marker
+            locationMap.setView([lat, lng], 15);
+            const marker = L.marker([lat, lng]).addTo(locationMap);
+            marker.bindPopup(`Found: ${result.display_name}`).openPopup();
+            
+            selectedLocation = { lat, lng };
+            
+            // Update UI
+            updateLocationDisplay(`Found: ${result.display_name}`);
+            enableConfirmButton();
+        } else {
+            window.showNotification('Location not found. Please try a different search term.', 'error');
         }
     })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            return response.json();
-        })
-        .then(data => {
-            if (data && data.length > 0) {
-                const result = data[0];
-                const lat = parseFloat(result.lat);
-                const lng = parseFloat(result.lon);
-                
-                // Clear previous markers
-                locationMap.eachLayer(layer => {
-                    if (layer instanceof L.Marker) {
-                        locationMap.removeLayer(layer);
-                    }
-                });
-                
-                // Center map and add marker
-                locationMap.setView([lat, lng], 15);
-                const marker = L.marker([lat, lng]).addTo(locationMap);
-                marker.bindPopup(`Found: ${result.display_name}`).openPopup();
-                
-                selectedLocation = { lat, lng };
-                
-                // Update UI
-                updateLocationDisplay(`Found: ${result.display_name}`);
-                enableConfirmButton();
-            } else {
-                window.showNotification('Location not found. Please try a different search term.', 'error');
-            }
-        })
-        .catch(error => {
-            console.error('Search error:', error);
-            window.showNotification('Error searching for location. Please check your connection.', 'error');
-        })
-        .finally(() => {
-            searchBtn.innerHTML = originalText;
-            searchBtn.disabled = false;
-            searchBtn.classList.remove('loading');
-        });
+    .catch(error => {
+        console.error('Search error:', error);
+        window.showNotification('Error searching for location. Please check your connection.', 'error');
+    });
 };
 
 // Update location display

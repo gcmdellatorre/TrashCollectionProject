@@ -1598,23 +1598,33 @@ document.addEventListener('DOMContentLoaded', function() {
         };
 
         const promptForAlternativeLocation = () => {
-            if (browserLocation) {
+            // First, check if browser location is available and ask the user
+            if (browserLocation && browserLocation.lat && browserLocation.lng) {
                 showLocationConfirmation(
                     'Use Current Location?',
-                    'Would you like to use your current device location for this report?',
+                    `We couldn't find GPS data in the photo. Would you like to use your current device location (${browserLocation.lat.toFixed(4)}, ${browserLocation.lng.toFixed(4)})?`,
                     () => { // onConfirm
                         setLocation(browserLocation.lat, browserLocation.lng, 'your device');
                     },
-                    () => { // onDecline
-                        locationStatusText.textContent = 'Please select a location for your report.';
+                    () => { // onDecline, user wants to select manually
+                        console.log('User declined browser location. Showing manual selector.');
+                        locationStatusText.textContent = 'Please select the report location on the map.';
                         manualLocationSection.classList.remove('hidden');
-                        showLocationSelector();
+                        // Directly show the modal for manual selection
+                        const locationModal = new bootstrap.Modal(document.getElementById('locationModal'));
+                        locationModal.show();
+                        window.initializeModalMap();
                     }
                 );
             } else {
-                locationStatusText.textContent = 'Please select a location for your report.';
+                // If no browser location, go straight to manual selection
+                console.log('No browser location available. Showing manual selector directly.');
+                window.showNotification('Please select the report location on the map.', 'info');
+                locationStatusText.textContent = 'Please select the report location on the map.';
                 manualLocationSection.classList.remove('hidden');
-                showLocationSelector();
+                const locationModal = new bootstrap.Modal(document.getElementById('locationModal'));
+                locationModal.show();
+                window.initializeModalMap();
             }
         };
         

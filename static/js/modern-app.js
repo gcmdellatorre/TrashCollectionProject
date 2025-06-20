@@ -13,6 +13,9 @@ let locationMap = null; // Map for the full-page selector
 let browserLocation = null;
 let selectedLocation = null; // Store selected {lat, lng}
 let locationMapMarker = null; // Marker for the location map
+let lastSearchedLocation = null; // Store the last successfully searched location
+let allTrashData = []; // Store all trash points
+let markersOnMap = []; // Store references to Leaflet markers
 
 // =================================================================================
 //
@@ -96,6 +99,7 @@ window.searchMainMap = function() {
             const lat = parseFloat(result.lat);
             const lng = parseFloat(result.lon);
 
+            lastSearchedLocation = { lat, lng }; // Save the searched location
             map.setView([lat, lng], 12, { animate: true });
 
             window.showNotification(`Found: ${result.display_name}`, 'success');
@@ -108,6 +112,56 @@ window.searchMainMap = function() {
         window.showNotification('Error searching for location. Please check your connection.', 'error');
     });
 };
+
+function haversineDistance(coords1, coords2) {
+    function toRad(x) {
+        return x * Math.PI / 180;
+    }
+
+    const R = 6371; // km
+    const dLat = toRad(coords2.lat - coords1.lat);
+    const dLon = toRad(coords2.lng - coords1.lng);
+    const lat1 = toRad(coords1.lat);
+    const lat2 = toRad(coords2.lat);
+
+    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.sin(dLon / 2) * Math.sin(dLon / 2) * Math.cos(lat1) * Math.cos(lat2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    
+    return R * c;
+}
+
+function findNearbyTrash() {
+    const searchCenter = lastSearchedLocation || browserLocation;
+
+    if (!searchCenter) {
+        window.showNotification('Could not determine a location. Please search for one or enable location services.', 'error');
+        if (!browserLocation) {
+            requestUserLocationOnLoad();
+        }
+        return;
+    }
+
+    const radius = document.getElementById('radius-slider').value;
+    const nearbyPoints = allTrashData.filter(point => {
+        const pointCoords = { lat: point.latitude, lng: point.longitude };
+        const distance = haversineDistance(searchCenter, pointCoords);
+        return distance <= radius;
+    });
+
+    // Clear existing markers and add only nearby ones
+    markersOnMap.forEach(marker => marker.remove());
+    markersOnMap = [];
+    
+    map.setView([searchCenter.lat, searchCenter.lng], 12, { animate: true });
+
+    if (nearbyPoints.length > 0) {
+        nearbyPoints.forEach(point => addModernMarker(point));
+        window.showNotification(`Found ${nearbyPoints.length} trash points within ${radius} km.`, 'success');
+    } else {
+        window.showNotification(`No trash found within ${radius} km of your selected location.`, 'info');
+    }
+}
 
 // =================================================================================
 //
@@ -219,8 +273,9 @@ function loadMapData() {
     .then(response => response.json())
     .then(response => {
         if (response.status === 'success' && response.data) {
-            console.log(`Loaded ${response.data.length} trash data points`);
-            response.data.forEach(point => addModernMarker(point));
+            allTrashData = response.data; // Store all data
+            console.log(`Loaded ${allTrashData.length} trash data points`);
+            allTrashData.forEach(point => addModernMarker(point));
         } else {
             console.log('No trash data available or error in response');
         }
@@ -260,6 +315,7 @@ function addModernMarker(point) {
             </div>
         </div>`;
     marker.bindPopup(popupContent);
+    markersOnMap.push(marker); // Keep track of markers
 }
 
 function setupEventListeners() {
@@ -268,6 +324,17 @@ function setupEventListeners() {
 
     const uploadForm = document.getElementById('upload-form');
     uploadForm.addEventListener('submit', handleUploadFormSubmit);
+
+    // Main map search
+    document.getElementById('main-map-search-btn').addEventListener('click', window.searchMainMap);
+
+    // Nearby trash functionality
+    document.getElementById('find-nearby-btn').addEventListener('click', findNearbyTrash);
+    const radiusSlider = document.getElementById('radius-slider');
+    const radiusValue = document.getElementById('radius-value');
+    radiusSlider.addEventListener('input', () => {
+        radiusValue.textContent = radiusSlider.value;
+    });
 
     // Event listeners for the new full-page selector
     const manualLocationButton = document.getElementById('manual-location-section').querySelector('button');
@@ -461,25 +528,27 @@ function requestUserLocationOnLoad() {
 //
 // =================================================================================
 
-console.log('=== MODERN APP INITIALIZATION START ===');
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('=== MODERN APP INITIALIZATION START ===');
 
-// Unregister all service workers to break cache
-if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.getRegistrations().then(function(registrations) {
-        for(let registration of registrations) {
-            registration.unregister();
-            console.log('Service Worker unregistered successfully.');
-        }
-    }).catch(function(err) {
-        console.error('Service Worker unregistration failed: ', err);
-    });
-}
+    // Unregister all service workers to break cache
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(function(registrations) {
+            for(let registration of registrations) {
+                registration.unregister();
+                console.log('Service Worker unregistered successfully.');
+            }
+        }).catch(function(err) {
+            console.error('Service Worker unregistration failed: ', err);
+        });
+    }
 
-// Initialize all functionality
-initMap();
-loadMapData();
-setupEventListeners();
-setupPhotoCapture();
-requestUserLocationOnLoad();
+    // Initialize all functionality
+    initMap();
+    loadMapData();
+    setupEventListeners();
+    setupPhotoCapture();
+    requestUserLocationOnLoad();
 
-console.log('=== MODERN APP INITIALIZATION COMPLETE ===');
+    console.log('=== MODERN APP INITIALIZATION COMPLETE ===');
+});

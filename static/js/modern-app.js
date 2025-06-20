@@ -1096,13 +1096,22 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Modern form submission
     function handleUploadFormSubmit(event) {
+        // This function should ONLY be triggered by a user click on the submit button.
+        // We prevent default to handle submission via fetch.
         event.preventDefault();
-        
-        const formData = new FormData(event.target);
+
         const submitBtn = document.getElementById('submit-btn');
+        const isSubmitting = submitBtn.disabled;
+
+        if (isSubmitting) {
+            console.log('Form submission already in progress. Ignoring additional trigger.');
+            return;
+        }
+
+        const formData = new FormData(event.target);
         
         // Debug: Log form data
-        console.log('Submitting form with data:');
+        console.log('handleUploadFormSubmit triggered. Form data:');
         for (let [key, value] of formData.entries()) {
             console.log(`${key}: ${value}`);
         }
@@ -1113,7 +1122,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const longitude = formData.get('longitude');
         
         if (!file || file.size === 0) {
-            window.showNotification('Please select an image file', 'error');
+            window.showNotification('Please select an image file to upload.', 'error');
             return;
         }
         

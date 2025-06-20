@@ -98,23 +98,6 @@ window.searchMainMap = function() {
 
             map.setView([lat, lng], 12, { animate: true });
 
-            if (searchRadiusCircle) {
-                map.removeLayer(searchRadiusCircle);
-            }
-            searchRadiusCircle = L.circle([lat, lng], {
-                radius: currentSearchRadius * 1000,
-                color: '#0ea5e9',
-                fillColor: '#0ea5e9',
-                fillOpacity: 0.1,
-                weight: 2
-            }).addTo(map);
-
-            const findDirtyBtn = document.getElementById('find-dirty-btn');
-            if (findDirtyBtn) {
-                findDirtyBtn.disabled = false;
-                findDirtyBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-            }
-
             window.showNotification(`Found: ${result.display_name}`, 'success');
         } else {
             window.showNotification('Location not found. Please try a different search term.', 'error');
@@ -287,7 +270,10 @@ function setupEventListeners() {
     uploadForm.addEventListener('submit', handleUploadFormSubmit);
 
     // Event listeners for the new full-page selector
-    document.getElementById('manual-location-section').querySelector('button').addEventListener('click', openLocationSelector);
+    const manualLocationButton = document.getElementById('manual-location-section').querySelector('button');
+    if (manualLocationButton) {
+        manualLocationButton.addEventListener('click', openLocationSelector);
+    }
     document.getElementById('close-location-selector').addEventListener('click', closeLocationSelector);
     document.getElementById('confirm-selected-location').addEventListener('click', confirmLocationSelection);
 }
@@ -315,9 +301,37 @@ function handleUploadFormSubmit(event) {
 
     const form = event.target;
     const formData = new FormData(form);
-    const file = formData.get('file');
+    
+    // Create a new FormData object to filter out empty optional fields
+    const filteredFormData = new FormData();
 
-    if (!file || file.size === 0) {
+    // Append required fields
+    filteredFormData.append('file', formData.get('file'));
+    filteredFormData.append('latitude', formData.get('latitude'));
+    filteredFormData.append('longitude', formData.get('longitude'));
+
+    // Only append optional fields if they have a value
+    const trashType = formData.get('trash_type');
+    if (trashType) {
+        filteredFormData.append('trash_type', trashType);
+    }
+
+    const estimatedKg = formData.get('estimated_kg');
+    if (estimatedKg) {
+        filteredFormData.append('estimated_kg', estimatedKg);
+    }
+
+    const sparcity = formData.get('sparcity');
+    if (sparcity) {
+        filteredFormData.append('sparcity', sparcity);
+    }
+
+    const cleanliness = formData.get('cleanliness');
+    if (cleanliness) {
+        filteredFormData.append('cleanliness', cleanliness);
+    }
+
+    if (!formData.get('file') || formData.get('file').size === 0) {
         window.showNotification('Please select an image file to upload.', 'error');
         return;
     }
@@ -327,7 +341,7 @@ function handleUploadFormSubmit(event) {
 
     fetch('/upload', {
         method: 'POST',
-        body: formData
+        body: filteredFormData // Use the filtered data
     })
     .then(response => response.json())
     .then(data => {
@@ -448,6 +462,18 @@ function requestUserLocationOnLoad() {
 // =================================================================================
 
 console.log('=== MODERN APP INITIALIZATION START ===');
+
+// Unregister all service workers to break cache
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistrations().then(function(registrations) {
+        for(let registration of registrations) {
+            registration.unregister();
+            console.log('Service Worker unregistered successfully.');
+        }
+    }).catch(function(err) {
+        console.error('Service Worker unregistration failed: ', err);
+    });
+}
 
 // Initialize all functionality
 initMap();

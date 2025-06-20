@@ -169,9 +169,8 @@ async def upload_file(
     file: UploadFile = File(...),
     latitude: str = Form(None),
     longitude: str = Form(None),
-    fill_form: str = Form(None),
     trash_type: str = Form(None),
-    estimated_kg: float = Form(None),
+    estimated_kg: str = Form(None),  # Accept as string
     sparcity: str = Form(None),
     cleanliness: str = Form(None)
 ):
@@ -179,65 +178,64 @@ async def upload_file(
         # Read file data
         file_data = await file.read()
         
-        print(f"Processing file: {file.filename}")
-        
+        # Convert estimated_kg to float, or None if empty/invalid
+        final_estimated_kg = None
+        if estimated_kg and estimated_kg.strip():
+            try:
+                final_estimated_kg = float(estimated_kg)
+            except (ValueError, TypeError):
+                pass  # Keep it as None if conversion fails
+
         # Extract metadata from image
-        # Save temporarily to extract GPS data
-        temp_path = f"temp_{file.filename}"
+        temp_path = f"temp_{uuid.uuid4()}"
         with open(temp_path, "wb") as temp_file:
             temp_file.write(file_data)
         
         metadata = extract_metadata(temp_path)
-        os.remove(temp_path)  # Clean up temp file
+        os.remove(temp_path)
         
-        print(f"Extracted metadata: {metadata}")
-        
-        # Use form coordinates if no GPS in image
-        if ('latitude' not in metadata or 'longitude' not in metadata):
-            if latitude and longitude:
-                print(f"Using form coordinates: lat={latitude}, lng={longitude}")
-                final_latitude = float(latitude)
-                final_longitude = float(longitude)
-            else:
-                raise ValueError("No GPS coordinates found in image and none provided in form")
-        else:
-            final_latitude = metadata['latitude']
-            final_longitude = metadata['longitude']
-        
-        # Handle manual form data if provided
-        form_data = {}
-        if fill_form == 'true':
-            print("Processing manual form data")
-            form_data = parse_optional_form(trash_type, estimated_kg, sparcity, cleanliness)
-            print(f"Form data: {form_data}")
-        
-        # Save to new database system
+        # Determine final coordinates
+        final_latitude = float(latitude) if latitude else metadata.get('latitude')
+        final_longitude = float(longitude) if longitude else metadata.get('longitude')
+
+        if not final_latitude or not final_longitude:
+            raise ValueError("No GPS coordinates found or provided.")
+
+        # Save to database
         report_id = save_trash_report(
             latitude=final_latitude,
             longitude=final_longitude,
             image_data=file_data,
             filename=file.filename,
-            trash_type=form_data.get('trash_type'),
-            estimated_kg=form_data.get('estimated_kg'),
-            sparcity=form_data.get('sparcity'),
-            cleanliness=form_data.get('cleanliness')
+            trash_type=trash_type if trash_type else None,
+            estimated_kg=final_estimated_kg,
+            sparcity=sparcity if sparcity else None,
+            cleanliness=cleanliness if cleanliness else None
         )
         
         print(f"Saved trash report with ID: {report_id}")
+        
+        # Prepare metadata for response, ensuring kg is a number or null
+        response_metadata = {
+            "latitude": final_latitude,
+            "longitude": final_longitude,
+            "trash_type": trash_type,
+            "estimated_kg": final_estimated_kg,
+            "sparcity": sparcity,
+            "cleanliness": cleanliness
+        }
         
         return JSONResponse(content={
             "status": "success", 
             "message": "File uploaded successfully",
             "report_id": report_id,
-            "metadata": {
-                "latitude": final_latitude,
-                "longitude": final_longitude,
-                **form_data
-            }
+            "metadata": response_metadata
         })
         
     except Exception as e:
+        import traceback
         print(f"Upload error: {e}")
+        traceback.print_exc()
         return JSONResponse(
             status_code=500,
             content={"status": "error", "message": str(e)}

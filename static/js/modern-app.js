@@ -9,15 +9,10 @@
 // =================================================================================
 
 let map = null;
-let modalMap = null;
-let locationMap = null;
+let locationMap = null; // Map for the full-page selector
 let browserLocation = null;
-let selectedLocation = null;
-let searchRadiusCircle = null;
-let currentSearchLocation = null;
-let currentSearchRadius = 1; // Default 1km
-let locationModalInstance = null; // SINGLE INSTANCE FOR THE LOCATION MODAL
-
+let selectedLocation = null; // Store selected {lat, lng}
+let locationMapMarker = null; // Marker for the location map
 
 // =================================================================================
 //
@@ -101,9 +96,6 @@ window.searchMainMap = function() {
             const lat = parseFloat(result.lat);
             const lng = parseFloat(result.lon);
 
-            currentSearchLocation = { lat, lng };
-            currentSearchRadius = parseInt(document.getElementById('search-radius').value) || 1;
-
             map.setView([lat, lng], 12, { animate: true });
 
             if (searchRadiusCircle) {
@@ -134,80 +126,102 @@ window.searchMainMap = function() {
     });
 };
 
-window.initializeModalMap = function() {
-    if (!modalMap) {
-        const mapContainer = document.getElementById('modal-map-container');
-        if (!mapContainer) {
-            console.error('Modal map container not found');
-            return;
-        }
+// =================================================================================
+//
+//  FULL PAGE LOCATION SELECTOR LOGIC
+//
+// =================================================================================
 
-        mapContainer.style.height = '300px';
-        modalMap = L.map('modal-map-container').setView([0, 0], 2);
-
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap contributors'
-        }).addTo(modalMap);
-
-        modalMap.on('click', function(e) {
-            const lat = e.latlng.lat;
-            const lng = e.latlng.lng;
-
-            modalMap.eachLayer(layer => {
-                if (layer instanceof L.Marker) {
-                    modalMap.removeLayer(layer);
-                }
-            });
-
-            const marker = L.marker([lat, lng]).addTo(modalMap);
-            marker.bindPopup(`Selected: ${lat.toFixed(6)}, ${lng.toFixed(6)}`).openPopup();
-
-            selectedLocation = { lat, lng };
-            document.getElementById('selected-location-display').textContent = `Manual selection: ${lat.toFixed(6)}, ${lng.toFixed(6)}`;
-            document.getElementById('confirm-location-btn').disabled = false;
-        });
-
-        setTimeout(() => modalMap.invalidateSize(), 100);
+function openLocationSelector() {
+    const selectorPage = document.getElementById('location-selector-page');
+    selectorPage.classList.add('visible');
+    
+    // Initialize the map only if it hasn't been already
+    if (!locationMap) {
+        initializeLocationMap();
+    } else {
+        // If map already exists, just make sure its size is correct
+        setTimeout(() => locationMap.invalidateSize(), 100);
     }
-};
-
-function showLocationConfirmation(title, message, onConfirm, onDecline) {
-    const prompt = document.getElementById('location-confirmation-prompt');
-    const titleEl = document.getElementById('confirmation-title');
-    const messageEl = document.getElementById('confirmation-message');
-    const confirmBtn = document.getElementById('confirmation-confirm-btn');
-    const declineBtn = document.getElementById('confirmation-decline-btn');
-
-    if (!prompt || !titleEl || !messageEl || !confirmBtn || !declineBtn) {
-        if (window.confirm(message)) {
-            onConfirm();
-        } else {
-            onDecline();
-        }
-        return;
-    }
-
-    titleEl.textContent = title;
-    messageEl.textContent = message;
-
-    const newConfirmBtn = confirmBtn.cloneNode(true);
-    confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
-
-    const newDeclineBtn = declineBtn.cloneNode(true);
-    declineBtn.parentNode.replaceChild(newDeclineBtn, declineBtn);
-
-    newConfirmBtn.addEventListener('click', () => {
-        prompt.classList.add('hidden');
-        onConfirm();
-    });
-
-    newDeclineBtn.addEventListener('click', () => {
-        prompt.classList.add('hidden');
-        onDecline();
-    });
-
-    prompt.classList.remove('hidden');
 }
+
+function closeLocationSelector() {
+    const selectorPage = document.getElementById('location-selector-page');
+    selectorPage.classList.remove('visible');
+}
+
+function initializeLocationMap() {
+    locationMap = L.map('location-map').setView([20, 0], 2);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+    }).addTo(locationMap);
+
+    locationMap.on('click', function(e) {
+        selectedLocation = { lat: e.latlng.lat, lng: e.latlng.lng };
+
+        if (locationMapMarker) {
+            locationMap.removeLayer(locationMapMarker);
+        }
+
+        locationMapMarker = L.marker(e.latlng).addTo(locationMap);
+        
+        document.getElementById('selected-location-info').textContent = 
+            `Selected: ${selectedLocation.lat.toFixed(5)}, ${selectedLocation.lng.toFixed(5)}`;
+            
+        document.getElementById('confirm-selected-location').disabled = false;
+    });
+
+    // Handle search within the location selector
+    const searchInput = document.getElementById('location-search-input');
+    searchInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            searchLocationOnSelectorMap(searchInput.value);
+        }
+    });
+}
+
+function searchLocationOnSelectorMap(query) {
+    if (!query) return;
+    const searchUrl = `/api/search-location?q=${encodeURIComponent(query)}`;
+
+    fetch(searchUrl)
+        .then(response => response.json())
+        .then(data => {
+            if (data && data.length > 0) {
+                const result = data[0];
+                const lat = parseFloat(result.lat);
+                const lng = parseFloat(result.lon);
+                locationMap.setView([lat, lng], 13);
+                window.showNotification(`Found: ${result.display_name}`, 'info');
+            } else {
+                window.showNotification('Location not found.', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Location search error:', error);
+            window.showNotification('Error searching for location.', 'error');
+        });
+}
+
+function confirmLocationSelection() {
+    if (selectedLocation) {
+        document.getElementById('latitude').value = selectedLocation.lat;
+        document.getElementById('longitude').value = selectedLocation.lng;
+        
+        const coordsText = `${selectedLocation.lat.toFixed(4)}, ${selectedLocation.lng.toFixed(4)}`;
+        document.getElementById('coordinates-text').textContent = `Location set to: ${coordsText}`;
+        document.getElementById('coordinates-info').classList.remove('hidden');
+        
+        showManualDetailsSection();
+        closeLocationSelector();
+    }
+}
+
+// =================================================================================
+//
+//  FORM & MAP LOGIC
+//
+// =================================================================================
 
 function initMap() {
     map = L.map('map').setView([0, 0], 2);
@@ -218,11 +232,18 @@ function initMap() {
 }
 
 function loadMapData() {
-    fetch('/api/data')
+    fetch('/api/trash-data')
     .then(response => response.json())
-    .then(data => {
-        console.log(`Loaded ${data.length} trash data points`);
-        data.forEach(point => addModernMarker(point));
+    .then(response => {
+        if (response.status === 'success' && response.data) {
+            console.log(`Loaded ${response.data.length} trash data points`);
+            response.data.forEach(point => addModernMarker(point));
+        } else {
+            console.log('No trash data available or error in response');
+        }
+    })
+    .catch(error => {
+        console.error('Error loading map data:', error);
     });
 }
 
@@ -265,14 +286,10 @@ function setupEventListeners() {
     const uploadForm = document.getElementById('upload-form');
     uploadForm.addEventListener('submit', handleUploadFormSubmit);
 
-    document.getElementById('confirm-location-btn').addEventListener('click', () => {
-        if (selectedLocation) {
-            document.getElementById('latitude').value = selectedLocation.lat;
-            document.getElementById('longitude').value = selectedLocation.lng;
-            showManualDetailsSection();
-            if(locationModalInstance) locationModalInstance.hide();
-        }
-    });
+    // Event listeners for the new full-page selector
+    document.getElementById('manual-location-section').querySelector('button').addEventListener('click', openLocationSelector);
+    document.getElementById('close-location-selector').addEventListener('click', closeLocationSelector);
+    document.getElementById('confirm-selected-location').addEventListener('click', confirmLocationSelection);
 }
 
 function handleFileInputChange(event) {
@@ -296,7 +313,8 @@ function handleUploadFormSubmit(event) {
     const submitBtn = document.getElementById('submit-btn');
     if (submitBtn.disabled) return;
 
-    const formData = new FormData(event.target);
+    const form = event.target;
+    const formData = new FormData(form);
     const file = formData.get('file');
 
     if (!file || file.size === 0) {
@@ -315,7 +333,8 @@ function handleUploadFormSubmit(event) {
     .then(data => {
         if (data.status === 'success') {
             window.showNotification('Report submitted successfully!', 'success');
-            event.target.reset();
+            
+            // Add the new marker to the map
             addModernMarker({
                 id: data.report_id,
                 latitude: parseFloat(data.metadata.latitude),
@@ -323,9 +342,24 @@ function handleUploadFormSubmit(event) {
                 ...data.metadata
             });
             map.panTo([parseFloat(data.metadata.latitude), parseFloat(data.metadata.longitude)]);
+
+            // Manually reset the UI instead of using form.reset()
             document.getElementById('photo-preview-container').classList.add('hidden');
+            document.getElementById('photo-preview').src = '';
             document.getElementById('details-form').classList.add('hidden');
             document.getElementById('manual-details-toggle').classList.add('hidden');
+            document.getElementById('coordinates-info').classList.add('hidden');
+            document.getElementById('submit-btn').classList.add('hidden');
+            
+            // Clear input fields
+            form.querySelector('#file').value = '';
+            form.querySelector('#latitude').value = '';
+            form.querySelector('#longitude').value = '';
+            form.querySelector('#trash-type').value = '';
+            form.querySelector('#estimated-kg').value = '';
+            form.querySelector('#sparcity').value = '';
+            form.querySelector('#cleanliness').value = '';
+            
         } else {
             window.showNotification(data.message || 'An error occurred.', 'error');
         }
@@ -376,34 +410,17 @@ function handlePhotoCapture(file) {
 function processPhotoForLocation(file) {
     extractCoordinatesFromImage(file)
     .then(coords => {
+        const statusText = document.getElementById('location-status-text');
         if (coords) {
-            showLocationConfirmation('Photo Location Found', `Use location from photo: ${coords.latitude.toFixed(4)}, ${coords.longitude.toFixed(4)}?`, 
-            () => {
-                document.getElementById('latitude').value = coords.latitude;
-                document.getElementById('longitude').value = coords.longitude;
-                showManualDetailsSection();
-            }, 
-            promptForAlternativeLocation);
+            document.getElementById('latitude').value = coords.latitude;
+            document.getElementById('longitude').value = coords.longitude;
+            statusText.textContent = `Photo location found: ${coords.latitude.toFixed(4)}, ${coords.longitude.toFixed(4)}`;
+            showManualDetailsSection();
         } else {
-            promptForAlternativeLocation();
+            statusText.textContent = 'No GPS data found in photo. Please select location.';
+            document.getElementById('manual-location-section').classList.remove('hidden');
         }
     });
-}
-
-function promptForAlternativeLocation() {
-    if (browserLocation) {
-        showLocationConfirmation('Use Device Location?', `Use your current location: ${browserLocation.lat.toFixed(4)}, ${browserLocation.lng.toFixed(4)}?`, 
-        () => {
-            document.getElementById('latitude').value = browserLocation.lat;
-            document.getElementById('longitude').value = browserLocation.lng;
-            showManualDetailsSection();
-        }, 
-        () => {
-            if(locationModalInstance) locationModalInstance.show();
-        });
-    } else {
-        if(locationModalInstance) locationModalInstance.show();
-    }
 }
 
 function showManualDetailsSection() {
@@ -431,15 +448,6 @@ function requestUserLocationOnLoad() {
 // =================================================================================
 
 console.log('=== MODERN APP INITIALIZATION START ===');
-
-// Initialize the location modal instance once and for all
-const locationModalEl = document.getElementById('locationModal');
-if (locationModalEl) {
-    locationModalInstance = new bootstrap.Modal(locationModalEl);
-    console.log('Location modal instance created successfully.');
-} else {
-    console.error("CRITICAL: Location modal element not found!");
-}
 
 // Initialize all functionality
 initMap();

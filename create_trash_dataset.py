@@ -159,8 +159,8 @@ def view_database_stats():
         trash_counts[trash_type] = trash_counts.get(trash_type, 0) + 1
     
     print(f"   By trash type:")
-    for trash_type, count in sorted(trash_counts.items()):
-        print(f"     {trash_type}: {count}")
+    for trash_type, count in sorted(trash_counts.items(), key=lambda x: (x[0] is None, x[0] or '')):
+        print(f"     {trash_type or 'unknown'}: {count}")
     
     # Show date range
     timestamps = [report.get('timestamp') for report in reports if report.get('timestamp')]

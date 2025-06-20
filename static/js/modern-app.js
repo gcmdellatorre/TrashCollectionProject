@@ -1210,27 +1210,37 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 // Add the new point to the map immediately
                 if (map && data.metadata) {
+                    console.log('Attempting to add new marker. Map is available.', 'Metadata:', data.metadata);
                     try {
+                        const lat = parseFloat(data.metadata.latitude);
+                        const lng = parseFloat(data.metadata.longitude);
+
+                        if (isNaN(lat) || isNaN(lng)) {
+                            throw new Error(`Invalid coordinates from metadata: lat=${data.metadata.latitude}, lng=${data.metadata.longitude}`);
+                        }
+
                         const newPoint = {
                             id: data.report_id,
-                            latitude: parseFloat(data.metadata.latitude),
-                            longitude: parseFloat(data.metadata.longitude),
-                            // Use other metadata if available, otherwise use defaults
+                            latitude: lat,
+                            longitude: lng,
                             trash_type: data.metadata.trash_type || 'Mixed',
                             estimated_kg: data.metadata.estimated_kg || 1,
                             cleanliness: data.metadata.cleanliness || 3,
                         };
+
                         console.log('Adding new trash point to map:', newPoint);
                         addModernMarker(newPoint);
-                        // Optionally, pan the map to the new point
+                        
+                        console.log('Panning map to new point.');
                         map.panTo([newPoint.latitude, newPoint.longitude]);
+
                     } catch (e) {
-                        console.error("Error adding new marker to map:", e);
-                        // Fallback to full refresh if adding the marker fails
+                        console.error("Fatal error adding new marker to map:", e);
+                        console.log("Falling back to full map data reload.");
                         loadMapData();
                     }
                 } else {
-                    // Fallback to full refresh if map or metadata is not available
+                    console.log('Map or metadata not available. Falling back to full map data reload.', { hasMap: !!map, hasMetadata: !!data.metadata });
                     loadMapData();
                 }
 

@@ -31,3 +31,15 @@ typing_extensions==4.13.2
 urllib3==2.4.0
 uvicorn==0.34.2
 xyzservices==2025.4.0
+httpx
+python-dotenv
+beautifulsoup4
+lxml
+pandas
+scikit-learn
+scipy
+joblib
+geopy
+timezonefinder
+pytz
+requests-toolbelt

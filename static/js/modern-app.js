@@ -761,7 +761,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         <strong>Cleanliness:</strong> ${point.cleanliness || 'Unknown'}
                     </div>
                     <div class="popup-item">
-                        <strong>Reported:</strong> ${new Date(point.timestamp).toLocaleDateString()}
+                        <strong>Reported:</strong> ${point.timestamp ? new Date(point.timestamp).toLocaleDateString() : 'Just now'}
                     </div>
                 </div>
             </div>

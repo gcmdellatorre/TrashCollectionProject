@@ -1643,7 +1643,11 @@ document.addEventListener('DOMContentLoaded', function() {
                         locationStatusText.textContent = 'Please select the report location on the map.';
                         manualLocationSection.classList.remove('hidden');
                         // Directly show the modal for manual selection
-                        const locationModal = new bootstrap.Modal(document.getElementById('locationModal'));
+                        const locationModalEl = document.getElementById('locationModal');
+                        let locationModal = bootstrap.Modal.getInstance(locationModalEl);
+                        if (!locationModal) {
+                            locationModal = new bootstrap.Modal(locationModalEl);
+                        }
                         locationModal.show();
                         window.initializeModalMap();
                     }
@@ -1654,7 +1658,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 window.showNotification('Please select the report location on the map.', 'info');
                 locationStatusText.textContent = 'Please select the report location on the map.';
                 manualLocationSection.classList.remove('hidden');
-                const locationModal = new bootstrap.Modal(document.getElementById('locationModal'));
+                const locationModalEl = document.getElementById('locationModal');
+                let locationModal = bootstrap.Modal.getInstance(locationModalEl);
+                if (!locationModal) {
+                    locationModal = new bootstrap.Modal(locationModalEl);
+                }
                 locationModal.show();
                 window.initializeModalMap();
             }

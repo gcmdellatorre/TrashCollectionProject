@@ -9,6 +9,8 @@ let currentSearchRadius = null;
 let searchMarkers = [];
 let searchRadiusCircle = null; // Add this to track the radius circle
 let browserLocation = null; // Store user's browser location
+let locationMap = null;
+let locationModalInstance = null; // SINGLE INSTANCE FOR THE LOCATION MODAL
 
 // Global notification system
 window.showNotification = function(message, type = 'info') {
@@ -259,7 +261,6 @@ window.closeLocationSelector = function() {
 };
 
 // Initialize location map for the page overlay
-let locationMap = null;
 function initializeLocationMap() {
     if (!locationMap) {
         const mapContainer = document.getElementById('location-map');
@@ -666,7 +667,27 @@ window.testShowManualDetails = function() {
 };
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('=== MODERN APP INITIALIZATION ===');
+    console.log('=== MODERN APP INITIALIZATION START ===');
+
+    // Centralized variables
+    let map = null;
+    let modalMap = null;
+    let locationMap = null;
+    let browserLocation = null;
+    let selectedLocation = null;
+    let searchRadiusCircle = null;
+    let currentSearchLocation = null;
+    let currentSearchRadius = 1; // Default 1km
+    let locationModalInstance = null; // SINGLE INSTANCE FOR THE LOCATION MODAL
+
+    // Initialize the location modal instance once and for all
+    const locationModalEl = document.getElementById('locationModal');
+    if (locationModalEl) {
+        locationModalInstance = new bootstrap.Modal(locationModalEl);
+        console.log('Location modal instance created successfully.');
+    } else {
+        console.error("CRITICAL: Location modal element not found on DOMContentLoaded!");
+    }
     
     // Initialize all functionality
     initMap();
@@ -1397,158 +1418,6 @@ document.addEventListener('DOMContentLoaded', function() {
             });
     }
     
-    // Initialize modal when it's shown
-    const locationModal = document.getElementById('locationModal');
-    if (locationModal) {
-        console.log('Location modal found, setting up event listeners');
-        
-        // Ensure modal is hidden by default
-        locationModal.classList.remove('show');
-        locationModal.style.display = 'none';
-        
-        locationModal.addEventListener('shown.bs.modal', function() {
-            console.log('Modal shown event triggered');
-            
-            // Ensure modal is properly sized
-            const modalDialog = locationModal.querySelector('.modal-dialog');
-            const modalContent = locationModal.querySelector('.modal-content');
-            const modalBody = locationModal.querySelector('.modal-body');
-            
-            if (modalDialog) {
-                modalDialog.style.margin = '1rem auto';
-                modalDialog.style.maxHeight = '90vh';
-            }
-            
-            if (modalContent) {
-                modalContent.style.maxHeight = '90vh';
-                modalContent.style.display = 'flex';
-                modalContent.style.flexDirection = 'column';
-                modalContent.style.overflow = 'hidden';
-            }
-            
-            if (modalBody) {
-                modalBody.style.flex = '1';
-                modalBody.style.overflowY = 'auto';
-                modalBody.style.webkitOverflowScrolling = 'touch';
-            }
-            
-            // Initialize map after a short delay to ensure DOM is ready
-            setTimeout(() => {
-                window.initializeModalMap();
-                
-                // Force map resize after initialization
-                if (modalMap) {
-                    setTimeout(() => {
-                        modalMap.invalidateSize();
-                    }, 200);
-                }
-            }, 100);
-            
-            // Reset modal state
-            selectedLocation = null;
-            disableConfirmButton();
-            const display = document.getElementById('selected-location-display');
-            if (display) {
-                display.classList.add('hidden');
-            }
-            const searchInput = document.getElementById('location-search');
-            if (searchInput) {
-                searchInput.value = '';
-            }
-            
-            // Ensure buttons are visible
-            setTimeout(() => {
-                ensureModalButtonsVisible();
-            }, 300);
-            
-            // Handle mobile keyboard appearance
-            if (window.innerWidth <= 768) {
-                // Listen for viewport changes (keyboard appearance)
-                const handleViewportChange = () => {
-                    console.log('Viewport changed, adjusting modal');
-                    const modalFooter = locationModal.querySelector('.modal-footer');
-                    if (modalFooter) {
-                        // Ensure footer stays visible above keyboard
-                        modalFooter.style.position = 'sticky';
-                        modalFooter.style.bottom = '0';
-                        modalFooter.style.zIndex = '9999';
-                    }
-                };
-                
-                // Use ResizeObserver to detect viewport changes
-                if (window.ResizeObserver) {
-                    const resizeObserver = new ResizeObserver(handleViewportChange);
-                    resizeObserver.observe(document.body);
-                } else {
-                    // Fallback for older browsers
-                    window.addEventListener('resize', handleViewportChange);
-                    window.addEventListener('orientationchange', handleViewportChange);
-                }
-            }
-        });
-        
-        locationModal.addEventListener('hidden.bs.modal', function() {
-            console.log('Modal hidden event triggered');
-            // Clean up when modal is closed
-            if (modalMap) {
-                modalMap.eachLayer(layer => {
-                    if (layer instanceof L.Marker) {
-                        modalMap.removeLayer(layer);
-                    }
-                });
-            }
-        });
-        
-        // Debug: Check if modal is accidentally shown
-        setTimeout(() => {
-            if (locationModal.classList.contains('show') || locationModal.style.display === 'block') {
-                console.warn('Modal appears to be shown by default - hiding it');
-                locationModal.classList.remove('show');
-                locationModal.style.display = 'none';
-            }
-        }, 1000);
-    } else {
-        console.error('Location modal not found!');
-    }
-    
-    // PWA Service Worker Registration
-    if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-            navigator.serviceWorker.register('/static/sw.js')
-                .then(registration => {
-                    console.log('SW registered: ', registration);
-                })
-                .catch(registrationError => {
-                    console.log('SW registration failed: ', registrationError);
-                });
-        });
-    }
-
-    // PWA Install Prompt
-    let deferredPrompt;
-    window.addEventListener('beforeinstallprompt', (e) => {
-        e.preventDefault();
-        deferredPrompt = e;
-        
-        // Show install button if needed
-        const installButton = document.getElementById('install-app-btn');
-        if (installButton) {
-            installButton.style.display = 'block';
-            installButton.addEventListener('click', () => {
-                deferredPrompt.prompt();
-                deferredPrompt.userChoice.then((choiceResult) => {
-                    if (choiceResult.outcome === 'accepted') {
-                        console.log('User accepted the install prompt');
-                    }
-                    deferredPrompt = null;
-                    installButton.style.display = 'none';
-                });
-            });
-        }
-    });
-    
-    console.log('=== MODERN APP INITIALIZATION COMPLETE ===');
-
     // Handle photo capture and processing
     function handlePhotoCapture(file) {
         console.log('handlePhotoCapture called with file:', file.name, 'size:', file.size);
@@ -1642,14 +1511,13 @@ document.addEventListener('DOMContentLoaded', function() {
                         console.log('User declined browser location. Showing manual selector.');
                         locationStatusText.textContent = 'Please select the report location on the map.';
                         manualLocationSection.classList.remove('hidden');
-                        // Directly show the modal for manual selection
-                        const locationModalEl = document.getElementById('locationModal');
-                        let locationModal = bootstrap.Modal.getInstance(locationModalEl);
-                        if (!locationModal) {
-                            locationModal = new bootstrap.Modal(locationModalEl);
+                        // Show the single, pre-initialized modal instance
+                        if (locationModalInstance) {
+                            locationModalInstance.show();
+                            window.initializeModalMap();
+                        } else {
+                            console.error("Location modal was not initialized, cannot show.");
                         }
-                        locationModal.show();
-                        window.initializeModalMap();
                     }
                 );
             } else {
@@ -1658,13 +1526,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 window.showNotification('Please select the report location on the map.', 'info');
                 locationStatusText.textContent = 'Please select the report location on the map.';
                 manualLocationSection.classList.remove('hidden');
-                const locationModalEl = document.getElementById('locationModal');
-                let locationModal = bootstrap.Modal.getInstance(locationModalEl);
-                if (!locationModal) {
-                    locationModal = new bootstrap.Modal(locationModalEl);
+                // Show the single, pre-initialized modal instance
+                if (locationModalInstance) {
+                    locationModalInstance.show();
+                    window.initializeModalMap();
+                } else {
+                    console.error("Location modal was not initialized, cannot show.");
                 }
-                locationModal.show();
-                window.initializeModalMap();
             }
         };
         
@@ -1867,4 +1735,6 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log('Geolocation not supported by this browser');
         }
     }
+
+    console.log('=== MODERN APP INITIALIZATION COMPLETE ===');
 }); 

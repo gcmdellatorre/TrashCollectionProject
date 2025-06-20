@@ -1279,8 +1279,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 window.updateSubmitButtonVisibility();
                 
-                // Refresh map data
-                loadMapData();
             } else {
                 const errorMessage = data.message || data.error || 'Error submitting report';
                 console.error('Server error:', errorMessage);
@@ -1288,11 +1286,9 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         })
         .catch(error => {
-            console.error('Upload error:', error);
-            const errorMessage = error.message || 'Error submitting report. Please try again.';
-            window.showNotification(errorMessage, 'error');
-        })
-        .finally(() => {
+            console.error('Submission fetch error:', error);
+            window.showNotification('Submission failed. Please check your connection.', 'error');
+            // Re-enable submit button on failure
             submitBtn.innerHTML = 'Submit Report';
             submitBtn.disabled = false;
         });

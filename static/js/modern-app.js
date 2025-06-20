@@ -1207,7 +1207,33 @@ document.addEventListener('DOMContentLoaded', function() {
             if (data.status === 'success' || data.success) {
                 window.showNotification('Report submitted successfully!', 'success');
                 event.target.reset();
-                
+
+                // Add the new point to the map immediately
+                if (map && data.metadata) {
+                    try {
+                        const newPoint = {
+                            id: data.report_id,
+                            latitude: parseFloat(data.metadata.latitude),
+                            longitude: parseFloat(data.metadata.longitude),
+                            // Use other metadata if available, otherwise use defaults
+                            trash_type: data.metadata.trash_type || 'Mixed',
+                            estimated_kg: data.metadata.estimated_kg || 1,
+                            cleanliness: data.metadata.cleanliness || 3,
+                        };
+                        console.log('Adding new trash point to map:', newPoint);
+                        addModernMarker(newPoint);
+                        // Optionally, pan the map to the new point
+                        map.panTo([newPoint.latitude, newPoint.longitude]);
+                    } catch (e) {
+                        console.error("Error adding new marker to map:", e);
+                        // Fallback to full refresh if adding the marker fails
+                        loadMapData();
+                    }
+                } else {
+                    // Fallback to full refresh if map or metadata is not available
+                    loadMapData();
+                }
+
                 // Reset photo preview
                 const photoPreviewContainer = document.getElementById('photo-preview-container');
                 const manualLocationSection = document.getElementById('manual-location-section');

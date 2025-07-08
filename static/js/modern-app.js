@@ -424,7 +424,7 @@ function findNearbyTrash() {
         map.removeLayer(radiusCircle);
         radiusCircle = null;
     }
-    
+
     // Add radius visualizer on the map
     radiusCircle = L.circle([searchCenter.lat, searchCenter.lng], {
         color: '#0ea5e9',
@@ -556,14 +556,14 @@ function confirmLocationSelection() {
             
         } else if (photoFlowContainer && !photoFlowContainer.classList.contains('hidden')) {
             // Photo flow is active
-            document.getElementById('latitude').value = selectedLocation.lat;
-            document.getElementById('longitude').value = selectedLocation.lng;
-            
-            const coordsText = `${selectedLocation.lat.toFixed(4)}, ${selectedLocation.lng.toFixed(4)}`;
-            document.getElementById('coordinates-text').textContent = `Location set to: ${coordsText}`;
-            document.getElementById('coordinates-info').classList.remove('hidden');
-            
-            showManualDetailsSection();
+        document.getElementById('latitude').value = selectedLocation.lat;
+        document.getElementById('longitude').value = selectedLocation.lng;
+        
+        const coordsText = `${selectedLocation.lat.toFixed(4)}, ${selectedLocation.lng.toFixed(4)}`;
+        document.getElementById('coordinates-text').textContent = `Location set to: ${coordsText}`;
+        document.getElementById('coordinates-info').classList.remove('hidden');
+        
+        showManualDetailsSection();
         }
         
         closeLocationSelector();
@@ -707,6 +707,45 @@ function setupEventListeners() {
     //         window.showNotification('Edit functionality coming soon!', 'info');
     //     }
     // });
+
+    // Dark mode toggle functionality
+    const darkModeToggle = document.getElementById('dark-mode-toggle');
+    if (darkModeToggle) {
+        darkModeToggle.addEventListener('click', toggleDarkMode);
+    }
+
+    // Initialize dark mode from localStorage
+    initializeDarkMode();
+}
+
+// Dark mode functionality
+function toggleDarkMode() {
+    const html = document.documentElement;
+    const isDark = html.classList.contains('dark');
+    
+    if (isDark) {
+        html.classList.remove('dark');
+        localStorage.setItem('darkMode', 'light');
+    } else {
+        html.classList.add('dark');
+        localStorage.setItem('darkMode', 'dark');
+    }
+}
+
+function initializeDarkMode() {
+    const savedMode = localStorage.getItem('darkMode');
+    const html = document.documentElement;
+    
+    // Check for system preference if no saved preference
+    if (!savedMode) {
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        if (prefersDark) {
+            html.classList.add('dark');
+            localStorage.setItem('darkMode', 'dark');
+        }
+    } else if (savedMode === 'dark') {
+        html.classList.add('dark');
+    }
 }
 
 function handleFileInputChange(event) {

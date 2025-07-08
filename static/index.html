@@ -29,6 +29,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
+            darkMode: 'class',
             theme: {
                 extend: {
                     fontFamily: {
@@ -77,14 +78,23 @@
     <!-- YOLO model for client-side detection -->
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.3/dist/coco-ssd.min.js"></script>
 </head>
-<body class="bg-gray-50 font-sans">
+<body class="bg-gray-50 dark:bg-gray-900 font-sans">
     <!-- Navigation -->
-    <nav class="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
+    <nav class="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50 dark:bg-gray-800 dark:border-gray-700">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-16">
                 <div class="flex items-center space-x-3">
                     <img src="/static/images/Mamaland Beverage Logo - Fun Character Design.png" alt="MamaLand" class="h-8 w-8 rounded-full">
-                    <span class="text-xl font-semibold text-gray-900">MamaLand</span>
+                    <span class="text-xl font-semibold text-gray-900 dark:text-white">MamaLand</span>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <!-- Dark Mode Toggle -->
+                    <button id="dark-mode-toggle" 
+                            class="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 transition-colors"
+                            title="Toggle dark mode">
+                        <i class="bi bi-moon-fill text-gray-600 dark:text-yellow-300 dark:hidden"></i>
+                        <i class="bi bi-sun-fill text-yellow-500 hidden dark:inline"></i>
+                    </button>
                 </div>
             </div>
         </div>

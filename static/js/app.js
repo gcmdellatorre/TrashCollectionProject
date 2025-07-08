@@ -132,6 +132,20 @@ document.addEventListener('DOMContentLoaded', function() {
     function setupEventListeners() {
         console.log('Setting up modern event listeners');
         
+        // Dark mode toggle
+        const darkModeToggle = document.getElementById('dark-mode-toggle');
+        if (darkModeToggle) {
+            darkModeToggle.addEventListener('click', toggleDarkMode);
+            
+            // Initialize dark mode based on user preference or stored setting
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            
+            if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+                document.documentElement.classList.add('dark');
+            }
+        }
+        
         // File input with drag and drop
         const fileInput = document.getElementById('file');
         const fileUploadArea = document.querySelector('.file-upload-area');
@@ -735,4 +749,22 @@ function confirmLocation() {
         window.confirmLocation();
     }
 } 
+
+// Dark mode toggle function
+function toggleDarkMode() {
+    const html = document.documentElement;
+    const isDark = html.classList.contains('dark');
+    
+    if (isDark) {
+        html.classList.remove('dark');
+        localStorage.setItem('theme', 'light');
+    } else {
+        html.classList.add('dark');
+        localStorage.setItem('theme', 'dark');
+    }
+    
+    // Show notification
+    const message = isDark ? 'Switched to light mode' : 'Switched to dark mode';
+    showNotification(message, 'info');
+}
 

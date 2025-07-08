@@ -84,153 +84,335 @@
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <!-- Left Column - Report Form -->
             <div class="lg:col-span-1">
-                <!-- Report Form Card -->
-                <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                    <div class="px-6 py-4 border-b border-gray-200">
-                        <h2 class="text-lg font-semibold text-gray-900">Report Trash</h2>
+                <!-- Toggle for Photo/Video Flows -->
+                <div class="flex justify-center mb-6">
+                    <div class="inline-flex rounded-lg shadow-sm bg-gray-100 overflow-hidden w-full max-w-xs" role="group">
+                        <button type="button" id="toggle-video-flow" class="flex-1 px-4 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary-500 bg-primary-600 text-white toggle-active">
+                            <i class="bi bi-camera-video mr-1"></i> Video
+                        </button>
+                        <button type="button" id="toggle-photo-flow" class="flex-1 px-4 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary-500 text-gray-700 bg-white">
+                            <i class="bi bi-camera mr-1"></i> Photo
+                        </button>
                     </div>
-                    <div class="p-6">
-                        <form id="upload-form" enctype="multipart/form-data" class="space-y-6">
-                            <!-- Photo Capture Section -->
-                            <div class="space-y-4">
-                                <label class="block text-sm font-medium text-gray-700">
-                                    <i class="bi bi-camera mr-2"></i>
-                                    Capture Trash Photo
-                                </label>
-                                
-                                <!-- Photo Capture Buttons -->
-                                <div class="flex flex-col sm:flex-row gap-3">
-                                    <button type="button" 
-                                            id="take-photo-btn"
-                                            class="flex-1 px-4 py-3 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors">
-                                        <i class="bi bi-camera mr-2"></i>
-                                        Take Photo
-                                    </button>
-                                    <button type="button" 
-                                            id="upload-photo-btn"
-                                            class="flex-1 px-4 py-3 border border-gray-300 text-gray-700 rounded-lg text-sm font-medium bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors">
-                                        <i class="bi bi-upload mr-2"></i>
-                                        Upload Photo
-                                    </button>
-                                </div>
-                                
-                                <!-- Hidden file input for upload -->
-                                <input id="file" name="file" type="file" class="sr-only" accept="image/*">
-                                
-                                <!-- Photo Preview -->
-                                <div id="photo-preview-container" class="hidden">
-                                    <div class="relative">
-                                        <img id="photo-preview" class="w-full h-64 object-cover rounded-lg border-2 border-gray-200" src="" alt="Photo preview">
+                </div>
+                <!-- Video Flow Container (default visible) -->
+                <div id="video-flow-container">
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                        <div class="px-6 py-4 border-b border-gray-200">
+                            <h2 class="text-lg font-semibold text-gray-900">Report Trash</h2>
+                        </div>
+                        <div class="p-6">
+                            <form id="video-upload-form" enctype="multipart/form-data" class="space-y-6">
+                                <!-- Video Capture Section -->
+                                <div class="space-y-4">
+                                    <label class="block text-sm font-medium text-gray-700">
+                                        <i class="bi bi-camera-video mr-2"></i>
+                                        Capture Trash Video
+                                    </label>
+                                    
+                                    <!-- Video Capture Buttons -->
+                                    <div class="flex flex-col sm:flex-row gap-3 mb-2">
                                         <button type="button" 
-                                                id="retake-photo-btn"
-                                                class="absolute top-2 right-2 bg-red-500 text-white rounded-full p-2 hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors">
-                                            <i class="bi bi-x-lg"></i>
+                                                id="take-video-btn"
+                                                class="flex-1 px-4 py-3 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors">
+                                            <i class="bi bi-camera-video mr-2"></i>
+                                            Take Video
+                                        </button>
+                                        <button type="button" 
+                                                id="upload-video-btn"
+                                                class="flex-1 px-4 py-3 border border-gray-300 text-gray-700 rounded-lg text-sm font-medium bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors">
+                                            <i class="bi bi-upload mr-2"></i>
+                                            Upload Video
                                         </button>
                                     </div>
+                                    <!-- Hidden file input for video upload -->
+                                    <input type="file" id="video-file-input" name="file" accept="video/*" class="hidden">
+                                    <span class="text-xs text-gray-500">Max video duration: 10 seconds.</span>
                                     
-                                    <!-- Location Status -->
-                                    <div id="location-status" class="mt-3 p-3 bg-gray-50 border border-gray-200 rounded-lg">
-                                        <div class="flex items-center text-sm text-gray-600">
-                                            <i class="bi bi-geo-alt mr-2"></i>
-                                            <span id="location-status-text">Checking photo for location data...</span>
+                                    <!-- Video Preview -->
+                                    <div id="video-preview-container" class="hidden">
+                                        <div class="relative">
+                                            <video id="video-preview" class="w-full h-64 object-cover rounded-lg border-2 border-gray-200" controls>
+                                                Your browser does not support the video tag.
+                                            </video>
+                                            <button type="button" 
+                                                    id="retake-video-btn"
+                                                    class="absolute top-2 right-2 bg-red-500 text-white rounded-full p-2 hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors">
+                                                <i class="bi bi-x-lg"></i>
+                                            </button>
+                                        </div>
+                                        
+                                        <!-- Location Status -->
+                                        <div id="video-location-status" class="mt-3 p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                                            <div class="flex items-center text-sm text-gray-600">
+                                                <i class="bi bi-geo-alt mr-2"></i>
+                                                <span id="video-location-status-text">Checking video for location data...</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Manual Location Selection (shown if no GPS in video) -->
+                                    <div id="video-manual-location-section" class="hidden">
+                                        <div class="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                                            <div class="flex items-center mb-3">
+                                                <i class="bi bi-exclamation-triangle text-yellow-600 mr-2"></i>
+                                                <span class="text-sm font-medium text-yellow-800">Location not found in video</span>
+                                            </div>
+                                            <p class="text-sm text-yellow-700 mb-3">
+                                                No GPS coordinates were found in your video. Please select the location manually.
+                                            </p>
+                                            <button type="button" 
+                                                    id="video-select-location-btn"
+                                                    class="px-4 py-2 bg-yellow-600 text-white rounded-lg text-sm font-medium hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 transition-colors">
+                                                <i class="bi bi-geo-alt mr-2"></i>
+                                                Select Location Manually
+                                            </button>
                                         </div>
                                     </div>
                                 </div>
+                                <!-- Upload Options -->
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                                    <div>
+                                        <label for="modelSelect" class="block text-sm font-medium text-gray-700 mb-1">Detection Model</label>
+                                        <select class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500" id="modelSelect" name="model_name">
+                                            <option value="yolov8n-smart">YOLOv8n-Smart (Fast)</option>
+                                            <option value="yolov8s-smart" selected>YOLOv8s-Smart (Recommended)</option>
+                                            <option value="yolov8m-smart">YOLOv8m-Smart (High accuracy)</option>
+                                        </select>
+                                        <div class="text-xs text-gray-500 mt-1">Choose the best model for your needs</div>
+                                    </div>
+                                    <div>
+                                        <label for="frameInterval" class="block text-sm font-medium text-gray-700 mb-1">Frame Interval</label>
+                                        <select class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500" id="frameInterval" name="frame_interval">
+                                            <option value="15">Every 15 frames (~2 fps)</option>
+                                            <option value="30" selected>Every 30 frames (~1 fps)</option>
+                                            <option value="60">Every 60 frames (~0.5 fps)</option>
+                                        </select>
+                                        <div class="text-xs text-gray-500 mt-1">Lower = more accurate, slower</div>
+                                    </div>
+                                    <div>
+                                        <label for="confidenceThreshold" class="block text-sm font-medium text-gray-700 mb-1">Confidence Threshold</label>
+                                        <input type="range" class="w-full" id="confidenceThreshold" name="confidence_threshold" min="0.1" max="0.9" step="0.1" value="0.3">
+                                        <div class="text-xs text-gray-500 mt-1">
+                                            <span id="confidenceValue">0.3</span> - Higher = fewer, more confident detections
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- Location Status -->
+                                <div id="video-location-status" class="hidden p-3 bg-blue-50 border border-blue-200 rounded-lg mb-4">
+                                    <div class="flex items-center text-sm text-blue-700">
+                                        <i class="bi bi-geo-alt mr-2"></i>
+                                        <span id="video-location-status-text">Checking video for location data...</span>
+                                    </div>
+                                </div>
                                 
-                                <!-- Manual Location Selection (shown if no GPS in photo) -->
-                                <div id="manual-location-section" class="hidden">
+                                <!-- Manual Location Selection (shown if no GPS in video) -->
+                                <div id="video-manual-location-section" class="hidden mb-4">
                                     <div class="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
                                         <div class="flex items-center mb-3">
                                             <i class="bi bi-exclamation-triangle text-yellow-600 mr-2"></i>
-                                            <span class="text-sm font-medium text-yellow-800">Location not found in photo</span>
+                                            <span class="text-sm font-medium text-yellow-800">Location not found in video</span>
                                         </div>
                                         <p class="text-sm text-yellow-700 mb-3">
-                                            No GPS coordinates were found in your photo. Please select the location manually.
+                                            No GPS coordinates were found in your video. Please select the location manually.
                                         </p>
                                         <button type="button" 
+                                                id="video-select-location-btn"
                                                 class="px-4 py-2 bg-yellow-600 text-white rounded-lg text-sm font-medium hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 transition-colors">
                                             <i class="bi bi-geo-alt mr-2"></i>
                                             Select Location Manually
                                         </button>
                                     </div>
                                 </div>
-                            </div>
-                            
-                            <!-- Hidden Fields -->
-                            <input type="hidden" id="latitude" name="latitude">
-                            <input type="hidden" id="longitude" name="longitude">
-                            
-                            <!-- Coordinates Display -->
-                            <div id="coordinates-info" class="hidden p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                                <div class="flex items-center text-sm text-blue-700">
-                                    <i class="bi bi-geo-alt mr-2"></i>
-                                    <span id="coordinates-text">Location captured</span>
-                                </div>
-                            </div>
-                            
-                            <!-- Manual Details Toggle -->
-                            <div id="manual-details-toggle" class="flex items-center hidden">
-                                <input type="checkbox" id="fill-form-check" class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded">
-                                <label for="fill-form-check" class="ml-2 block text-sm text-gray-700">
-                                    Add details manually
-                                </label>
-                            </div>
-                            
-                            <!-- Manual Details Form -->
-                            <div id="details-form" class="hidden space-y-4">
-                                <div>
-                                    <label for="trash-type" class="block text-sm font-medium text-gray-700 mb-1">Trash Type</label>
-                                    <select id="trash-type" name="trash_type" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
-                                        <option value="">Select type</option>
-                                        <option value="plastic">Plastic</option>
-                                        <option value="paper">Paper</option>
-                                        <option value="metal">Metal</option>
-                                        <option value="glass">Glass</option>
-                                        <option value="organic">Organic</option>
-                                        <option value="electronic">Electronic</option>
-                                    </select>
-                                </div>
                                 
-                                <div>
-                                    <label for="estimated-kg" class="block text-sm font-medium text-gray-700 mb-1">Estimated Weight (kg)</label>
-                                    <input type="number" step="0.1" id="estimated-kg" name="estimated_kg" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
-                                </div>
+                                <!-- Hidden location fields -->
+                                <input type="hidden" id="video-latitude" name="latitude">
+                                <input type="hidden" id="video-longitude" name="longitude">
                                 
-                                <div>
-                                    <label for="sparcity" class="block text-sm font-medium text-gray-700 mb-1">Sparcity</label>
-                                    <select id="sparcity" name="sparcity" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
-                                        <option value="">Select sparcity</option>
-                                        <option value="low">Low</option>
-                                        <option value="medium">Medium</option>
-                                        <option value="high">High</option>
-                                    </select>
+                                <!-- Action Buttons -->
+                                <div class="flex flex-col gap-2">
+                                    <!-- Detect Button (shown after video is selected and location is set) -->
+                                    <button type="button" class="w-full px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 hidden" id="video-detect-btn">
+                                        <span class="loading-spinner hidden"><i class="bi bi-arrow-clockwise spin"></i></span>
+                                        <span class="btn-text">Detect Trash</span>
+                                    </button>
+                                    
+                                    <!-- Submit Button (shown after detection is complete) -->
                                 </div>
-                                
-                                <div>
-                                    <label for="cleanliness" class="block text-sm font-medium text-gray-700 mb-1">Cleanliness</label>
-                                    <select id="cleanliness" name="cleanliness" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
-                                        <option value="">Select cleanliness</option>
-                                        <option value="good">Good</option>
-                                        <option value="moderate">Moderate</option>
-                                        <option value="poor">Poor</option>
-                                        <option value="very_poor">Very Poor</option>
-                                    </select>
+                                <!-- Progress Bar -->
+                                <div class="w-full bg-gray-200 rounded-full h-2.5 mt-3 hidden" id="video-progress-bar">
+                                    <div class="bg-primary-600 h-2.5 rounded-full" style="width: 0%"></div>
+                                </div>
+                            </form>
+                            <!-- Results Section -->
+                            <div id="video-results-section" class="hidden mt-4">
+                                <div class="bg-white rounded-lg shadow-md p-4">
+                                    <h5 class="font-semibold text-gray-800 mb-2"><i class="bi bi-graph-up"></i> Detection Results</h5>
+                                    <div id="video-results-content"></div>
                                 </div>
                             </div>
-                            
-                            <!-- Action Buttons -->
-                            <div class="flex flex-col sm:flex-row gap-3">
-                                <button type="submit" id="submit-btn" class="flex-1 px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 hidden">
-                                    Submit Report
-                                </button>
+                            <!-- Error Section -->
+                            <div id="video-error-section" class="hidden mt-4">
+                                <div class="bg-red-100 border border-red-200 text-red-700 rounded-lg p-3 flex items-center">
+                                    <i class="bi bi-exclamation-triangle mr-2"></i>
+                                    <span id="video-error-message"></span>
+                                </div>
                             </div>
-                        </form>
+                        </div>
+                    </div>
+                    <div class="mt-8 flex justify-center">
+                        <img src="/static/images/Mamaland Beverage Logo - Fun Character Design.png" alt="MamaLand" class="h-32 w-32 rounded-full shadow-lg">
                     </div>
                 </div>
-                
-                <!-- MamaLand Logo -->
-                <div class="mt-8 flex justify-center">
-                    <img src="/static/images/Mamaland Beverage Logo - Fun Character Design.png" alt="MamaLand" class="h-32 w-32 rounded-full shadow-lg">
+                <!-- Photo Flow Container (default hidden) -->
+                <div id="photo-flow-container" class="hidden">
+                    <!-- Report Form Card -->
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                        <div class="px-6 py-4 border-b border-gray-200">
+                            <h2 class="text-lg font-semibold text-gray-900">Report Trash</h2>
+                        </div>
+                        <div class="p-6">
+                            <form id="upload-form" enctype="multipart/form-data" class="space-y-6">
+                                <!-- Photo Capture Section -->
+                                <div class="space-y-4">
+                                    <label class="block text-sm font-medium text-gray-700">
+                                        <i class="bi bi-camera mr-2"></i>
+                                        Capture Trash Photo
+                                    </label>
+                                    
+                                    <!-- Photo Capture Buttons -->
+                                    <div class="flex flex-col sm:flex-row gap-3 mb-2">
+                                        <button type="button" 
+                                                id="take-photo-btn"
+                                                class="flex-1 px-4 py-3 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors">
+                                            <i class="bi bi-camera mr-2"></i>
+                                            Take Photo
+                                        </button>
+                                        <button type="button" 
+                                                id="upload-photo-btn"
+                                                class="flex-1 px-4 py-3 border border-gray-300 text-gray-700 rounded-lg text-sm font-medium bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors">
+                                            <i class="bi bi-upload mr-2"></i>
+                                            Upload Photo
+                                        </button>
+                                    </div>
+                                    <!-- Hidden file input for photo upload -->
+                                    <input id="file" name="file" type="file" class="sr-only" accept="image/*">
+                                    
+                                    <!-- Photo Preview -->
+                                    <div id="photo-preview-container" class="hidden">
+                                        <div class="relative">
+                                            <img id="photo-preview" class="w-full h-64 object-cover rounded-lg border-2 border-gray-200" src="" alt="Photo preview">
+                                            <button type="button" 
+                                                    id="retake-photo-btn"
+                                                    class="absolute top-2 right-2 bg-red-500 text-white rounded-full p-2 hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors">
+                                                <i class="bi bi-x-lg"></i>
+                                            </button>
+                                        </div>
+                                        
+                                        <!-- Location Status -->
+                                        <div id="location-status" class="mt-3 p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                                            <div class="flex items-center text-sm text-gray-600">
+                                                <i class="bi bi-geo-alt mr-2"></i>
+                                                <span id="location-status-text">Checking photo for location data...</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Manual Location Selection (shown if no GPS in photo) -->
+                                    <div id="manual-location-section" class="hidden">
+                                        <div class="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                                            <div class="flex items-center mb-3">
+                                                <i class="bi bi-exclamation-triangle text-yellow-600 mr-2"></i>
+                                                <span class="text-sm font-medium text-yellow-800">Location not found in photo</span>
+                                            </div>
+                                            <p class="text-sm text-yellow-700 mb-3">
+                                                No GPS coordinates were found in your photo. Please select the location manually.
+                                            </p>
+                                            <button type="button" 
+                                                    class="px-4 py-2 bg-yellow-600 text-white rounded-lg text-sm font-medium hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 transition-colors">
+                                                <i class="bi bi-geo-alt mr-2"></i>
+                                                Select Location Manually
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Hidden Fields -->
+                                <input type="hidden" id="latitude" name="latitude">
+                                <input type="hidden" id="longitude" name="longitude">
+                                
+                                <!-- Coordinates Display -->
+                                <div id="coordinates-info" class="hidden p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                                    <div class="flex items-center text-sm text-blue-700">
+                                        <i class="bi bi-geo-alt mr-2"></i>
+                                        <span id="coordinates-text">Location captured</span>
+                                    </div>
+                                </div>
+                                
+                                <!-- Manual Details Toggle -->
+                                <div id="manual-details-toggle" class="flex items-center hidden">
+                                    <input type="checkbox" id="fill-form-check" class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded">
+                                    <label for="fill-form-check" class="ml-2 block text-sm text-gray-700">
+                                        Add details manually
+                                    </label>
+                                </div>
+                                
+                                <!-- Manual Details Form -->
+                                <div id="details-form" class="hidden space-y-4">
+                                    <div>
+                                        <label for="trash-type" class="block text-sm font-medium text-gray-700 mb-1">Trash Type</label>
+                                        <select id="trash-type" name="trash_type" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                                            <option value="">Select type</option>
+                                            <option value="plastic">Plastic</option>
+                                            <option value="paper">Paper</option>
+                                            <option value="metal">Metal</option>
+                                            <option value="glass">Glass</option>
+                                            <option value="organic">Organic</option>
+                                            <option value="electronic">Electronic</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div>
+                                        <label for="estimated-kg" class="block text-sm font-medium text-gray-700 mb-1">Estimated Weight (kg)</label>
+                                        <input type="number" step="0.1" id="estimated-kg" name="estimated_kg" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                                    </div>
+                                    
+                                    <div>
+                                        <label for="sparcity" class="block text-sm font-medium text-gray-700 mb-1">Sparcity</label>
+                                        <select id="sparcity" name="sparcity" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                                            <option value="">Select sparcity</option>
+                                            <option value="low">Low</option>
+                                            <option value="medium">Medium</option>
+                                            <option value="high">High</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div>
+                                        <label for="cleanliness" class="block text-sm font-medium text-gray-700 mb-1">Cleanliness</label>
+                                        <select id="cleanliness" name="cleanliness" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                                            <option value="">Select cleanliness</option>
+                                            <option value="good">Good</option>
+                                            <option value="moderate">Moderate</option>
+                                            <option value="poor">Poor</option>
+                                            <option value="very_poor">Very Poor</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <!-- Action Buttons -->
+                                <div class="flex flex-col sm:flex-row gap-3">
+                                    <button type="submit" id="submit-btn" class="flex-1 px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 hidden">
+                                        Submit Report
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    
+                    <!-- MamaLand Logo -->
+                    <div class="mt-8 flex justify-center">
+                        <img src="/static/images/Mamaland Beverage Logo - Fun Character Design.png" alt="MamaLand" class="h-32 w-32 rounded-full shadow-lg">
+                    </div>
                 </div>
             </div>
             

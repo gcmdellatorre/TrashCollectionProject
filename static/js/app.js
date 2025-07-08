@@ -233,6 +233,31 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
         }
+
+        // Video upload buttons
+        const takeVideoBtn = document.getElementById('take-video-btn');
+        const uploadVideoBtn = document.getElementById('upload-video-btn');
+        const videoFileInput = document.getElementById('video-file');
+        
+        if (takeVideoBtn && videoFileInput) {
+            takeVideoBtn.addEventListener('click', function() {
+                videoFileInput.value = '';
+                videoFileInput.removeAttribute('multiple');
+                videoFileInput.setAttribute('capture', 'environment');
+                videoFileInput.click();
+            });
+        }
+        if (uploadVideoBtn && videoFileInput) {
+            uploadVideoBtn.addEventListener('click', function() {
+                videoFileInput.value = '';
+                videoFileInput.removeAttribute('capture');
+                videoFileInput.removeAttribute('multiple');
+                videoFileInput.click();
+            });
+        }
+        if (videoFileInput) {
+            videoFileInput.addEventListener('change', handleVideoInputChange);
+        }
     }
     
     // Mobile-specific features
@@ -477,6 +502,55 @@ document.addEventListener('DOMContentLoaded', function() {
             submitBtn.innerHTML = 'Submit Report';
             submitBtn.disabled = false;
         });
+    }
+
+    // Handle video file input
+    function handleVideoInputChange(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        // Check video duration (<=10s)
+        const url = URL.createObjectURL(file);
+        const video = document.createElement('video');
+        video.preload = 'metadata';
+        video.src = url;
+        video.onloadedmetadata = function() {
+            URL.revokeObjectURL(url);
+            if (video.duration > 10.1) {
+                showNotification('Video too long! Max 10 seconds allowed.', 'error');
+                event.target.value = '';
+                return;
+            }
+            // Prepare form data
+            const formData = new FormData();
+            formData.append('video_file', file);
+            // Add location if available
+            const lat = document.getElementById('latitude').value;
+            const lng = document.getElementById('longitude').value;
+            if (lat && lng) {
+                formData.append('latitude', lat);
+                formData.append('longitude', lng);
+            }
+            // Show loading notification
+            showNotification('Uploading video and running detection...', 'info');
+            fetch('/api/upload-video', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification('Video processed and trash detected!', 'success');
+                    // Refresh map data
+                    loadMapData();
+                } else {
+                    showNotification(data.error || 'Error processing video', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Video upload error:', error);
+                showNotification('Error uploading video. Please try again.', 'error');
+            });
+        };
     }
     
     // Clear search results

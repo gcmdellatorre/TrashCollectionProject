@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trash Detection - Video Upload</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="css/modern-style.css" rel="stylesheet">
+    <style>
+        .upload-area {
+            border: 2px dashed #0ea5e9;
+            border-radius: 12px;
+            padding: 2rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            background: #f8fafc;
+        }
+        
+        .upload-area:hover {
+            border-color: #0284c7;
+            background: #f0f9ff;
+        }
+        
+        .upload-area.dragover {
+            border-color: #0284c7;
+            background: #e0f2fe;
+            transform: scale(1.02);
+        }
+        
+        .results-card {
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            transition: all 0.2s ease;
+        }
+        
+        .results-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        }
+        
+        .category-badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.375rem;
+            font-size: 0.75rem;
+            font-weight: 500;
+            margin: 0.125rem;
+        }
+        
+        .category-plastic { background: #dbeafe; color: #1e40af; }
+        .category-paper { background: #dcfce7; color: #166534; }
+        .category-metal { background: #fef3c7; color: #92400e; }
+        .category-glass { background: #f3e8ff; color: #7c3aed; }
+        .category-electronic { background: #fef2f2; color: #991b1b; }
+        .category-other { background: #f1f5f9; color: #475569; }
+        
+        .loading-spinner {
+            display: none;
+        }
+        
+        .loading .loading-spinner {
+            display: inline-block;
+        }
+        
+        .progress-bar {
+            transition: width 0.3s ease;
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <div class="container py-4">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <!-- Header -->
+                <div class="text-center mb-4">
+                    <h1 class="display-5 fw-bold text-primary">
+                        <i class="bi bi-camera-video"></i>
+                        Trash Detection
+                    </h1>
+                    <p class="lead text-muted">
+                        Upload a video to automatically detect and classify trash objects
+                    </p>
+                </div>
+
+                <!-- Upload Form -->
+                <div class="card results-card mb-4">
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            <i class="bi bi-upload"></i>
+                            Upload Video
+                        </h5>
+                        
+                        <form id="videoUploadForm" enctype="multipart/form-data">
+                            <!-- File Upload Area -->
+                            <div class="upload-area mb-3" id="uploadArea">
+                                <i class="bi bi-cloud-upload display-4 text-primary mb-3"></i>
+                                <h5>Drag & Drop Video Here</h5>
+                                <p class="text-muted">or click to browse</p>
+                                <input type="file" id="videoFile" name="file" accept="video/*" class="d-none">
+                                <button type="button" class="btn btn-outline-primary" onclick="document.getElementById('videoFile').click()">
+                                    Choose Video File
+                                </button>
+                            </div>
+
+                            <!-- Upload Options -->
+                            <div class="row mb-3">
+                                <div class="col-md-4">
+                                    <label for="modelSelect" class="form-label">Detection Model</label>
+                                    <select class="form-select" id="modelSelect" name="model_name">
+                                        <option value="yolov8n-smart">YOLOv8n-Smart (Fast trash detection)</option>
+                                        <option value="yolov8s-smart" selected>YOLOv8s-Smart (Recommended trash detection)</option>
+                                        <option value="yolov8m-smart">YOLOv8m-Smart (High accuracy trash detection)</option>
+                                    </select>
+                                    <div class="form-text">Choose the best model for your needs</div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="frameInterval" class="form-label">Frame Interval</label>
+                                    <select class="form-select" id="frameInterval" name="frame_interval">
+                                        <option value="15">Every 15 frames (~2 fps)</option>
+                                        <option value="30" selected>Every 30 frames (~1 fps)</option>
+                                        <option value="60">Every 60 frames (~0.5 fps)</option>
+                                    </select>
+                                    <div class="form-text">Lower values = more accurate but slower processing</div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="confidenceThreshold" class="form-label">Confidence Threshold</label>
+                                    <input type="range" class="form-range" id="confidenceThreshold" name="confidence_threshold" 
+                                           min="0.1" max="0.9" step="0.1" value="0.3">
+                                    <div class="form-text">
+                                        <span id="confidenceValue">0.3</span> - Higher values = fewer but more confident detections
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Location (Optional) -->
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="latitude" class="form-label">Latitude (Optional)</label>
+                                    <input type="number" class="form-control" id="latitude" name="latitude" 
+                                           step="any" placeholder="e.g., 40.7128">
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="longitude" class="form-label">Longitude (Optional)</label>
+                                    <input type="number" class="form-control" id="longitude" name="longitude" 
+                                           step="any" placeholder="e.g., -74.0060">
+                                </div>
+                            </div>
+
+                            <!-- Submit Button -->
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary btn-lg" id="submitBtn">
+                                    <span class="loading-spinner">
+                                        <i class="bi bi-arrow-clockwise spin"></i>
+                                    </span>
+                                    <span class="btn-text">Process Video</span>
+                                </button>
+                            </div>
+                        </form>
+
+                        <!-- Progress Bar -->
+                        <div class="progress mt-3" id="progressBar" style="display: none;">
+                            <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                                 role="progressbar" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Results Section -->
+                <div id="resultsSection" style="display: none;">
+                    <div class="card results-card">
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                <i class="bi bi-graph-up"></i>
+                                Detection Results
+                            </h5>
+                            
+                            <div id="resultsContent">
+                                <!-- Results will be populated here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Error Section -->
+                <div id="errorSection" style="display: none;">
+                    <div class="alert alert-danger" role="alert">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        <span id="errorMessage"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // DOM elements
+        const uploadForm = document.getElementById('videoUploadForm');
+        const uploadArea = document.getElementById('uploadArea');
+        const videoFile = document.getElementById('videoFile');
+        const submitBtn = document.getElementById('submitBtn');
+        const progressBar = document.getElementById('progressBar');
+        const resultsSection = document.getElementById('resultsSection');
+        const resultsContent = document.getElementById('resultsContent');
+        const errorSection = document.getElementById('errorSection');
+        const errorMessage = document.getElementById('errorMessage');
+        const confidenceThreshold = document.getElementById('confidenceThreshold');
+        const confidenceValue = document.getElementById('confidenceValue');
+
+        // Update confidence value display
+        confidenceThreshold.addEventListener('input', function() {
+            confidenceValue.textContent = this.value;
+        });
+
+        // Drag and drop functionality
+        uploadArea.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            this.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', function(e) {
+            e.preventDefault();
+            this.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', function(e) {
+            e.preventDefault();
+            this.classList.remove('dragover');
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0 && files[0].type.startsWith('video/')) {
+                videoFile.files = files;
+                updateFileDisplay(files[0]);
+            }
+        });
+
+        // File selection
+        videoFile.addEventListener('change', function() {
+            if (this.files.length > 0) {
+                updateFileDisplay(this.files[0]);
+            }
+        });
+
+        function updateFileDisplay(file) {
+            const fileInfo = `
+                <div class="alert alert-info">
+                    <i class="bi bi-file-earmark-play"></i>
+                    <strong>${file.name}</strong> (${formatFileSize(file.size)})
+                </div>
+            `;
+            uploadArea.innerHTML = fileInfo;
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        // Form submission
+        uploadForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            if (!videoFile.files.length) {
+                showError('Please select a video file');
+                return;
+            }
+
+            // Show loading state
+            setLoading(true);
+            hideError();
+            hideResults();
+
+            const formData = new FormData();
+            formData.append('file', videoFile.files[0]);
+            formData.append('model_name', document.getElementById('modelSelect').value);
+            formData.append('frame_interval', document.getElementById('frameInterval').value);
+            formData.append('confidence_threshold', confidenceThreshold.value);
+            
+            const latitude = document.getElementById('latitude').value;
+            const longitude = document.getElementById('longitude').value;
+            
+            if (latitude) formData.append('latitude', latitude);
+            if (longitude) formData.append('longitude', longitude);
+
+            try {
+                const response = await fetch('/api/upload-video', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    showResults(result.data);
+                } else {
+                    showError(result.message || 'Upload failed');
+                }
+            } catch (error) {
+                showError('Network error: ' + error.message);
+            } finally {
+                setLoading(false);
+            }
+        });
+
+        function setLoading(loading) {
+            submitBtn.classList.toggle('loading', loading);
+            submitBtn.disabled = loading;
+            progressBar.style.display = loading ? 'block' : 'none';
+            
+            if (loading) {
+                // Simulate progress
+                let progress = 0;
+                const interval = setInterval(() => {
+                    progress += Math.random() * 15;
+                    if (progress > 90) progress = 90;
+                    progressBar.querySelector('.progress-bar').style.width = progress + '%';
+                    
+                    if (!loading) {
+                        clearInterval(interval);
+                        progressBar.querySelector('.progress-bar').style.width = '100%';
+                    }
+                }, 500);
+            }
+        }
+
+        function showResults(data) {
+            const categoryColors = {
+                'plastic': 'category-plastic',
+                'paper': 'category-paper',
+                'metal': 'category-metal',
+                'glass': 'category-glass',
+                'electronic': 'category-electronic',
+                'other': 'category-other'
+            };
+
+            const categoryBreakdown = Object.entries(data.category_breakdown || {})
+                .map(([category, count]) => 
+                    `<span class="category-badge ${categoryColors[category] || 'category-other'}">${category}: ${count}</span>`
+                ).join('');
+
+            // Create detailed object breakdown
+            const allObjectsBreakdown = Object.entries(data.all_class_counts || {})
+                .map(([className, count]) => {
+                    const isTrash = data.trash_class_counts && data.trash_class_counts[className];
+                    const badgeClass = isTrash ? 'category-plastic' : 'category-other';
+                    const trashIcon = isTrash ? '🗑️' : '🌿';
+                    return `<span class="category-badge ${badgeClass}">${trashIcon} ${className}: ${count}</span>`;
+                }).join('');
+
+            resultsContent.innerHTML = `
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6><i class="bi bi-box"></i> Detection Summary</h6>
+                        <ul class="list-unstyled">
+                            <li><strong>Trash Objects:</strong> ${data.trash_objects_detected || data.total_objects}</li>
+                            <li><strong>Natural Objects:</strong> ${data.natural_objects_filtered || 0}</li>
+                            <li><strong>Total Detected:</strong> ${data.total_objects_detected || data.total_objects}</li>
+                            <li><strong>Estimated Weight:</strong> ${data.estimated_weight_kg} kg</li>
+                            <li><strong>Processing Time:</strong> ${data.processing_time ? data.processing_time.toFixed(2) + 's' : 'N/A'}</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6><i class="bi bi-info-circle"></i> Video Info</h6>
+                        <ul class="list-unstyled">
+                            <li><strong>File Size:</strong> ${data.video_info.file_size_mb} MB</li>
+                            <li><strong>Frames Processed:</strong> ${data.video_info.total_frames_processed}</li>
+                            <li><strong>Model Used:</strong> <code>${data.model_used || 'Unknown'}</code></li>
+                            <li><strong>Detection ID:</strong> <code>${data.detection_id}</code></li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="mt-3">
+                    <h6><i class="bi bi-tags"></i> Trash Category Breakdown</h6>
+                    <div class="mb-2">
+                        ${categoryBreakdown || '<em>No trash objects detected</em>'}
+                    </div>
+                </div>
+                
+                <div class="mt-3">
+                    <h6><i class="bi bi-list-check"></i> All Detected Objects (For Validation)</h6>
+                    <div class="mb-2">
+                        <small class="text-muted">🗑️ = Trash object, 🌿 = Natural element</small>
+                    </div>
+                    <div class="mb-2">
+                        ${allObjectsBreakdown || '<em>No objects detected</em>'}
+                    </div>
+                </div>
+                
+                ${data.trash_report_id ? `
+                <div class="mt-3">
+                    <div class="alert alert-success">
+                        <i class="bi bi-check-circle"></i>
+                        <strong>Location saved!</strong> Trash report created with ID: ${data.trash_report_id}
+                    </div>
+                </div>
+                ` : ''}
+            `;
+
+            resultsSection.style.display = 'block';
+        }
+
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorSection.style.display = 'block';
+        }
+
+        function hideError() {
+            errorSection.style.display = 'none';
+        }
+
+        function hideResults() {
+            resultsSection.style.display = 'none';
+        }
+
+        // Add spinning animation
+        const style = document.createElement('style');
+        style.textContent = `
+            .spin {
+                animation: spin 1s linear infinite;
+            }
+            @keyframes spin {
+                from { transform: rotate(0deg); }
+                to { transform: rotate(360deg); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html> 

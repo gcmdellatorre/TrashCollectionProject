@@ -28,7 +28,7 @@ async def lifespan(app: FastAPI):
         reports = get_all_trash_reports()
         if len(reports) == 0:
             print("Database is empty - creating sample data for demo...")
-            await create_sample_data_internal(count=25)
+            await create_sample_data_internal(count=100)
             print("✅ Sample data created successfully!")
         else:
             print(f"Database already has {len(reports)} reports - skipping auto-seed")
@@ -165,6 +165,29 @@ async def seed_database(count: int = 20):
         
     except Exception as e:
         print(f"Error seeding database: {e}")
+        return JSONResponse(
+            status_code=500,
+            content={"status": "error", "message": str(e)}
+        )
+
+@app.post("/api/seed-worldwide-data")
+async def seed_worldwide_data():
+    """Seed database with worldwide trash data (500 points)"""
+    try:
+        # Import the worldwide data generator
+        from generate_worldwide_data import generate_worldwide_trash_data
+        
+        # Generate 500 worldwide data points
+        created_count = await generate_worldwide_trash_data()
+        
+        return JSONResponse(content={
+            "status": "success",
+            "message": f"Created {created_count} worldwide trash data points",
+            "count": created_count
+        })
+        
+    except Exception as e:
+        print(f"Error seeding worldwide data: {e}")
         return JSONResponse(
             status_code=500,
             content={"status": "error", "message": str(e)}
@@ -442,9 +465,9 @@ async def upload_video(
     file: UploadFile = File(...),
     latitude: str = Form(None),
     longitude: str = Form(None),
-    frame_interval: int = Form(30),
-    confidence_threshold: float = Form(0.3),
-    model_name: str = Form('yolov8s-smart')
+    frame_interval: int = Form(60),
+    confidence_threshold: float = Form(0.5),
+    model_name: str = Form('yolov8n-smart')
 ):
     """
     Upload and process video for trash detection

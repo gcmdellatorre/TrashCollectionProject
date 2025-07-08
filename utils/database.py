@@ -3,6 +3,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from datetime import datetime
 import uuid
+import os
 
 Base = declarative_base()
 
@@ -47,8 +48,13 @@ class TrashReport(Base):
             'device_info': self.device_info
         }
 
-# Database setup
-DATABASE_URL = "sqlite:///data/trash_reports.db"
+# Database setup - use environment variable for Render deployment
+DATABASE_PATH = os.getenv('DATABASE_PATH', 'data/trash_reports.db')
+DATABASE_URL = f"sqlite:///{DATABASE_PATH}"
+
+# Ensure the directory exists
+os.makedirs(os.path.dirname(DATABASE_PATH), exist_ok=True)
+
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 

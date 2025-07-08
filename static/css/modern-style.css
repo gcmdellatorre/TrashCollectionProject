@@ -163,6 +163,15 @@
         padding: 1rem;
     }
     
+    /* Mobile vs Desktop button text */
+    .mobile-text {
+        display: inline;
+    }
+    
+    .desktop-text {
+        display: none;
+    }
+    
     /* Touch-friendly buttons */
     .btn-mobile {
         min-height: 44px;
@@ -228,6 +237,27 @@
     
     #map-container {
         height: 500px !important;
+    }
+    
+    /* Mobile vs Desktop button text */
+    .mobile-text {
+        display: none;
+    }
+    
+    .desktop-text {
+        display: inline;
+    }
+}
+
+/* Desktop-specific styles */
+@media (min-width: 1025px) {
+    /* Mobile vs Desktop button text */
+    .mobile-text {
+        display: none;
+    }
+    
+    .desktop-text {
+        display: inline;
     }
 }
 

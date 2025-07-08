@@ -1152,7 +1152,16 @@ function setupVideoFlow() {
     // Take Video Button
     if (takeVideoBtn) {
         takeVideoBtn.addEventListener('click', function() {
-            startVideoCapture();
+            // Check if we're on a mobile device
+            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            
+            if (isMobile) {
+                // On mobile, trigger the file input directly to open native camera
+                videoFileInput.click();
+            } else {
+                // On desktop, use the browser camera API
+                startVideoCapture();
+            }
         });
     }
     
@@ -1167,7 +1176,9 @@ function setupVideoFlow() {
     if (videoFileInput) {
         videoFileInput.addEventListener('change', function() {
             if (this.files.length > 0) {
-                handleVideoSelected(this.files[0]);
+                const file = this.files[0];
+                console.log('Video file selected:', file.name, 'Size:', file.size, 'Type:', file.type);
+                handleVideoSelected(file);
             }
         });
     }

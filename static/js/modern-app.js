@@ -1415,11 +1415,18 @@ function setupVideoFlow() {
         formData.append('latitude', document.getElementById('video-latitude').value);
         formData.append('longitude', document.getElementById('video-longitude').value);
         
+        // Set a timeout for the request
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 300000); // 5 minutes timeout
+        
         try {
             const response = await fetch('/api/upload-video', {
                 method: 'POST',
-                body: formData
+                body: formData,
+                signal: controller.signal
             });
+            
+            clearTimeout(timeoutId);
             
             const result = await response.json();
             
@@ -1432,7 +1439,13 @@ function setupVideoFlow() {
                 showVideoError(result.message || 'Detection failed');
             }
         } catch (error) {
-            showVideoError('Network error: ' + error.message);
+            clearTimeout(timeoutId);
+            
+            if (error.name === 'AbortError') {
+                showVideoError('Detection timed out after 5 minutes. Please try a shorter video or contact support.');
+            } else {
+                showVideoError('Network error: ' + error.message);
+            }
         } finally {
             setVideoLoading(false);
         }
@@ -1441,31 +1454,88 @@ function setupVideoFlow() {
     // UI helper functions
     function setVideoLoading(isLoading) {
         const btn = detectBtn;
+        const progressBar = document.getElementById('video-progress-bar');
+        const progressFill = progressBar ? progressBar.querySelector('div') : null;
+        
         if (btn) {
             btn.disabled = isLoading;
-            const spinner = btn.querySelector('.loading-spinner');
-            const text = btn.querySelector('.btn-text');
             
             if (isLoading) {
-                // Show loading state
-                if (spinner) {
-                    spinner.classList.remove('hidden');
-                    spinner.innerHTML = '<i class="bi bi-arrow-clockwise animate-spin"></i>';
+                // Show loading state with progress
+                btn.innerHTML = '<span class="loading-spinner"><i class="bi bi-arrow-clockwise animate-spin"></i></span><span class="btn-text">Processing Video...</span>';
+                
+                // Show progress bar
+                if (progressBar) {
+                    progressBar.classList.remove('hidden');
+                    progressFill.style.width = '0%';
                 }
-                if (text) {
-                    text.classList.add('hidden');
-                }
-                btn.innerHTML = '<span class="loading-spinner"><i class="bi bi-arrow-clockwise animate-spin"></i></span><span class="btn-text">Detecting Trash...</span>';
+                
+                // Show status message
+                showVideoStatus('Initializing detection model...');
+                
+                // Simulate progress updates
+                let progress = 0;
+                const progressInterval = setInterval(() => {
+                    progress += Math.random() * 15;
+                    if (progress > 90) progress = 90; // Don't go to 100% until done
+                    
+                    if (progressFill) {
+                        progressFill.style.width = progress + '%';
+                    }
+                    
+                    // Update status messages
+                    if (progress < 20) {
+                        showVideoStatus('Loading AI model...');
+                    } else if (progress < 40) {
+                        showVideoStatus('Processing video frames...');
+                    } else if (progress < 60) {
+                        showVideoStatus('Detecting objects...');
+                    } else if (progress < 80) {
+                        showVideoStatus('Analyzing results...');
+                    } else {
+                        showVideoStatus('Finalizing detection...');
+                    }
+                }, 2000); // Update every 2 seconds
+                
+                // Store interval for cleanup
+                btn.dataset.progressInterval = progressInterval;
+                
             } else {
                 // Reset to normal state
-                if (spinner) {
-                    spinner.classList.add('hidden');
-                }
-                if (text) {
-                    text.classList.remove('hidden');
-                }
                 btn.innerHTML = '<span class="loading-spinner hidden"><i class="bi bi-arrow-clockwise animate-spin"></i></span><span class="btn-text">Detect Trash</span>';
+                
+                // Hide progress bar
+                if (progressBar) {
+                    progressBar.classList.add('hidden');
+                }
+                
+                // Clear progress interval
+                if (btn.dataset.progressInterval) {
+                    clearInterval(parseInt(btn.dataset.progressInterval));
+                    delete btn.dataset.progressInterval;
+                }
+                
+                // Hide status
+                hideVideoStatus();
             }
+        }
+    }
+    
+    function showVideoStatus(message) {
+        const statusElement = document.getElementById('video-location-status');
+        const statusText = document.getElementById('video-location-status-text');
+        
+        if (statusElement && statusText) {
+            statusElement.classList.remove('hidden');
+            statusElement.className = 'mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg';
+            statusText.innerHTML = `<i class="bi bi-hourglass-split mr-2"></i>${message}`;
+        }
+    }
+    
+    function hideVideoStatus() {
+        const statusElement = document.getElementById('video-location-status');
+        if (statusElement) {
+            statusElement.classList.add('hidden');
         }
     }
     

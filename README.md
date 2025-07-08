@@ -1,14 +1,28 @@
 # 🗑️ Trash Detection & Reporting App
 
-A comprehensive web application for reporting and tracking trash locations with advanced geospatial analysis capabilities.
+A comprehensive web application for reporting and tracking trash locations with **AI-powered video detection**, advanced geospatial analysis, and mobile-optimized features.
 
 ## ✨ Features
+
+### 🤖 AI-Powered Video Detection
+- **YOLOv8 integration** for real-time trash detection in videos
+- **Frame-by-frame analysis** with configurable processing intervals
+- **Multiple model options** (YOLOv8n, YOLOv8s, YOLOv8m) for speed vs accuracy trade-offs
+- **Progress tracking** with real-time feedback and timeout protection
+- **Confidence threshold filtering** to reduce false positives
+- **Automatic trash classification** and bounding box detection
 
 ### 📸 Smart Image Upload
 - **Drag & drop interface** for easy image uploads
 - **Automatic GPS extraction** from image EXIF data
 - **Interactive map selection** when GPS data is unavailable
 - **Real-time coordinate validation** and feedback
+
+### 📱 Mobile-Optimized Features
+- **Native camera app integration** for mobile video capture
+- **Responsive design** for all device sizes
+- **Touch-friendly interface** with optimized controls
+- **Mobile-specific video handling** with `capture="environment"` attribute
 
 ### 🗺️ Advanced Geospatial Analysis
 - **Find closest dirty places** to any location
@@ -22,6 +36,7 @@ A comprehensive web application for reporting and tracking trash locations with 
 - **Blob storage system** for images (local/MinIO)
 - **RESTful API** for data access
 - **Test data generation** for development and testing
+- **Auto-seeding** with 100 worldwide data points
 
 ### 🎯 Smart Search & Discovery
 - **Search by address** or coordinates
@@ -37,13 +52,14 @@ A comprehensive web application for reporting and tracking trash locations with 
 ### Prerequisites
 - Python 3.8+
 - pip package manager
+- Docker (for deployment)
 
 ### Installation
 
 1. **Clone the repository**
 ```bash
 git clone <repository-url>
-cd trash-detection-app
+cd TrashCollectionProject
 ```
 
 2. **Install dependencies**
@@ -53,11 +69,11 @@ pip install -r requirements.txt
 
 3. **Create test data (optional)**
 ```bash
-# Create 50 test entries
+# Create 100 test entries (auto-seeded on startup)
 python create_trash_dataset.py create
 
-# Create 100 test entries
-python create_trash_dataset.py create 100
+# Create custom number of test entries
+python create_trash_dataset.py create 500
 
 # View database statistics
 python create_trash_dataset.py stats
@@ -71,7 +87,36 @@ python app.py
 5. **Open your browser**
 Navigate to `http://localhost:8000`
 
+## 🐳 Docker Deployment
+
+### Local Docker
+```bash
+# Build and run with Docker Compose
+docker-compose up --build
+
+# Or build and run manually
+docker build -t trash-detection-app .
+docker run -p 8000:8000 trash-detection-app
+```
+
+### Production Deployment (Render)
+- **Auto-deploy** from GitHub repository
+- **Persistent storage** for database and images
+- **Environment variables** for configuration
+- **Health checks** and automatic restarts
+
 ## 📱 Usage
+
+### Video Detection
+
+1. **Upload a video** (MP4, AVI, MOV supported)
+2. **Choose detection settings**:
+   - Model: YOLOv8n (fastest) to YOLOv8m (most accurate)
+   - Frame interval: Higher values = faster processing
+   - Confidence threshold: Higher values = fewer detections
+3. **Start detection** and monitor progress
+4. **Review results** with bounding boxes and classifications
+5. **Submit report** with detected trash locations
 
 ### Uploading Trash Reports
 
@@ -112,6 +157,17 @@ trash_type: string (optional)
 estimated_kg: float (optional)
 sparcity: "low"|"medium"|"high" (optional)
 cleanliness: "good"|"moderate"|"poor"|"very_poor" (optional)
+```
+
+#### Video Detection
+```http
+POST /detect-video
+Content-Type: multipart/form-data
+
+video: video file
+model: "yolov8n"|"yolov8s"|"yolov8m" (optional, default: yolov8n)
+frame_interval: int (optional, default: 60)
+confidence: float (optional, default: 0.5)
 ```
 
 #### Get All Reports
@@ -156,11 +212,11 @@ python create_trash_dataset.py stats
 
 ### Create Test Data
 ```bash
-# Create 50 entries (default)
+# Create 100 entries (default)
 python create_trash_dataset.py create
 
 # Create custom number
-python create_trash_dataset.py create 200
+python create_trash_dataset.py create 500
 ```
 
 ### Clear All Data
@@ -190,6 +246,8 @@ SELECT * FROM trash_reports LIMIT 5;
 - **SQLAlchemy** - Database ORM
 - **SQLite** - Lightweight database
 - **Pillow** - Image processing
+- **OpenCV** - Video processing and computer vision
+- **Ultralytics YOLOv8** - Object detection models
 - **MinIO** - Object storage (optional)
 
 ### Frontend Stack
@@ -197,10 +255,18 @@ SELECT * FROM trash_reports LIMIT 5;
 - **Leaflet** - Interactive maps
 - **Bootstrap** - UI components
 - **OpenStreetMap** - Map tiles
+- **Progress indicators** - Real-time feedback
+
+### ML Pipeline
+- **YOLOv8 Models**: Pre-trained on COCO dataset
+- **Video Processing**: Frame extraction and analysis
+- **Object Detection**: Real-time trash identification
+- **Result Aggregation**: Bounding boxes and classifications
 
 ### Storage Architecture
 - **Metadata**: SQLite database (`data/trash_reports.db`)
 - **Images**: Local filesystem (`data/images/`) or MinIO
+- **Videos**: Temporary processing storage
 - **Thumbnails**: Auto-generated for performance
 
 ## 🔧 Configuration
@@ -214,6 +280,11 @@ DATABASE_URL=sqlite:///data/trash_reports.db
 MINIO_ENDPOINT=localhost:9000
 MINIO_ACCESS_KEY=minioadmin
 MINIO_SECRET_KEY=minioadmin
+
+# ML Model Configuration
+DEFAULT_MODEL=yolov8n
+DEFAULT_FRAME_INTERVAL=60
+DEFAULT_CONFIDENCE=0.5
 ```
 
 ### Development vs Production
@@ -222,11 +293,13 @@ MINIO_SECRET_KEY=minioadmin
 - SQLite database
 - Local file storage
 - Single server deployment
+- YOLOv8n model for speed
 
 #### Production Setup
 - PostgreSQL database
 - MinIO/S3 object storage
 - Load balancer + multiple instances
+- Optimized model selection
 
 ## 📊 Dirtiness Scoring Algorithm
 
@@ -266,9 +339,11 @@ This ensures closer, dirtier places rank higher in search results.
 
 ### Manual Testing
 1. **Upload test images** with and without GPS data
-2. **Search various locations** to test geospatial features
-3. **Test form validation** with invalid inputs
-4. **Check API endpoints** with curl or Postman
+2. **Test video detection** with various video formats
+3. **Search various locations** to test geospatial features
+4. **Test form validation** with invalid inputs
+5. **Check API endpoints** with curl or Postman
+6. **Test mobile camera** functionality
 
 ### Automated Test Data
 ```bash
@@ -286,6 +361,9 @@ python create_trash_dataset.py create 1000
 
 # Test search performance
 time curl "http://localhost:8000/api/find-dirty-places?lat=40.7128&lng=-74.0060"
+
+# Test video detection performance
+# Upload various video sizes and monitor processing times
 ```
 
 ## 🐛 Troubleshooting
@@ -295,6 +373,9 @@ time curl "http://localhost:8000/api/find-dirty-places?lat=40.7128&lng=-74.0060"
 #### "No GPS coordinates found"
 - **Solution**: Use the manual location selector or add GPS data to your image
 
+#### "Video detection is slow"
+- **Solution**: Use YOLOv8n model, increase frame interval, or raise confidence threshold
+
 #### "MinIO connection failed"
 - **Solution**: App automatically falls back to local storage - no action needed
 
@@ -303,6 +384,9 @@ time curl "http://localhost:8000/api/find-dirty-places?lat=40.7128&lng=-74.0060"
 
 #### "Search returns no results"
 - **Solution**: Increase search radius or create test data in that area
+
+#### "Port 8000 already in use"
+- **Solution**: Kill existing processes or change port in app.py
 
 ### Debug Mode
 ```bash
@@ -339,10 +423,16 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - **FastAPI** for the excellent web framework
 - **SQLAlchemy** for database management
 - **Bootstrap** for UI components
+- **Ultralytics** for YOLOv8 models
+- **OpenCV** for computer vision capabilities
 
 ## 🔮 Future Roadmap
 
 ### Short Term
+- [x] AI-powered video detection
+- [x] Mobile camera integration
+- [x] Progress tracking and timeout protection
+- [x] Docker deployment optimization
 - [ ] User authentication system
 - [ ] Mobile-responsive design improvements
 - [ ] Batch upload functionality
@@ -353,12 +443,14 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - [ ] Real-time notifications for new reports
 - [ ] Community cleanup event coordination
 - [ ] Environmental impact metrics
+- [ ] Client-side ML processing for faster detection
 
 ### Long Term
 - [ ] Mobile app (React Native/Flutter)
 - [ ] Integration with city waste management systems
 - [ ] Predictive analytics for trash accumulation
 - [ ] Gamification and community challenges
+- [ ] Multi-language support
 
 ---
 

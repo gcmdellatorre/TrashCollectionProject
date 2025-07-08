@@ -1380,14 +1380,9 @@ function setupVideoFlow() {
             }
             
             try {
-                // Try client-side detection first
-                if (window.clientMLProcessor && window.clientMLProcessor.isReady()) {
-                    console.log('🚀 Using client-side ML detection...');
-                    await performClientSideDetection();
-                } else {
-                    console.log('🔄 Client-side ML not ready, using server-side detection...');
-                    await performVideoDetection();
-                }
+                // Use server-side detection
+                console.log('🔄 Using server-side detection...');
+                await performVideoDetection();
             } catch (error) {
                 console.error('Video detection error:', error);
                 showVideoError('Detection failed: ' + error.message);
@@ -1397,50 +1392,9 @@ function setupVideoFlow() {
     
     // Remove the event listeners for discard and rerun since we removed those buttons
 
-    // Perform client-side video detection
-    async function performClientSideDetection() {
-        setVideoLoading(true);
-        hideVideoError();
-        hideVideoResults();
-        
-        try {
-            console.log('🚀 Starting client-side detection...');
-            
-            // Get detection parameters
-            const frameInterval = parseInt(document.getElementById('frameInterval').value);
-            const confidenceThreshold = parseFloat(document.getElementById('confidenceThreshold').value);
-            
-            // Process video using client-side ML
-            const detectionData = await window.clientMLProcessor.processVideo(
-                currentVideoFile, 
-                frameInterval, 
-                confidenceThreshold
-            );
-            
-            // Add metadata
-            detectionData.model_used = 'Client-Side COCO-SSD';
-            detectionData.detection_id = 'client_' + Date.now();
-            detectionData.timestamp = new Date().toISOString();
-            
-            // Store detection data
-            currentDetectionData = detectionData;
-            
-            // Show results
-            showVideoResults(detectionData);
-            hideDetectButton();
-            showSubmitButton();
-            
-            console.log('✅ Client-side detection completed successfully');
-            
-        } catch (error) {
-            console.error('❌ Client-side detection failed:', error);
-            showVideoError('Client-side detection failed: ' + error.message);
-        } finally {
-            setVideoLoading(false);
-        }
-    }
 
-    // Perform server-side video detection (fallback)
+
+    // Perform server-side video detection
     async function performVideoDetection() {
         setVideoLoading(true);
         hideVideoError();

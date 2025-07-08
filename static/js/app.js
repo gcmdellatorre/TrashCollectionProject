@@ -775,5 +775,5 @@ window.toggleDarkMode = function() {
 // Also define it locally for the event listener
 function toggleDarkMode() {
     window.toggleDarkMode();
-}
+} 
 

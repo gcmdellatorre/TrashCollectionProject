@@ -750,8 +750,8 @@ function confirmLocation() {
     }
 } 
 
-// Dark mode toggle function
-function toggleDarkMode() {
+// Dark mode toggle function - make it globally accessible
+window.toggleDarkMode = function() {
     const html = document.documentElement;
     const isDark = html.classList.contains('dark');
     
@@ -765,6 +765,15 @@ function toggleDarkMode() {
     
     // Show notification
     const message = isDark ? 'Switched to light mode' : 'Switched to dark mode';
-    showNotification(message, 'info');
+    if (typeof showNotification === 'function') {
+        showNotification(message, 'info');
+    } else {
+        console.log(message);
+    }
+};
+
+// Also define it locally for the event listener
+function toggleDarkMode() {
+    window.toggleDarkMode();
 }
 

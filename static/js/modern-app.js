@@ -556,14 +556,20 @@ function confirmLocationSelection() {
             
         } else if (photoFlowContainer && !photoFlowContainer.classList.contains('hidden')) {
             // Photo flow is active
-        document.getElementById('latitude').value = selectedLocation.lat;
-        document.getElementById('longitude').value = selectedLocation.lng;
-        
-        const coordsText = `${selectedLocation.lat.toFixed(4)}, ${selectedLocation.lng.toFixed(4)}`;
-        document.getElementById('coordinates-text').textContent = `Location set to: ${coordsText}`;
-        document.getElementById('coordinates-info').classList.remove('hidden');
-        
-        showManualDetailsSection();
+            document.getElementById('latitude').value = selectedLocation.lat;
+            document.getElementById('longitude').value = selectedLocation.lng;
+            
+            const coordsText = `${selectedLocation.lat.toFixed(4)}, ${selectedLocation.lng.toFixed(4)}`;
+            document.getElementById('coordinates-text').textContent = `Location set to: ${coordsText}`;
+            document.getElementById('coordinates-info').classList.remove('hidden');
+            
+            // Hide manual location section since location is now set
+            const manualLocationSection = document.getElementById('manual-location-section');
+            if (manualLocationSection) {
+                manualLocationSection.classList.add('hidden');
+            }
+            
+            // The toggle will handle showing AI or manual sections
         }
         
         closeLocationSelector();
@@ -716,6 +722,24 @@ function setupEventListeners() {
 
     // Initialize dark mode from localStorage
     initializeDarkMode();
+    
+    // Photo detection button
+    const detectPhotoBtn = document.getElementById('detect-photo-btn');
+    if (detectPhotoBtn) {
+        detectPhotoBtn.addEventListener('click', detectPhotoWithAI);
+    }
+    
+    // Photo mode toggle
+    const photoModeRadios = document.querySelectorAll('input[name="photo-report-method"]');
+    photoModeRadios.forEach(radio => {
+        radio.addEventListener('change', handlePhotoModeToggle);
+    });
+    
+    // Photo manual location button
+    const photoSelectLocationBtn = document.getElementById('photo-select-location-btn');
+    if (photoSelectLocationBtn) {
+        photoSelectLocationBtn.addEventListener('click', openLocationSelector);
+    }
 }
 
 // Dark mode functionality
@@ -797,7 +821,7 @@ function uploadVideo(file) {
     }
     
     // Add model selection
-    formData.append('model', 'yolov8s-smart');
+            formData.append('model', 'yolov8s');
     
     // Show upload progress
     window.showNotification('Uploading video for trash detection...', 'info');
@@ -945,6 +969,185 @@ function setupPhotoCapture() {
     });
 }
 
+function setupPhotoDetection() {
+    // Show detection toggle when photo is selected
+    const detectionToggle = document.getElementById("detection-toggle");
+    const aiDetectionSection = document.getElementById("ai-detection-section");
+    const manualDetailsToggle = document.getElementById("manual-details-toggle");
+    const detailsForm = document.getElementById("details-form");
+    
+    if (detectionToggle) {
+        detectionToggle.classList.remove("hidden");
+    }
+    
+    // Default to AI detection
+    const aiRadio = document.querySelector('input[name="report-method"][value="ai"]');
+    if (aiRadio) {
+        aiRadio.checked = true;
+        aiDetectionSection.classList.remove("hidden");
+        manualDetailsToggle.classList.add("hidden");
+        detailsForm.classList.add("hidden");
+    }
+    
+    // Handle radio button changes
+    const radioButtons = document.querySelectorAll('input[name="report-method"]');
+    radioButtons.forEach(radio => {
+        radio.addEventListener("change", function() {
+            if (this.value === "ai") {
+                aiDetectionSection.classList.remove("hidden");
+                manualDetailsToggle.classList.add("hidden");
+                detailsForm.classList.add("hidden");
+            } else {
+                aiDetectionSection.classList.add("hidden");
+                manualDetailsToggle.classList.remove("hidden");
+                detailsForm.classList.add("hidden");
+            }
+        });
+    });
+    
+    // Handle manual details toggle
+    const fillFormCheck = document.getElementById("fill-form-check");
+    if (fillFormCheck) {
+        fillFormCheck.addEventListener("change", function() {
+            if (this.checked) {
+                detailsForm.classList.remove("hidden");
+            } else {
+                detailsForm.classList.add("hidden");
+            }
+        });
+    }
+}
+
+async function detectPhotoWithAI() {
+    const fileInput = document.getElementById("file");
+    const latitudeInput = document.getElementById("latitude");
+    const longitudeInput = document.getElementById("longitude");
+    const modelSelect = document.getElementById("photo-model-select");
+    const confidenceSelect = document.getElementById("photo-confidence-threshold");
+    const detectBtn = document.getElementById("detect-photo-btn");
+    const progressBar = document.getElementById("photo-detection-progress");
+    const statusText = document.getElementById("photo-detection-status");
+    const resultsDiv = document.getElementById("photo-detection-results");
+    const errorDiv = document.getElementById("photo-detection-error");
+    
+    if (!fileInput.files[0]) {
+        showPhotoDetectionError("Please select a photo first");
+        return;
+    }
+    
+    if (!latitudeInput.value || !longitudeInput.value) {
+        showPhotoDetectionError("Location coordinates are required");
+        return;
+    }
+    
+    // Show loading state
+    detectBtn.disabled = true;
+    detectBtn.querySelector(".btn-text").textContent = "Detecting...";
+    detectBtn.querySelector(".loading-spinner").classList.remove("hidden");
+    progressBar.classList.remove("hidden");
+    errorDiv.classList.add("hidden");
+    resultsDiv.classList.add("hidden");
+    
+    // Update progress
+    updatePhotoDetectionProgress(10, "Preparing image...");
+    
+    const formData = new FormData();
+    formData.append("file", fileInput.files[0]);
+    formData.append("latitude", latitudeInput.value);
+    formData.append("longitude", longitudeInput.value);
+    formData.append("model_name", modelSelect.value);
+    formData.append("confidence_threshold", confidenceSelect.value);
+    
+    try {
+        updatePhotoDetectionProgress(30, "Uploading image...");
+        
+        const response = await fetch("/api/detect-photo", {
+            method: "POST",
+            body: formData
+        });
+        
+        updatePhotoDetectionProgress(70, "Processing results...");
+        
+        const result = await response.json();
+        
+        if (response.ok) {
+            updatePhotoDetectionProgress(100, "Detection complete!");
+            showPhotoDetectionResults(result);
+            window.showNotification("Photo detection completed successfully!", "success");
+        } else {
+            throw new Error(result.message || "Detection failed");
+        }
+    } catch (error) {
+        console.error("Photo detection error:", error);
+        showPhotoDetectionError(error.message);
+    } finally {
+        // Reset button state
+        detectBtn.disabled = false;
+        detectBtn.querySelector(".btn-text").textContent = "Detect Trash with AI";
+        detectBtn.querySelector(".loading-spinner").classList.add("hidden");
+    }
+}
+
+function updatePhotoDetectionProgress(percentage, message) {
+    const progressBar = document.getElementById("photo-detection-progress");
+    const progressFill = progressBar.querySelector(".bg-blue-600");
+    const statusText = document.getElementById("photo-detection-status");
+    
+    if (progressFill) {
+        progressFill.style.width = percentage + "%";
+    }
+    if (statusText) {
+        statusText.textContent = message;
+    }
+}
+
+function showPhotoDetectionResults(result) {
+    const resultsDiv = document.getElementById("photo-detection-results");
+    const contentDiv = document.getElementById("photo-detection-content");
+    const submitBtn = document.getElementById("submit-btn");
+    
+    if (!resultsDiv || !contentDiv) return;
+    
+    const summary = result.summary;
+    const detections = result.detections;
+    
+    let content = `<div class="space-y-3">`;
+    content += `<div><strong>Detected Items:</strong> ${summary.total_detections}</div>`;
+    content += `<div><strong>Trash Type:</strong> ${summary.trash_type}</div>`;
+    content += `<div><strong>Estimated Weight:</strong> ${summary.estimated_kg} kg</div>`;
+    content += `<div><strong>Sparcity:</strong> ${summary.sparcity}</div>`;
+    content += `<div><strong>Cleanliness:</strong> ${summary.cleanliness}</div>`;
+    
+    if (detections && detections.length > 0) {
+        content += `<div class="mt-3"><strong>Detected Objects:</strong></div>`;
+        content += `<ul class="list-disc list-inside text-xs space-y-1">`;
+        detections.forEach(detection => {
+            content += `<li>${detection.class} (${(detection.confidence * 100).toFixed(1)}% confidence)</li>`;
+        });
+        content += `</ul>`;
+    }
+    
+    content += `</div>`;
+    
+    contentDiv.innerHTML = content;
+    resultsDiv.classList.remove("hidden");
+    
+    // Show the submit button after successful AI detection
+    if (submitBtn) {
+        submitBtn.classList.remove("hidden");
+    }
+}
+
+function showPhotoDetectionError(message) {
+    const errorDiv = document.getElementById("photo-detection-error");
+    const errorMessage = document.getElementById("photo-detection-error-message");
+    
+    if (errorDiv && errorMessage) {
+        errorMessage.textContent = message;
+        errorDiv.classList.remove("hidden");
+    }
+}
+
 function handlePhotoCapture(file) {
     if(!file) return;
 
@@ -961,6 +1164,9 @@ function handlePhotoCapture(file) {
     reader.readAsDataURL(file);
 
     processPhotoForLocation(file);
+    
+    // Setup photo detection functionality
+    setupPhotoDetection();
 }
 
 function processPhotoForLocation(file) {
@@ -976,15 +1182,15 @@ function processPhotoForLocation(file) {
             document.getElementById('longitude').value = coords.longitude;
             showLocationStatus(`Location found: ${coords.latitude.toFixed(4)}, ${coords.lng.toFixed(4)}`);
             
-            // Show coordinates info and submit button
+            // Show coordinates info
             document.getElementById('coordinates-info').classList.remove('hidden');
             document.getElementById('coordinates-text').textContent = `Location: ${coords.latitude.toFixed(4)}, ${coords.lng.toFixed(4)}`;
-            document.getElementById('manual-details-toggle').classList.remove('hidden');
-            window.updateSubmitButtonVisibility();
+            // The toggle will handle showing AI or manual sections
         } else {
             // No location found, show manual location section
             showLocationStatus('No location data found in photo');
             document.getElementById('manual-location-section').classList.remove('hidden');
+            // The toggle will handle showing AI or manual sections
         }
     })
     .catch(error => {
@@ -1109,6 +1315,22 @@ function showManualDetailsSection() {
     document.getElementById('fill-form-check').checked = true;
     document.getElementById('details-form').classList.remove('hidden');
     window.updateSubmitButtonVisibility();
+}
+
+function handlePhotoModeToggle(event) {
+    const selectedMode = event.target.value;
+    const aiSection = document.getElementById('ai-detection-section');
+    const manualSection = document.getElementById('manual-report-section');
+    
+    if (selectedMode === 'ai') {
+        // Show AI detection section, hide manual section
+        aiSection.classList.remove('hidden');
+        manualSection.classList.add('hidden');
+    } else if (selectedMode === 'manual') {
+        // Show manual section, hide AI section
+        aiSection.classList.add('hidden');
+        manualSection.classList.remove('hidden');
+    }
 }
 
 function requestUserLocationOnLoad() {
@@ -1564,6 +1786,7 @@ document.addEventListener('DOMContentLoaded', () => {
     loadMapData();
     setupEventListeners();
     setupPhotoCapture();
+    setupPhotoDetection(); // Initialize photo detection
     requestUserLocationOnLoad();
     setupFlowToggle();
     setupVideoFlow();

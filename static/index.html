@@ -344,6 +344,7 @@
                                                 No GPS coordinates were found in your photo. Please select the location manually.
                                             </p>
                                             <button type="button" 
+                                                    id="photo-select-location-btn"
                                                     class="px-4 py-2 bg-yellow-600 text-white rounded-lg text-sm font-medium hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 transition-colors">
                                                 <i class="bi bi-geo-alt mr-2"></i>
                                                 Select Location Manually
@@ -356,61 +357,154 @@
                                 <input type="hidden" id="latitude" name="latitude">
                                 <input type="hidden" id="longitude" name="longitude">
                                 
-                                <!-- Coordinates Display -->
+                                <!-- Photo Flow Mode Toggle -->
+                                <div id="photo-mode-toggle" class="flex items-center justify-between p-4 bg-gray-50 border border-gray-200 rounded-lg">
+                                    <div class="flex items-center">
+                                        <i class="bi bi-robot text-blue-600 mr-2"></i>
+                                        <span class="text-sm font-medium text-gray-700">Report Method</span>
+                                    </div>
+                                    <div class="flex items-center space-x-4">
+                                        <label class="flex items-center">
+                                            <input type="radio" name="photo-report-method" value="ai" class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300" checked>
+                                            <span class="ml-2 text-sm text-gray-700">AI Detection (Recommended)</span>
+                                        </label>
+                                        <label class="flex items-center">
+                                            <input type="radio" name="photo-report-method" value="manual" class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300">
+                                            <span class="ml-2 text-sm text-gray-700">Manual Report</span>
+                                        </label>
+                                    </div>
+                                </div>
+                                
+                                <!-- AI Detection Section -->
+                                <div id="ai-detection-section" class="space-y-4">
+                                    <div class="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                                        <div class="flex items-center mb-3">
+                                            <i class="bi bi-robot text-blue-600 mr-2"></i>
+                                            <span class="text-sm font-medium text-blue-800">AI Detection Settings</span>
+                                        </div>
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div>
+                                                <label for="photo-model-select" class="block text-sm font-medium text-gray-700 mb-1">Detection Model</label>
+                                                <select class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500" id="photo-model-select" name="model_name">
+                                                    <option value="yolov8n" selected>YOLOv8n-Enhanced (Fast - Recommended)</option>
+                                                    <option value="yolov8s">YOLOv8s-Enhanced (Medium)</option>
+                                                    <option value="yolov8m">YOLOv8m-Enhanced (High accuracy - Slow)</option>
+                                                </select>
+                                                <div class="text-xs text-gray-500 mt-1">YOLOv8n: ~10-30s | YOLOv8s: ~20-60s | YOLOv8m: ~30-90s</div>
+                                            </div>
+                                            <div>
+                                                <label for="photo-confidence-threshold" class="block text-sm font-medium text-gray-700 mb-1">Confidence Threshold</label>
+                                                <select class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500" id="photo-confidence-threshold" name="confidence_threshold">
+                                                    <option value="0.3" selected>Low (0.3) - More detections</option>
+                                                    <option value="0.5">Medium (0.5) - Balanced</option>
+                                                    <option value="0.7">High (0.7) - Fewer, accurate detections</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- AI Detection Button -->
+                                    <button type="button" 
+                                            id="detect-photo-btn"
+                                            class="w-full px-4 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg text-sm font-medium hover:from-blue-600 hover:to-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all">
+                                        <i class="bi bi-robot mr-2"></i>
+                                        <span class="btn-text">Detect Trash with AI</span>
+                                        <span class="loading-spinner hidden"><i class="bi bi-arrow-clockwise animate-spin"></i></span>
+                                    </button>
+                                    
+                                    <!-- AI Detection Progress -->
+                                    <div id="photo-detection-progress" class="hidden">
+                                        <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                            <div class="bg-blue-600 h-2.5 rounded-full transition-all duration-300" style="width: 0%"></div>
+                                        </div>
+                                        <div class="text-sm text-gray-600 mt-2 text-center" id="photo-detection-status">Initializing AI model...</div>
+                                    </div>
+                                    
+                                    <!-- AI Detection Results -->
+                                    <div id="photo-detection-results" class="hidden">
+                                        <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                                            <div class="flex items-center mb-3">
+                                                <i class="bi bi-check-circle text-green-600 mr-2"></i>
+                                                <span class="text-sm font-medium text-green-800">AI Detection Complete</span>
+                                            </div>
+                                            <div id="photo-detection-content" class="text-sm text-green-700"></div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- AI Detection Error -->
+                                    <div id="photo-detection-error" class="hidden">
+                                        <div class="bg-red-100 border border-red-200 text-red-700 rounded-lg p-3 flex items-center">
+                                            <i class="bi bi-exclamation-triangle mr-2"></i>
+                                            <span id="photo-detection-error-message"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Manual Report Section -->
+                                <div id="manual-report-section" class="hidden space-y-4">
+                                    <div class="p-4 bg-green-50 border border-green-200 rounded-lg">
+                                        <div class="flex items-center mb-3">
+                                            <i class="bi bi-pencil text-green-600 mr-2"></i>
+                                            <span class="text-sm font-medium text-green-800">Manual Report</span>
+                                        </div>
+                                        <p class="text-sm text-green-700 mb-3">
+                                            Fill out the details below to manually report the trash you found.
+                                        </p>
+                                    </div>
+                                    
+                                    <!-- Manual Report Form -->
+                                    <div class="space-y-4">
+                                        <div>
+                                            <label for="manual-trash-type" class="block text-sm font-medium text-gray-700 mb-1">Trash Type</label>
+                                            <select id="manual-trash-type" name="trash_type" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500" required>
+                                                <option value="">Select type</option>
+                                                <option value="plastic">Plastic</option>
+                                                <option value="paper">Paper</option>
+                                                <option value="metal">Metal</option>
+                                                <option value="glass">Glass</option>
+                                                <option value="organic">Organic</option>
+                                                <option value="electronic">Electronic</option>
+                                            </select>
+                                        </div>
+                                        
+                                        <div>
+                                            <label for="manual-estimated-kg" class="block text-sm font-medium text-gray-700 mb-1">Estimated Weight (kg)</label>
+                                            <input type="number" step="0.1" id="manual-estimated-kg" name="estimated_kg" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500" required>
+                                        </div>
+                                        
+                                        <div>
+                                            <label for="manual-sparcity" class="block text-sm font-medium text-gray-700 mb-1">Sparcity</label>
+                                            <select id="manual-sparcity" name="sparcity" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500" required>
+                                                <option value="">Select sparcity</option>
+                                                <option value="low">Low</option>
+                                                <option value="medium">Medium</option>
+                                                <option value="high">High</option>
+                                            </select>
+                                        </div>
+                                        
+                                        <div>
+                                            <label for="manual-cleanliness" class="block text-sm font-medium text-gray-700 mb-1">Cleanliness</label>
+                                            <select id="manual-cleanliness" name="cleanliness" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500" required>
+                                                <option value="">Select cleanliness</option>
+                                                <option value="good">Good</option>
+                                                <option value="moderate">Moderate</option>
+                                                <option value="poor">Poor</option>
+                                                <option value="very_poor">Very Poor</option>
+                                            </select>
+                                        </div>
+                                        
+                                        <!-- Manual Submit Button -->
+                                        <button type="submit" id="manual-submit-btn" class="w-full px-4 py-3 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all">
+                                            <i class="bi bi-check-circle mr-2"></i>
+                                            Submit Manual Report
+                                        </button>
+                                    </div>
+                                </div>
+                                
                                 <div id="coordinates-info" class="hidden p-3 bg-blue-50 border border-blue-200 rounded-lg">
                                     <div class="flex items-center text-sm text-blue-700">
                                         <i class="bi bi-geo-alt mr-2"></i>
                                         <span id="coordinates-text">Location captured</span>
-                                    </div>
-                                </div>
-                                
-                                <!-- Manual Details Toggle -->
-                                <div id="manual-details-toggle" class="flex items-center hidden">
-                                    <input type="checkbox" id="fill-form-check" class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded">
-                                    <label for="fill-form-check" class="ml-2 block text-sm text-gray-700">
-                                        Add details manually
-                                    </label>
-                                </div>
-                                
-                                <!-- Manual Details Form -->
-                                <div id="details-form" class="hidden space-y-4">
-                                    <div>
-                                        <label for="trash-type" class="block text-sm font-medium text-gray-700 mb-1">Trash Type</label>
-                                        <select id="trash-type" name="trash_type" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
-                                            <option value="">Select type</option>
-                                            <option value="plastic">Plastic</option>
-                                            <option value="paper">Paper</option>
-                                            <option value="metal">Metal</option>
-                                            <option value="glass">Glass</option>
-                                            <option value="organic">Organic</option>
-                                            <option value="electronic">Electronic</option>
-                                        </select>
-                                    </div>
-                                    
-                                    <div>
-                                        <label for="estimated-kg" class="block text-sm font-medium text-gray-700 mb-1">Estimated Weight (kg)</label>
-                                        <input type="number" step="0.1" id="estimated-kg" name="estimated_kg" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
-                                    </div>
-                                    
-                                    <div>
-                                        <label for="sparcity" class="block text-sm font-medium text-gray-700 mb-1">Sparcity</label>
-                                        <select id="sparcity" name="sparcity" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
-                                            <option value="">Select sparcity</option>
-                                            <option value="low">Low</option>
-                                            <option value="medium">Medium</option>
-                                            <option value="high">High</option>
-                                        </select>
-                                    </div>
-                                    
-                                    <div>
-                                        <label for="cleanliness" class="block text-sm font-medium text-gray-700 mb-1">Cleanliness</label>
-                                        <select id="cleanliness" name="cleanliness" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
-                                            <option value="">Select cleanliness</option>
-                                            <option value="good">Good</option>
-                                            <option value="moderate">Moderate</option>
-                                            <option value="poor">Poor</option>
-                                            <option value="very_poor">Very Poor</option>
-                                        </select>
                                     </div>
                                 </div>
                                 

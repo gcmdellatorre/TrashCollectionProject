@@ -239,8 +239,14 @@ async def upload_file(
                 os.remove(temp_path)
         
         # Determine final coordinates
-        final_latitude = float(latitude) if latitude else metadata.get('latitude')
-        final_longitude = float(longitude) if longitude else metadata.get('longitude')
+        try:
+            final_latitude = float(latitude) if latitude else metadata.get('latitude')
+            final_longitude = float(longitude) if longitude else metadata.get('longitude')
+        except (ValueError, TypeError):
+            return JSONResponse(
+                status_code=400,
+                content={"status": "error", "message": "Invalid coordinates provided. Please provide valid latitude and longitude values."}
+            )
 
         # If no coordinates found, use default coordinates (for testing/demo purposes)
         if not final_latitude or not final_longitude:
@@ -352,7 +358,7 @@ async def get_trash_data():
     """
     try:
         reports = get_all_trash_reports()
-        return JSONResponse(content={"status": "success", "data": reports})
+        return JSONResponse(content={"status": "success", "reports": reports})
     except Exception as e:
         print(f"Error fetching trash data: {e}")
         return JSONResponse(
@@ -467,7 +473,7 @@ async def upload_video(
     longitude: str = Form(None),
     frame_interval: int = Form(60),
     confidence_threshold: float = Form(0.5),
-    model_name: str = Form('yolov8n-smart')
+    model_name: str = Form('yolov8n-taco')
 ):
     """
     Upload and process video for trash detection
@@ -573,7 +579,7 @@ async def submit_video_report(
     video: UploadFile = File(...),
     latitude: str = Form(...),
     longitude: str = Form(...),
-    model: str = Form('yolov8s-smart'),
+            model: str = Form('yolov8s'),
     detection_data: str = Form(None)
 ):
     """
@@ -734,6 +740,152 @@ async def get_available_models():
         
     except Exception as e:
         print(f"Error getting available models: {e}")
+        return JSONResponse(
+            status_code=500,
+            content={"status": "error", "message": str(e)}
+        )
+
+@app.post("/api/detect-photo")
+async def detect_photo(
+    file: UploadFile = File(...),
+    latitude: str = Form(...),
+    longitude: str = Form(...),
+    model_name: str = Form("yolov8n"),
+    confidence_threshold: float = Form(0.3)
+):
+    """
+    Detect trash in a photo and save results to database
+    """
+    try:
+        # Validate file type
+        if not file.content_type.startswith("image/"):
+            return JSONResponse(
+                status_code=400,
+                content={"status": "error", "message": "File must be an image"}
+            )
+        
+        # Save image temporarily
+        temp_path = f"temp_photo_{uuid.uuid4()}.jpg"
+        file_content = await file.read()
+        with open(temp_path, "wb") as temp_file:
+            temp_file.write(file_content)
+        
+        # Print temp file path and size for debugging
+        import os
+        print(f"[DEBUG] Saved uploaded image to: {temp_path}")
+        print(f"[DEBUG] Uploaded image size: {os.path.getsize(temp_path)} bytes")
+        
+        # Process image with trash detection
+        from ml.trash_detection_v2 import create_trash_detector
+        detector = create_trash_detector(model_name)
+        
+        # Print model info and environment for debugging
+        print(f"[DEBUG] Model file: {detector.model_config['filename']}")
+        print(f"[DEBUG] Model name: {detector.model_config['name']}")
+        print(f"[DEBUG] Model description: {detector.model_config['description']}")
+        import sys
+        import torch
+        import ultralytics
+        print(f"[DEBUG] Python version: {sys.version}")
+        print(f"[DEBUG] torch version: {torch.__version__}")
+        print(f"[DEBUG] ultralytics version: {ultralytics.__version__}")
+
+        print(f"[DEBUG] /api/detect-photo: confidence_threshold={confidence_threshold}")
+        results = detector.detect_trash_in_image(temp_path, confidence_threshold)
+        print(f"[DEBUG] /api/detect-photo: all_detections={results.get('all_detections')}")
+        print(f"[DEBUG] /api/detect-photo: trash_detections={results.get('trash_detections')}")
+        
+        # DO NOT DELETE temp file (for debugging)
+        # os.remove(temp_path)
+        
+        # Save results to database
+        from utils.db_utils import save_trash_report
+        
+        # Create a summary of detected items
+        detected_items = []
+        total_confidence = 0
+        if results and "trash_detections" in results:
+            for detection in results["trash_detections"]:
+                detected_items.append({
+                    "class": detection.get("class_name", "unknown"),
+                    "confidence": detection.get("confidence", 0),
+                    "bbox": detection.get("bbox", [])
+                })
+                total_confidence += detection.get("confidence", 0)
+        
+        # Determine trash type from detections
+        trash_type = "mixed"
+        if detected_items:
+            # Get the most confident detection
+            best_detection = max(detected_items, key=lambda x: x["confidence"])
+            class_name = best_detection["class"].lower()
+            
+            # Map detection classes to trash types
+            if any(word in class_name for word in ["bottle", "can", "plastic"]):
+                trash_type = "plastic"
+            elif any(word in class_name for word in ["paper", "cardboard", "newspaper"]):
+                trash_type = "paper"
+            elif any(word in class_name for word in ["metal", "can", "aluminum"]):
+                trash_type = "metal"
+            elif any(word in class_name for word in ["glass", "bottle"]):
+                trash_type = "glass"
+            elif any(word in class_name for word in ["food", "organic", "fruit"]):
+                trash_type = "organic"
+            elif any(word in class_name for word in ["phone", "electronic", "device"]):
+                trash_type = "electronic"
+        
+        # Estimate weight based on number of detections
+        estimated_kg = min(len(detected_items) * 0.5, 10.0)  # 0.5kg per item, max 10kg
+        
+        # Determine sparcity based on number of detections
+        if len(detected_items) <= 2:
+            sparcity = "low"
+        elif len(detected_items) <= 5:
+            sparcity = "medium"
+        else:
+            sparcity = "high"
+        
+        # Determine cleanliness based on average confidence
+        avg_confidence = total_confidence / len(detected_items) if detected_items else 0
+        if avg_confidence > 0.8:
+            cleanliness = "good"
+        elif avg_confidence > 0.6:
+            cleanliness = "moderate"
+        elif avg_confidence > 0.4:
+            cleanliness = "poor"
+        else:
+            cleanliness = "very_poor"
+        
+        # Save to database
+        report_id = save_trash_report(
+            latitude=float(latitude),
+            longitude=float(longitude),
+            image_data=file_content,
+            filename=file.filename,
+            trash_type=trash_type,
+            estimated_kg=estimated_kg,
+            sparcity=sparcity,
+            cleanliness=cleanliness
+        )
+        
+        return JSONResponse(content={
+            "status": "success",
+            "message": "Photo detection completed successfully",
+            "report_id": report_id,
+            "detections": detected_items,
+            "summary": {
+                "trash_type": trash_type,
+                "estimated_kg": estimated_kg,
+                "sparcity": sparcity,
+                "cleanliness": cleanliness,
+                "total_detections": len(detected_items)
+            }
+        })
+        
+    except Exception as e:
+        import traceback
+        print(f"Photo detection error: {e}")
+        traceback.print_exc()
         return JSONResponse(
             status_code=500,
             content={"status": "error", "message": str(e)}

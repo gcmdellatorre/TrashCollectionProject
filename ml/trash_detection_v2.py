@@ -35,31 +35,31 @@ class TrashDetectorV2:
     
     # Model configurations with smart filtering
     TRASH_MODELS = {
-        'yolov8n-smart': {
-            'name': 'yolov8n-smart',
-            'description': 'YOLOv8n with smart trash filtering (fastest)',
-            'model_type': 'coco',
+        'yolov8n': {
+            'name': 'yolov8n',
+            'description': 'YOLOv8n with enhanced trash filtering (fast)',
+            'model_type': 'enhanced',
             'filename': 'yolov8n.pt',
             'size_mb': 6.2,
             'performance': 'fast',
             'accuracy': 'good'
         },
-        'yolov8s-smart': {
-            'name': 'yolov8s-smart',
-            'description': 'YOLOv8s with smart trash filtering (recommended)',
-            'model_type': 'coco',
+        'yolov8s': {
+            'name': 'yolov8s',
+            'description': 'YOLOv8s with enhanced trash filtering (medium)',
+            'model_type': 'enhanced',
             'filename': 'yolov8s.pt',
             'size_mb': 22.4,
             'performance': 'medium',
             'accuracy': 'high'
         },
-        'yolov8m-smart': {
-            'name': 'yolov8m-smart',
-            'description': 'YOLOv8m with smart trash filtering (highest accuracy)',
-            'model_type': 'coco',
+        'yolov8m': {
+            'name': 'yolov8m',
+            'description': 'YOLOv8m with enhanced trash filtering (high accuracy)',
+            'model_type': 'enhanced',
             'filename': 'yolov8m.pt',
-            'size_mb': 52.0,
-            'performance': 'medium',
+            'size_mb': 50.0,
+            'performance': 'slow',
             'accuracy': 'very_high'
         }
     }
@@ -231,7 +231,7 @@ class TrashDetectorV2:
         ]
     }
     
-    def __init__(self, model_name: str = 'yolov8s-smart', cache_dir: str = 'models'):
+    def __init__(self, model_name: str = 'yolov8s', cache_dir: str = 'models'):
         """
         Initialize the trash detector
         
@@ -243,7 +243,7 @@ class TrashDetectorV2:
         self.cache_dir = Path(cache_dir)
         self.cache_dir.mkdir(exist_ok=True)
         self.model = None
-        self.model_config = self.TRASH_MODELS.get(model_name, self.TRASH_MODELS['yolov8s-smart'])
+        self.model_config = self.TRASH_MODELS.get(model_name, self.TRASH_MODELS['yolov8s'])
         
         # Set model type for compatibility
         self.fallback_to_coco = False  # We're using smart filtering, not fallback
@@ -272,63 +272,72 @@ class TrashDetectorV2:
             config = self.model_config
             
             logger.info(f"Loading {config['name']}: {config['description']}")
-            self.model = YOLO(config['filename'])
+            
+            # Build the full path to the model file
+            model_path = self.cache_dir / config['filename']
+            
+            if not model_path.exists():
+                raise FileNotFoundError(f"Model file not found: {model_path}")
+            
+            self.model = YOLO(str(model_path))
             logger.info(f"Model loaded successfully. Size: {config['size_mb']}MB")
                     
         except Exception as e:
             logger.error(f"Error loading model: {e}")
             raise
     
-    def _is_trash_object(self, class_name: str, confidence: float) -> bool:
-        """Check if detected object is trash (not natural element)"""
+    def _is_trash_object(self, class_name: str, confidence: float, bbox: Optional[List] = None, image_size: Optional[Tuple] = None) -> bool:
+        """Enhanced trash detection with context awareness and better filtering"""
         class_name_lower = class_name.lower()
         
-        # Comprehensive trash classes (man-made objects that can be litter)
+        # Enhanced trash classes with more granular categories
         trash_classes = {
-            # Beverage containers
-            'bottle', 'cup', 'wine glass', 'can', 'mug', 'glass',
+            # Beverage containers (high priority trash)
+            'bottle', 'cup', 'wine glass', 'can', 'mug', 'glass', 'beer bottle', 'soda can',
+            'aluminum can', 'tin can', 'metal can', 'plastic bottle', 'water bottle',
+            'coffee cup', 'takeout cup', 'disposable cup', 'paper cup', 'styrofoam cup',
             
-            # Food packaging
-            'bowl', 'plate', 'fork', 'spoon', 'knife', 'utensil',
-            'food wrapper', 'packaging', 'container',
+            # Food packaging (very common litter)
+            'bowl', 'plate', 'fork', 'spoon', 'knife', 'utensil', 'chopstick',
+            'food wrapper', 'packaging', 'container', 'takeout container', 'fast food bag',
+            'chip bag', 'candy wrapper', 'gum wrapper', 'sandwich wrapper',
             
-            # Paper products
-            'book', 'newspaper', 'magazine', 'paper', 'cardboard',
-            'tissue', 'napkin', 'toilet paper', 'paper bag',
+            # Paper products (biodegradable but still litter)
+            'book', 'newspaper', 'magazine', 'paper', 'cardboard', 'paper bag',
+            'tissue', 'napkin', 'toilet paper', 'paper towel', 'receipt',
+            'flyer', 'brochure', 'menu', 'ticket', 'stamp',
             
-            # Plastic items
+            # Plastic items (major environmental concern)
             'plastic bag', 'plastic cup', 'plastic bottle', 'plastic wrapper',
-            'plastic container', 'plastic utensil', 'plastic straw',
+            'plastic container', 'plastic utensil', 'plastic straw', 'plastic',
+            'ziploc bag', 'grocery bag', 'shopping bag', 'trash bag',
             
-            # Electronics
-            'cell phone', 'remote', 'keyboard', 'mouse', 'laptop',
-            'electronics', 'battery', 'charger',
+            # Electronics (e-waste)
+            'cell phone', 'remote', 'keyboard', 'mouse', 'laptop', 'phone',
+            'electronics', 'battery', 'charger', 'cable', 'wire', 'headphones',
+            'earbuds', 'speaker', 'tablet', 'camera', 'flash drive',
             
-            # Personal items
-            'backpack', 'handbag', 'suitcase', 'umbrella', 'tie',
-            'shoe', 'clothing', 'hat', 'glasses', 'watch',
+            # Personal items (often discarded)
+            'backpack', 'handbag', 'suitcase', 'umbrella', 'tie', 'shoe',
+            'clothing', 'hat', 'glasses', 'watch', 'jewelry', 'wallet',
+            'purse', 'belt', 'scarf', 'glove', 'sock',
             
-            # Sports equipment
-            'sports ball', 'baseball bat', 'baseball glove',
-            'tennis racket', 'basketball', 'football',
+            # Smoking items (very common litter)
+            'cigarette', 'cigarette butt', 'lighter', 'matches', 'cigar',
+            'tobacco', 'rolling paper', 'filter', 'ash',
             
-            # Household items
-            'vase', 'scissors', 'teddy bear', 'hair drier', 'toothbrush',
-            'comb', 'mirror', 'lamp', 'clock', 'camera',
+            # Medical/hygiene (hazardous waste)
+            'mask', 'glove', 'bandage', 'syringe', 'needle', 'diaper',
+            'sanitary pad', 'condom', 'tampon', 'cotton swab', 'band-aid',
             
-            # Construction/industrial
-            'wire', 'cable', 'rope', 'string', 'fabric', 'plastic',
-            'metal', 'glass shard', 'metal shard', 'plastic shard',
+            # Construction/industrial debris
+            'wire', 'cable', 'rope', 'string', 'fabric', 'plastic shard',
+            'glass shard', 'metal shard', 'wood shard', 'concrete', 'brick',
+            'nail', 'screw', 'bolt', 'washer', 'metal scrap',
             
-            # Medical/hygiene
-            'mask', 'glove', 'bandage', 'syringe', 'needle',
-            'diaper', 'sanitary pad', 'condom',
-            
-            # Smoking
-            'cigarette', 'cigarette butt', 'lighter', 'matches',
-            
-            # Other
-            'toy', 'game', 'puzzle', 'art', 'decoration'
+            # Other common litter
+            'toy', 'game', 'puzzle', 'art', 'decoration', 'trash', 'litter',
+            'balloon', 'ribbon', 'tape', 'sticker', 'label', 'tag'
         }
         
         # Natural elements to exclude (not trash)
@@ -336,57 +345,83 @@ class TrashDetectorV2:
             # Living things
             'person', 'bird', 'cat', 'dog', 'horse', 'sheep', 'cow',
             'elephant', 'bear', 'zebra', 'giraffe', 'fish', 'animal',
+            'insect', 'spider', 'butterfly', 'bee', 'ant', 'fly',
             
             # Plants
             'tree', 'plant', 'flower', 'grass', 'leaf', 'branch',
-            'potted plant', 'bush', 'shrub', 'vine',
+            'potted plant', 'bush', 'shrub', 'vine', 'weed', 'moss',
+            'fungus', 'mushroom', 'lichen', 'algae',
             
             # Natural materials
             'rock', 'stone', 'water', 'cloud', 'sky', 'sun', 'moon',
             'star', 'earth', 'soil', 'sand', 'mud', 'snow', 'ice',
-            'fire', 'smoke', 'steam', 'rain', 'wind', 'air',
+            'fire', 'smoke', 'steam', 'rain', 'wind', 'air', 'dust',
             
-            # Buildings/infrastructure
+            # Buildings/infrastructure (not litter)
             'building', 'house', 'bridge', 'tower', 'wall', 'door',
-            'window', 'roof', 'floor', 'ceiling', 'stairs',
+            'window', 'roof', 'floor', 'ceiling', 'stairs', 'fence',
+            'gate', 'sign', 'billboard', 'streetlight', 'pole',
             
             # Vehicles (not typically litter)
             'airplane', 'train', 'truck', 'bus', 'boat', 'car',
-            'motorcycle', 'bicycle', 'skateboard',
+            'motorcycle', 'bicycle', 'skateboard', 'scooter', 'wheelchair',
             
-            # Infrastructure
+            # Infrastructure/furniture (not litter)
             'traffic light', 'fire hydrant', 'stop sign', 'parking meter',
             'bench', 'chair', 'couch', 'bed', 'dining table', 'desk',
             'toilet', 'sink', 'refrigerator', 'microwave', 'oven',
-            'toaster', 'stove', 'dishwasher', 'washing machine',
+            'toaster', 'stove', 'dishwasher', 'washing machine', 'lamp',
+            'clock', 'mirror', 'picture', 'painting', 'statue',
             
             # Food (not typically litter in nature)
-            'banana', 'apple', 'orange', 'broccoli', 'carrot',
-            'hot dog', 'pizza', 'donut', 'cake', 'sandwich',
+            'banana', 'apple', 'orange', 'broccoli', 'carrot', 'tomato',
+            'hot dog', 'pizza', 'donut', 'cake', 'sandwich', 'bread',
+            'meat', 'fish', 'chicken', 'egg', 'milk', 'cheese',
             
-            # Entertainment
+            # Entertainment/electronics (when in use)
             'tv', 'monitor', 'computer', 'printer', 'speaker',
-            'headphones', 'microphone', 'guitar', 'piano'
+            'headphones', 'microphone', 'guitar', 'piano', 'book',
+            'newspaper', 'magazine'  # These can be trash when discarded
         }
         
-        # Check if it's trash
+        # Context-aware filtering
         is_trash = class_name_lower in trash_classes
         is_natural = class_name_lower in natural_classes
         
-        # If it's explicitly trash and not natural, it's trash
-        if is_trash and not is_natural:
-            return True
+        # Enhanced confidence thresholds based on object type
+        if is_trash:
+            # Lower threshold for obvious trash items
+            if class_name_lower in ['bottle', 'can', 'plastic bag', 'cigarette butt', 'food wrapper']:
+                return confidence > 0.3
+            # Medium threshold for common litter
+            elif class_name_lower in ['cup', 'paper', 'cardboard', 'utensil', 'tissue']:
+                return confidence > 0.4
+            # Higher threshold for items that could be in use
+            else:
+                return confidence > 0.5
         
-        # If it's explicitly natural, it's not trash
+        # Exclude natural elements
         if is_natural:
             return False
         
-        # For ambiguous cases, use confidence threshold
-        # Higher confidence for objects that might be trash
-        if confidence > 0.7:
-            return True
+        # For ambiguous cases, use size and position context
+        if bbox and image_size:
+            # Check if object is very small (likely litter)
+            x1, y1, x2, y2 = bbox
+            object_area = (x2 - x1) * (y2 - y1)
+            image_area = image_size[0] * image_size[1]
+            relative_size = object_area / image_area
+            
+            # Small objects are more likely to be litter
+            if relative_size < 0.01:  # Less than 1% of image
+                return confidence > 0.4
+            elif relative_size < 0.05:  # Less than 5% of image
+                return confidence > 0.5
+            else:
+                return confidence > 0.6
         
-        return False
+        # Default fallback
+        return confidence > 0.6
     
     def _get_trash_category(self, class_name: str) -> str:
         """Get trash category for detected object"""
@@ -466,12 +501,25 @@ class TrashDetectorV2:
     def detect_trash_in_image(self, image_path: str, confidence_threshold: float = 0.3) -> Dict:
         """Detect trash objects in a single image"""
         try:
+            # Get image dimensions for context-aware filtering
+            import cv2
+            img = cv2.imread(image_path)
+            if img is None:
+                raise ValueError(f"Could not read image: {image_path}")
+            image_height, image_width = img.shape[:2]
+            image_size = (image_width, image_height)
+            
+            logger.info(f"Processing image: {image_path} ({image_width}x{image_height}) with confidence threshold: {confidence_threshold}")
+            
             # Run inference
             results = self.model(image_path, conf=confidence_threshold)
             
             detections = []
             all_detections = []  # Include all detections for user validation
             trash_detections = []
+            
+            # Debug: Log all raw detections
+            raw_detections = []
             
             for result in results:
                 boxes = result.boxes
@@ -485,24 +533,51 @@ class TrashDetectorV2:
                         # Get class name
                         class_name = self.model.names[class_id]
                         
+                        # Debug: Log raw detection
+                        raw_detections.append({
+                            'class_name': class_name,
+                            'confidence': confidence,
+                            'class_id': class_id,
+                            'bbox': [float(x1), float(y1), float(x2), float(y2)]
+                        })
+                        
+                        # Create bbox for context-aware filtering
+                        bbox = [float(x1), float(y1), float(x2), float(y2)]
+                        
+                        # Enhanced trash detection with context
+                        is_trash = self._is_trash_object(class_name, confidence, bbox, image_size)
+                        
+                        # Debug: Log filtering decision
+                        logger.info(f"Detection: {class_name} (conf: {confidence:.3f}) -> is_trash: {is_trash}")
+                        
                         # Create detection object
                         detection = {
-                            'bbox': [float(x1), float(y1), float(x2), float(y2)],
+                            'bbox': bbox,
                             'confidence': confidence,
                             'class_name': class_name,
                             'class_id': class_id,
-                            'is_trash': self._is_trash_object(class_name, confidence),
-                            'category': self._get_trash_category(class_name) if self._is_trash_object(class_name, confidence) else 'natural',
-                            'simple_category': self._get_simple_category(class_name) if self._is_trash_object(class_name, confidence) else 'organic',
-                            'environmental_impact': self._get_environmental_impact(class_name) if self._is_trash_object(class_name, confidence) else 'none',
-                            'recycling_category': self._get_recycling_category(class_name) if self._is_trash_object(class_name, confidence) else 'none'
+                            'is_trash': is_trash,
+                            'category': self._get_trash_category(class_name) if is_trash else 'natural',
+                            'simple_category': self._get_simple_category(class_name) if is_trash else 'organic',
+                            'environmental_impact': self._get_environmental_impact(class_name) if is_trash else 'none',
+                            'recycling_category': self._get_recycling_category(class_name) if is_trash else 'none'
                         }
                         
                         all_detections.append(detection)
                         
                         # Only include trash objects in trash detections
-                        if detection['is_trash']:
+                        if is_trash:
                             trash_detections.append(detection)
+            
+            # Debug: Log summary
+            logger.info(f"Raw detections: {len(raw_detections)}")
+            logger.info(f"All detections: {len(all_detections)}")
+            logger.info(f"Trash detections: {len(trash_detections)}")
+            
+            if raw_detections:
+                logger.info("Raw detection details:")
+                for det in raw_detections:
+                    logger.info(f"  - {det['class_name']}: {det['confidence']:.3f}")
             
             return {
                 'image_path': image_path,
@@ -511,7 +586,12 @@ class TrashDetectorV2:
                 'total_objects': len(all_detections),
                 'trash_objects': len(trash_detections),
                 'natural_objects': len(all_detections) - len(trash_detections),
-                'timestamp': datetime.now().isoformat()
+                'timestamp': datetime.now().isoformat(),
+                'debug_info': {
+                    'raw_detections': raw_detections,
+                    'confidence_threshold': confidence_threshold,
+                    'image_size': image_size
+                }
             }
             
         except Exception as e:
@@ -673,11 +753,11 @@ class TrashDetectorV2:
 
 
 # Utility functions
-def create_trash_detector(model_name: str = 'yolov8s-smart') -> TrashDetectorV2:
+def create_trash_detector(model_name: str = 'yolov8s') -> TrashDetectorV2:
     """Create and return a TrashDetectorV2 instance"""
     return TrashDetectorV2(model_name)
 
-def process_video_with_trash_detection(video_path: str, model_name: str = 'yolov8s-smart',
+def process_video_with_trash_detection(video_path: str, model_name: str = 'yolov8s',
                                      output_path: Optional[str] = None,
                                      frame_interval: int = 30, 
                                      confidence_threshold: float = 0.3) -> Dict:
@@ -698,7 +778,7 @@ def process_video_with_trash_detection(video_path: str, model_name: str = 'yolov
 
 if __name__ == "__main__":
     # Example usage
-    detector = TrashDetectorV2('yolov8s-smart')
+    detector = TrashDetectorV2('yolov8s-taco')
     print("Trash detector v2 initialized successfully!")
     print(f"Model info: {detector.get_model_info()}")
     print(f"Available models: {list(detector.list_available_models().keys())}") 

@@ -42,3 +42,4 @@ uploads/
 
 # Docker
 .DS_Store
+.venv/

@@ -595,8 +595,8 @@ function loadMapData() {
     fetch('/api/trash-data')
     .then(response => response.json())
     .then(response => {
-        if (response.status === 'success' && response.data) {
-            allTrashData = response.data; // Store all data
+        if (response.status === 'success' && response.reports) {
+            allTrashData = response.reports; // Store all data
             console.log(`Loaded ${allTrashData.length} trash data points`);
             allTrashData.forEach(point => addModernMarker(point));
         } else {

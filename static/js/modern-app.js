@@ -746,7 +746,6 @@ function setupEventListeners() {
 function toggleDarkMode() {
     const html = document.documentElement;
     const isDark = html.classList.contains('dark');
-    
     if (isDark) {
         html.classList.remove('dark');
         localStorage.setItem('darkMode', 'light');
@@ -759,8 +758,6 @@ function toggleDarkMode() {
 function initializeDarkMode() {
     const savedMode = localStorage.getItem('darkMode');
     const html = document.documentElement;
-    
-    // Check for system preference if no saved preference
     if (!savedMode) {
         const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
         if (prefersDark) {
@@ -769,6 +766,8 @@ function initializeDarkMode() {
         }
     } else if (savedMode === 'dark') {
         html.classList.add('dark');
+    } else {
+        html.classList.remove('dark');
     }
 }
 
@@ -1357,17 +1356,17 @@ function setupFlowToggle() {
         videoContainer.classList.remove('hidden');
         photoContainer.classList.add('hidden');
         videoToggle.classList.add('bg-primary-600', 'text-white', 'toggle-active');
-        videoToggle.classList.remove('bg-white', 'text-gray-700');
+        videoToggle.classList.remove('bg-white', 'text-gray-700', 'hover:bg-gray-50', 'dark:bg-gray-700', 'dark:text-gray-100', 'dark:hover:bg-gray-600');
         photoToggle.classList.remove('bg-primary-600', 'text-white', 'toggle-active');
-        photoToggle.classList.add('bg-white', 'text-gray-700');
+        photoToggle.classList.add('bg-white', 'text-gray-700', 'hover:bg-gray-50', 'dark:bg-gray-700', 'dark:text-gray-100', 'dark:hover:bg-gray-600');
     }
     function showPhotoFlow() {
         videoContainer.classList.add('hidden');
         photoContainer.classList.remove('hidden');
         photoToggle.classList.add('bg-primary-600', 'text-white', 'toggle-active');
-        photoToggle.classList.remove('bg-white', 'text-gray-700');
+        photoToggle.classList.remove('bg-white', 'text-gray-700', 'hover:bg-gray-50', 'dark:bg-gray-700', 'dark:text-gray-100', 'dark:hover:bg-gray-600');
         videoToggle.classList.remove('bg-primary-600', 'text-white', 'toggle-active');
-        videoToggle.classList.add('bg-white', 'text-gray-700');
+        videoToggle.classList.add('bg-white', 'text-gray-700', 'hover:bg-gray-50', 'dark:bg-gray-700', 'dark:text-gray-100', 'dark:hover:bg-gray-600');
     }
     // Default: video flow
     showVideoFlow();

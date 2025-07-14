@@ -1355,18 +1355,18 @@ function setupFlowToggle() {
     function showVideoFlow() {
         videoContainer.classList.remove('hidden');
         photoContainer.classList.add('hidden');
-        videoToggle.classList.add('bg-primary-600', 'text-white', 'toggle-active');
+        videoToggle.classList.add('bg-primary-600', 'text-white', 'toggle-active', 'border-0');
         videoToggle.classList.remove('bg-white', 'text-gray-700', 'hover:bg-gray-50', 'dark:bg-gray-700', 'dark:text-gray-100', 'dark:hover:bg-gray-600');
-        photoToggle.classList.remove('bg-primary-600', 'text-white', 'toggle-active');
-        photoToggle.classList.add('bg-white', 'text-gray-700', 'hover:bg-gray-50', 'dark:bg-gray-700', 'dark:text-gray-100', 'dark:hover:bg-gray-600');
+        photoToggle.classList.remove('bg-primary-600', 'text-white', 'toggle-active', 'border-0');
+        photoToggle.classList.add('bg-white', 'text-gray-700', 'hover:bg-gray-50', 'dark:bg-gray-700', 'dark:text-gray-100', 'dark:hover:bg-gray-600', 'border-0');
     }
     function showPhotoFlow() {
         videoContainer.classList.add('hidden');
         photoContainer.classList.remove('hidden');
-        photoToggle.classList.add('bg-primary-600', 'text-white', 'toggle-active');
+        photoToggle.classList.add('bg-primary-600', 'text-white', 'toggle-active', 'border-0');
         photoToggle.classList.remove('bg-white', 'text-gray-700', 'hover:bg-gray-50', 'dark:bg-gray-700', 'dark:text-gray-100', 'dark:hover:bg-gray-600');
-        videoToggle.classList.remove('bg-primary-600', 'text-white', 'toggle-active');
-        videoToggle.classList.add('bg-white', 'text-gray-700', 'hover:bg-gray-50', 'dark:bg-gray-700', 'dark:text-gray-100', 'dark:hover:bg-gray-600');
+        videoToggle.classList.remove('bg-primary-600', 'text-white', 'toggle-active', 'border-0');
+        videoToggle.classList.add('bg-white', 'text-gray-700', 'hover:bg-gray-50', 'dark:bg-gray-700', 'dark:text-gray-100', 'dark:hover:bg-gray-600', 'border-0');
     }
     // Default: video flow
     showVideoFlow();

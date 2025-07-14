@@ -1042,4 +1042,42 @@
 
 .fade-in {
     animation: fadeIn 0.5s ease-in-out;
+}
+
+/* =================================================================================
+   TOGGLE BUTTON FIXES - Remove vertical lines
+   ================================================================================= */
+
+/* Fix toggle button borders - ensure no vertical lines */
+#toggle-video-flow,
+#toggle-photo-flow {
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+    margin: 0 !important;
+    padding: 0.5rem 1rem !important;
+}
+
+#toggle-video-flow:focus,
+#toggle-photo-flow:focus {
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+/* Ensure no gaps between toggle buttons */
+.inline-flex[role="group"] {
+    border: none !important;
+    gap: 0 !important;
+}
+
+.inline-flex[role="group"] > button {
+    border: none !important;
+    margin: 0 !important;
+    gap: 0 !important;
+}
+
+/* Override any Tailwind default button styles */
+button[type="button"] {
+    border-style: none !important;
 } 

@@ -165,24 +165,7 @@
                                         </div>
                                     </div>
                                     
-                                    <!-- Manual Location Selection (shown if no GPS in video) -->
-                                    <div id="video-manual-location-section" class="hidden">
-                                        <div class="p-4 bg-yellow-50 border border-yellow-200 rounded-lg dark:bg-yellow-900/20 dark:border-yellow-700/50">
-                                            <div class="flex items-center mb-3">
-                                                <i class="bi bi-exclamation-triangle text-yellow-600 dark:text-yellow-400 mr-2"></i>
-                                                <span class="text-sm font-medium text-yellow-800 dark:text-yellow-200">Location not found in video</span>
-                                            </div>
-                                            <p class="text-sm text-yellow-700 dark:text-yellow-300 mb-3">
-                                                No GPS coordinates were found in your video. Please select the location manually.
-                                            </p>
-                                            <button type="button" 
-                                                    id="video-select-location-btn"
-                                                    class="px-4 py-2 bg-yellow-600 text-white rounded-lg text-sm font-medium hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 transition-colors">
-                                                <i class="bi bi-geo-alt mr-2"></i>
-                                                Select Location Manually
-                                            </button>
-                                        </div>
-                                    </div>
+
                                 </div>
                                 <!-- Upload Options -->
                                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
@@ -325,7 +308,7 @@
                                         </div>
                                         
                                         <!-- Location Status -->
-                                        <div id="location-status" class="mt-3 p-3 bg-gray-50 border border-gray-200 rounded-lg dark:bg-gray-700 dark:border-gray-600">
+                                        <div id="photo-location-status" class="mt-3 p-3 bg-gray-50 border border-gray-200 rounded-lg dark:bg-gray-700 dark:border-gray-600">
                                             <div class="flex items-center text-sm text-gray-600 dark:text-gray-300">
                                                 <i class="bi bi-geo-alt mr-2"></i>
                                                 <span id="location-status-text">Checking photo for location data...</span>
@@ -354,8 +337,8 @@
                                 </div>
                                 
                                 <!-- Hidden Fields -->
-                                <input type="hidden" id="latitude" name="latitude">
-                                <input type="hidden" id="longitude" name="longitude">
+                                <input type="hidden" id="photo-latitude" name="latitude">
+                                <input type="hidden" id="photo-longitude" name="longitude">
                                 
                                 <!-- Photo Flow Mode Toggle -->
                                 <div id="photo-mode-toggle" class="flex items-center justify-between p-4 bg-gray-50 border border-gray-200 rounded-lg dark:bg-gray-700 dark:border-gray-600">
@@ -456,7 +439,7 @@
                                     <div class="space-y-4">
                                         <div>
                                             <label for="manual-trash-type" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Trash Type</label>
-                                            <select id="manual-trash-type" name="trash_type" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100" required>
+                                            <select id="manual-trash-type" name="trash_type" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100">
                                                 <option value="">Select type</option>
                                                 <option value="plastic">Plastic</option>
                                                 <option value="paper">Paper</option>
@@ -469,12 +452,12 @@
                                         
                                         <div>
                                             <label for="manual-estimated-kg" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Estimated Weight (kg)</label>
-                                            <input type="number" step="0.1" id="manual-estimated-kg" name="estimated_kg" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100" required>
+                                            <input type="number" step="0.1" id="manual-estimated-kg" name="estimated_kg" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100">
                                         </div>
                                         
                                         <div>
                                             <label for="manual-sparcity" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Sparcity</label>
-                                            <select id="manual-sparcity" name="sparcity" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100" required>
+                                            <select id="manual-sparcity" name="sparcity" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100">
                                                 <option value="">Select sparcity</option>
                                                 <option value="low">Low</option>
                                                 <option value="medium">Medium</option>
@@ -484,7 +467,7 @@
                                         
                                         <div>
                                             <label for="manual-cleanliness" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Cleanliness</label>
-                                            <select id="manual-cleanliness" name="cleanliness" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100" required>
+                                            <select id="manual-cleanliness" name="cleanliness" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100">
                                                 <option value="">Select cleanliness</option>
                                                 <option value="good">Good</option>
                                                 <option value="moderate">Moderate</option>
@@ -610,6 +593,6 @@
 
     <!-- Bootstrap JS (still needed for tooltips if any) -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="/static/js/modern-app.js?v=2024061001"></script>
+    <script src="/static/js/modern-app.js?v=2024061013"></script>
 </body>
 </html>

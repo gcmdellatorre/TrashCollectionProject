@@ -17,8 +17,9 @@ let lastSearchedLocation = null; // Store the last successfully searched locatio
 let allTrashData = []; // Store all trash points
 let markersOnMap = []; // Store references to Leaflet markers
 
-// Global variables for video flow
+// Add these global variables
 let currentVideoFile = null;
+let currentPhotoFile = null;  // ← This was missing!
 let currentDetectionData = null;
 let radiusCircle = null; // Track the radius circle on main map
 
@@ -227,16 +228,63 @@ function hideDetectButton() {
 }
 
 function showSubmitButton() {
-    const submitReportBtn = document.getElementById('video-submit-report-btn');
+    // Fix: Use the correct button ID from HTML
+    const submitReportBtn = document.getElementById('video-submit-btn');
     if (submitReportBtn) {
         submitReportBtn.classList.remove('hidden');
     }
 }
 
 function hideSubmitButton() {
-    const submitReportBtn = document.getElementById('video-submit-report-btn');
+    // Fix: Use the correct button ID from HTML
+    const submitReportBtn = document.getElementById('video-submit-btn');
     if (submitReportBtn) {
         submitReportBtn.classList.add('hidden');
+    }
+}
+
+// Add missing functions for photo flow buttons
+function showPhotoDetectButton() {
+    const detectBtn = document.getElementById('detect-photo-btn');
+    if (detectBtn) {
+        detectBtn.classList.remove('hidden');
+        detectBtn.disabled = false;
+    }
+}
+
+function hidePhotoDetectButton() {
+    const detectBtn = document.getElementById('detect-photo-btn');
+    if (detectBtn) {
+        detectBtn.classList.add('hidden');
+        detectBtn.disabled = true;
+    }
+}
+
+function showPhotoSubmitButton() {
+    const submitBtn = document.getElementById('submit-btn');
+    if (submitBtn) {
+        submitBtn.classList.remove('hidden');
+    }
+}
+
+function hidePhotoSubmitButton() {
+    const submitBtn = document.getElementById('submit-btn');
+    if (submitBtn) {
+        submitBtn.classList.add('hidden');
+    }
+}
+
+function showManualSubmitButton() {
+    const manualSubmitBtn = document.getElementById('manual-submit-btn');
+    if (manualSubmitBtn) {
+        manualSubmitBtn.classList.remove('hidden');
+    }
+}
+
+function hideManualSubmitButton() {
+    const manualSubmitBtn = document.getElementById('manual-submit-btn');
+    if (manualSubmitBtn) {
+        manualSubmitBtn.classList.add('hidden');
     }
 }
 
@@ -315,33 +363,33 @@ function hideManualLocationSection() {
 function generateVideoResultsHTML(data) {
     const categoryBreakdown = data.category_counts ? 
         Object.entries(data.category_counts).map(([cat, count]) => 
-            `<span class='inline-block px-2 py-1 rounded bg-blue-100 text-blue-800 text-xs mr-1 mb-1'>${cat.replace(/_/g, ' ')}: ${count}</span>`
+            `<span class='inline-block px-2 py-1 rounded bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 text-xs mr-1 mb-1'>${cat.replace(/_/g, ' ')}: ${count}</span>`
         ).join('') : '';
     const simpleCategoryBreakdown = data.simple_category_counts ? 
         Object.entries(data.simple_category_counts).map(([cat, count]) => 
-            `<span class='inline-block px-2 py-1 rounded bg-gray-100 text-gray-800 text-xs mr-1 mb-1'>${cat}: ${count}</span>`
+            `<span class='inline-block px-2 py-1 rounded bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200 text-xs mr-1 mb-1'>${cat}: ${count}</span>`
         ).join('') : '';
     const environmentalBreakdown = data.environmental_impact_breakdown ? 
         Object.entries(data.environmental_impact_breakdown).map(([impact, count]) => {
-            const colorClass = impact === 'high_impact' ? 'bg-red-100 text-red-800' : 
-                             impact === 'medium_impact' ? 'bg-yellow-100 text-yellow-800' : 
-                             'bg-green-100 text-green-800';
+            const colorClass = impact === 'high_impact' ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' : 
+                             impact === 'medium_impact' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' : 
+                             'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
             return `<span class='inline-block px-2 py-1 rounded ${colorClass} text-xs mr-1 mb-1'>${impact.replace(/_/g, ' ')}: ${count}</span>`;
         }).join('') : '';
     const recyclingBreakdown = data.recycling_category_breakdown ? 
         Object.entries(data.recycling_category_breakdown).map(([recycling, count]) => {
-            const colorClass = recycling === 'highly_recyclable' ? 'bg-green-100 text-green-800' : 
-                             recycling === 'moderately_recyclable' ? 'bg-blue-100 text-blue-800' : 
-                             recycling === 'difficult_recyclable' ? 'bg-yellow-100 text-yellow-800' : 
-                             'bg-red-100 text-red-800';
+            const colorClass = recycling === 'highly_recyclable' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 
+                             recycling === 'moderately_recyclable' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' : 
+                             recycling === 'difficult_recyclable' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' : 
+                             'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
             return `<span class='inline-block px-2 py-1 rounded ${colorClass} text-xs mr-1 mb-1'>${recycling.replace(/_/g, ' ')}: ${count}</span>`;
         }).join('') : '';
     
     return `
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-2">
             <div>
-                <h6 class="font-semibold text-gray-700 mb-1"><i class="bi bi-box"></i> Detection Summary</h6>
-                <ul class="text-sm text-gray-600">
+                <h6 class="font-semibold text-gray-700 dark:text-gray-200 mb-1"><i class="bi bi-box"></i> Detection Summary</h6>
+                <ul class="text-sm text-gray-600 dark:text-gray-300">
                     <li><strong>Trash Objects:</strong> ${data.trash_objects_detected || data.total_objects || 0}</li>
                     <li><strong>Natural Objects:</strong> ${data.natural_objects_filtered || 0}</li>
                     <li><strong>Total Detected:</strong> ${data.total_objects_detected || data.total_objects || 0}</li>
@@ -350,24 +398,24 @@ function generateVideoResultsHTML(data) {
                 </ul>
             </div>
         <div class="mt-2">
-            <h6 class="font-semibold text-gray-700 mb-1"><i class="bi bi-tags"></i> Detailed Category Breakdown</h6>
-            <div class="mb-2">${categoryBreakdown || '<em>No trash objects detected</em>'}</div>
+            <h6 class="font-semibold text-gray-700 dark:text-gray-200 mb-1"><i class="bi bi-tags"></i> Detailed Category Breakdown</h6>
+            <div class="mb-2">${categoryBreakdown || '<em class="text-gray-500 dark:text-gray-400">No trash objects detected</em>'}</div>
         </div>
         ${simpleCategoryBreakdown ? `
         <div class="mt-2">
-            <h6 class="font-semibold text-gray-700 mb-1"><i class="bi bi-list-ul"></i> Simple Categories (Database)</h6>
+            <h6 class="font-semibold text-gray-700 dark:text-gray-200 mb-1"><i class="bi bi-list-ul"></i> Simple Categories (Database)</h6>
             <div class="mb-2">${simpleCategoryBreakdown}</div>
         </div>
         ` : ''}
         ${environmentalBreakdown ? `
         <div class="mt-2">
-            <h6 class="font-semibold text-gray-700 mb-1"><i class="bi bi-exclamation-triangle"></i> Environmental Impact</h6>
+            <h6 class="font-semibold text-gray-700 dark:text-gray-200 mb-1"><i class="bi bi-exclamation-triangle"></i> Environmental Impact</h6>
             <div class="mb-2">${environmentalBreakdown}</div>
         </div>
         ` : ''}
         ${recyclingBreakdown ? `
         <div class="mt-2">
-            <h6 class="font-semibold text-gray-700 mb-1"><i class="bi bi-recycle"></i> Recycling Potential</h6>
+            <h6 class="font-semibold text-gray-700 dark:text-gray-200 mb-1"><i class="bi bi-recycle"></i> Recycling Potential</h6>
             <div class="mb-2">${recyclingBreakdown}</div>
         </div>
         ` : ''}
@@ -455,51 +503,100 @@ function findNearbyTrash() {
 // =================================================================================
 
 function openLocationSelector() {
-    const selectorPage = document.getElementById('location-selector-page');
-    selectorPage.classList.add('visible');
-    
-    // Initialize the map only if it hasn't been already
-    if (!locationMap) {
-        initializeLocationMap();
+    const locationSelectorPage = document.getElementById('location-selector-page');
+    if (locationSelectorPage) {
+        // Use the correct CSS class for showing the location selector
+        locationSelectorPage.classList.add('visible');
+        
+        // Initialize location map if not already done
+        if (!locationMap) {
+            setTimeout(() => {
+                initializeLocationMap();
+            }, 100);
+        }
+        
+        // Show notification
+        if (window.showNotification) {
+            window.showNotification('Please select a location on the map', 'info');
+        }
     } else {
-        // If map already exists, just make sure its size is correct
-        setTimeout(() => locationMap.invalidateSize(), 100);
+        console.error('Location selector page not found');
     }
 }
 
 function closeLocationSelector() {
     const selectorPage = document.getElementById('location-selector-page');
-    selectorPage.classList.remove('visible');
+    if (selectorPage) {
+        selectorPage.classList.remove('visible');
+    }
+    
+    // Clean up the location map to prevent re-initialization issues
+    if (locationMap) {
+        try {
+            locationMap.remove();
+            locationMap = null;
+            locationMapMarker = null;
+            console.log('Location map cleaned up');
+        } catch (error) {
+            console.error('Error cleaning up location map:', error);
+        }
+    }
 }
 
 function initializeLocationMap() {
-    locationMap = L.map('location-map').setView([20, 0], 2);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap contributors'
-    }).addTo(locationMap);
+    // Check if map is already initialized
+    if (locationMap) {
+        console.log('Location map already initialized, skipping...');
+        return;
+    }
+    
+    // Check if the container exists
+    const mapContainer = document.getElementById('location-map');
+    if (!mapContainer) {
+        console.error('Location map container not found');
+        return;
+    }
+    
+    try {
+        locationMap = L.map('location-map').setView([20, 0], 2);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(locationMap);
 
-    locationMap.on('click', function(e) {
-        selectedLocation = { lat: e.latlng.lat, lng: e.latlng.lng };
+        locationMap.on('click', function(e) {
+            selectedLocation = { lat: e.latlng.lat, lng: e.latlng.lng };
 
-        if (locationMapMarker) {
-            locationMap.removeLayer(locationMapMarker);
-        }
+            if (locationMapMarker) {
+                locationMap.removeLayer(locationMapMarker);
+            }
 
-        locationMapMarker = L.marker(e.latlng).addTo(locationMap);
-        
-        document.getElementById('selected-location-info').textContent = 
-            `Selected: ${selectedLocation.lat.toFixed(5)}, ${selectedLocation.lng.toFixed(5)}`;
+            locationMapMarker = L.marker(e.latlng).addTo(locationMap);
             
-        document.getElementById('confirm-selected-location').disabled = false;
-    });
+            const selectedLocationInfo = document.getElementById('selected-location-info');
+            const confirmBtn = document.getElementById('confirm-selected-location');
+            
+            if (selectedLocationInfo) {
+                selectedLocationInfo.textContent = `Selected: ${selectedLocation.lat.toFixed(5)}, ${selectedLocation.lng.toFixed(5)}`;
+            }
+            if (confirmBtn) {
+                confirmBtn.disabled = false;
+            }
+        });
 
-    // Handle search within the location selector
-    const searchInput = document.getElementById('location-search-input');
-    searchInput.addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
-            searchLocationOnSelectorMap(searchInput.value);
+        // Handle search within the location selector
+        const searchInput = document.getElementById('location-search-input');
+        if (searchInput) {
+            searchInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    searchLocationOnSelectorMap(searchInput.value);
+                }
+            });
         }
-    });
+        
+        console.log('Location map initialized successfully');
+    } catch (error) {
+        console.error('Error initializing location map:', error);
+    }
 }
 
 function searchLocationOnSelectorMap(query) {
@@ -526,53 +623,72 @@ function searchLocationOnSelectorMap(query) {
 }
 
 function confirmLocationSelection() {
-    if (selectedLocation) {
-        // Check which flow is active and update the appropriate fields
-        const videoFlowContainer = document.getElementById('video-flow-container');
-        const photoFlowContainer = document.getElementById('photo-flow-container');
-        
-        if (videoFlowContainer && !videoFlowContainer.classList.contains('hidden')) {
-            // Video flow is active
-            document.getElementById('video-latitude').value = selectedLocation.lat;
-            document.getElementById('video-longitude').value = selectedLocation.lng;
-            
-            // Update video location status
-            const locationStatusText = document.getElementById('video-location-status-text');
-            if (locationStatusText) {
-                locationStatusText.textContent = `Location set to: ${selectedLocation.lat.toFixed(4)}, ${selectedLocation.lng.toFixed(4)}`;
-            }
-            
-            // Hide manual location section and show detect button
-            const manualLocationSection = document.getElementById('video-manual-location-section');
-            if (manualLocationSection) {
-                manualLocationSection.classList.add('hidden');
-            }
-            
-            // Show detect button
-            const detectBtn = document.getElementById('video-detect-btn');
-            if (detectBtn) {
-                detectBtn.classList.remove('hidden');
-            }
-            
-        } else if (photoFlowContainer && !photoFlowContainer.classList.contains('hidden')) {
-            // Photo flow is active
-            document.getElementById('latitude').value = selectedLocation.lat;
-            document.getElementById('longitude').value = selectedLocation.lng;
-            
-            const coordsText = `${selectedLocation.lat.toFixed(4)}, ${selectedLocation.lng.toFixed(4)}`;
-            document.getElementById('coordinates-text').textContent = `Location set to: ${coordsText}`;
-            document.getElementById('coordinates-info').classList.remove('hidden');
-            
-            // Hide manual location section since location is now set
-            const manualLocationSection = document.getElementById('manual-location-section');
-            if (manualLocationSection) {
-                manualLocationSection.classList.add('hidden');
-            }
-            
-            // The toggle will handle showing AI or manual sections
-        }
-        
+    // Try to detect which flow is active
+    const photoFlowVisible = document.getElementById('photo-flow-container') && !document.getElementById('photo-flow-container').classList.contains('hidden');
+    const videoFlowVisible = document.getElementById('video-flow-container') && !document.getElementById('video-flow-container').classList.contains('hidden');
+
+    // Get selected coordinates from the map marker
+    let lat = null, lng = null;
+    if (selectedLocation && selectedLocation.lat && selectedLocation.lng) {
+        lat = selectedLocation.lat;
+        lng = selectedLocation.lng;
+    } else {
+        // fallback: try to get from hidden fields
+        lat = document.getElementById('latitude')?.value || document.getElementById('photo-latitude')?.value || document.getElementById('video-latitude')?.value;
+        lng = document.getElementById('longitude')?.value || document.getElementById('photo-longitude')?.value || document.getElementById('video-longitude')?.value;
+    }
+
+    if (lat && lng) {
+        // Close the location selector
         closeLocationSelector();
+
+        // Update the correct hidden fields
+        if (photoFlowVisible) {
+            document.getElementById('photo-latitude').value = lat;
+            document.getElementById('photo-longitude').value = lng;
+            // Update UI for photo flow
+            const locationStatusText = document.getElementById('location-status-text');
+            if (locationStatusText) {
+                locationStatusText.textContent = `Location selected: ${parseFloat(lat).toFixed(4)}, ${parseFloat(lng).toFixed(4)}`;
+            }
+            hidePhotoManualLocationSection();
+            const coordinatesInfo = document.getElementById('coordinates-info');
+            const coordinatesText = document.getElementById('coordinates-text');
+            if (coordinatesInfo && coordinatesText) {
+                coordinatesText.textContent = `Location: ${parseFloat(lat).toFixed(4)}, ${parseFloat(lng).toFixed(4)}`;
+                coordinatesInfo.classList.remove('hidden');
+            }
+            if (window.showNotification) window.showNotification(`Location selected: ${parseFloat(lat).toFixed(4)}, ${parseFloat(lng).toFixed(4)}`, 'success');
+            // Enable next step in photo flow
+            if (currentPhotoFile) {
+                const reportMethod = document.querySelector('input[name="photo-report-method"]:checked')?.value;
+                if (reportMethod === 'ai') {
+                    showPhotoDetectButton(); // Use the new function
+                } else {
+                    showManualSubmitButton(); // Use the new function
+                }
+            }
+        } else if (videoFlowVisible) {
+            document.getElementById('video-latitude').value = lat;
+            document.getElementById('video-longitude').value = lng;
+            // Update UI for video flow
+            const videoLocationStatus = document.getElementById('video-location-status');
+            if (videoLocationStatus) {
+                videoLocationStatus.textContent = `Location selected: ${parseFloat(lat).toFixed(4)}, ${parseFloat(lng).toFixed(4)}`;
+            }
+            if (window.showNotification) window.showNotification(`Location selected: ${parseFloat(lat).toFixed(4)}, ${parseFloat(lng).toFixed(4)}`, 'success');
+            // Enable next step in video flow
+            if (currentVideoFile) {
+                showDetectButton(); // Show the video detect button
+            }
+        } else {
+            // fallback: update generic fields
+            document.getElementById('latitude').value = lat;
+            document.getElementById('longitude').value = lng;
+            if (window.showNotification) window.showNotification(`Location selected: ${parseFloat(lat).toFixed(4)}, ${parseFloat(lng).toFixed(4)}`, 'success');
+        }
+    } else {
+        if (window.showNotification) window.showNotification('Please select a valid location.', 'error');
     }
 }
 
@@ -646,7 +762,8 @@ function setupEventListeners() {
     fileInput.addEventListener('change', handleFileInputChange);
 
     const uploadForm = document.getElementById('upload-form');
-    uploadForm.addEventListener('submit', handleUploadFormSubmit);
+    // Note: Photo form submission is handled separately in setupPhotoFormSubmission()
+    // to avoid conflicts between old and new handlers
 
     // Main map search
     document.getElementById('main-map-search-btn').addEventListener('click', window.searchMainMap);
@@ -740,6 +857,9 @@ function setupEventListeners() {
     if (photoSelectLocationBtn) {
         photoSelectLocationBtn.addEventListener('click', openLocationSelector);
     }
+
+    // Location selector functionality
+    setupLocationSelector();
 }
 
 // Dark mode functionality
@@ -861,7 +981,7 @@ function handleUploadFormSubmit(event) {
     event.preventDefault();
 
     const submitBtn = document.getElementById('submit-btn');
-    if (submitBtn.disabled) return;
+    if (!submitBtn || submitBtn.disabled) return;
 
     const form = event.target;
     const formData = new FormData(form);
@@ -922,22 +1042,57 @@ function handleUploadFormSubmit(event) {
             map.panTo([parseFloat(data.metadata.latitude), parseFloat(data.metadata.longitude)]);
 
             // Manually reset the UI instead of using form.reset()
-            document.getElementById('photo-preview-container').classList.add('hidden');
-            document.getElementById('photo-preview').src = '';
-            document.getElementById('details-form').classList.add('hidden');
-            document.getElementById('manual-details-toggle').classList.add('hidden');
-            document.getElementById('coordinates-info').classList.add('hidden');
-            document.getElementById('submit-btn').classList.add('hidden');
-            document.getElementById('manual-location-section').classList.add('hidden');
+            const photoPreviewContainer = document.getElementById('photo-preview-container');
+            const photoPreview = document.getElementById('photo-preview');
+            const detailsForm = document.getElementById('details-form');
+            const manualDetailsToggle = document.getElementById('manual-details-toggle');
+            const coordinatesInfo = document.getElementById('coordinates-info');
+            const submitBtn = document.getElementById('submit-btn');
+            const manualLocationSection = document.getElementById('manual-location-section');
             
-            // Clear input fields
-            form.querySelector('#file').value = '';
-            form.querySelector('#latitude').value = '';
-            form.querySelector('#longitude').value = '';
-            form.querySelector('#trash-type').value = '';
-            form.querySelector('#estimated-kg').value = '';
-            form.querySelector('#sparcity').value = '';
-            form.querySelector('#cleanliness').value = '';
+            if (photoPreviewContainer) photoPreviewContainer.classList.add('hidden');
+            if (photoPreview) photoPreview.src = '';
+            if (detailsForm) detailsForm.classList.add('hidden');
+            if (manualDetailsToggle) manualDetailsToggle.classList.add('hidden');
+            if (coordinatesInfo) coordinatesInfo.classList.add('hidden');
+            if (submitBtn) submitBtn.classList.add('hidden');
+            if (manualLocationSection) manualLocationSection.classList.add('hidden');
+            
+            // Clear input fields with null checks
+            if (form) {
+                const fileInput = form.querySelector('#file');
+                const latitudeInput = form.querySelector('#latitude');
+                const longitudeInput = form.querySelector('#longitude');
+                const trashTypeInput = form.querySelector('#trash-type');
+                const estimatedKgInput = form.querySelector('#estimated-kg');
+                const sparcityInput = form.querySelector('#sparcity');
+                const cleanlinessInput = form.querySelector('#cleanliness');
+                
+                if (fileInput) fileInput.value = '';
+                if (latitudeInput) latitudeInput.value = '';
+                if (longitudeInput) longitudeInput.value = '';
+                if (trashTypeInput) trashTypeInput.value = '';
+                if (estimatedKgInput) estimatedKgInput.value = '';
+                if (sparcityInput) sparcityInput.value = '';
+                if (cleanlinessInput) cleanlinessInput.value = '';
+            } else {
+                // Fallback: clear fields by ID if form is not available
+                const fileInput = document.getElementById('file');
+                const latitudeInput = document.getElementById('latitude');
+                const longitudeInput = document.getElementById('longitude');
+                const trashTypeInput = document.getElementById('trash-type');
+                const estimatedKgInput = document.getElementById('estimated-kg');
+                const sparcityInput = document.getElementById('sparcity');
+                const cleanlinessInput = document.getElementById('cleanliness');
+                
+                if (fileInput) fileInput.value = '';
+                if (latitudeInput) latitudeInput.value = '';
+                if (longitudeInput) longitudeInput.value = '';
+                if (trashTypeInput) trashTypeInput.value = '';
+                if (estimatedKgInput) estimatedKgInput.value = '';
+                if (sparcityInput) sparcityInput.value = '';
+                if (cleanlinessInput) cleanlinessInput.value = '';
+            }
             
         } else {
             window.showNotification(data.message || 'An error occurred.', 'error');
@@ -948,8 +1103,10 @@ function handleUploadFormSubmit(event) {
         window.showNotification('Submission failed.', 'error');
     })
     .finally(() => {
-        submitBtn.innerHTML = 'Submit Report';
-        submitBtn.disabled = false;
+        if (submitBtn) {
+            submitBtn.innerHTML = 'Submit Report';
+            submitBtn.disabled = false;
+        }
     });
 }
 
@@ -1018,9 +1175,10 @@ function setupPhotoDetection() {
 }
 
 async function detectPhotoWithAI() {
+    // Use the correct element IDs and add null checks
     const fileInput = document.getElementById("file");
-    const latitudeInput = document.getElementById("latitude");
-    const longitudeInput = document.getElementById("longitude");
+    const latitudeInput = document.getElementById("photo-latitude") || document.getElementById("latitude");
+    const longitudeInput = document.getElementById("photo-longitude") || document.getElementById("longitude");
     const modelSelect = document.getElementById("photo-model-select");
     const confidenceSelect = document.getElementById("photo-confidence-threshold");
     const detectBtn = document.getElementById("detect-photo-btn");
@@ -1029,7 +1187,20 @@ async function detectPhotoWithAI() {
     const resultsDiv = document.getElementById("photo-detection-results");
     const errorDiv = document.getElementById("photo-detection-error");
     
-    if (!fileInput.files[0]) {
+    // Check if required elements exist
+    if (!fileInput) {
+        console.error('File input not found');
+        showPhotoDetectionError("File input not found");
+        return;
+    }
+    
+    if (!latitudeInput || !longitudeInput) {
+        console.error('Location inputs not found');
+        showPhotoDetectionError("Location inputs not found");
+        return;
+    }
+    
+    if (!currentPhotoFile && !fileInput.files[0]) {
         showPhotoDetectionError("Please select a photo first");
         return;
     }
@@ -1040,22 +1211,40 @@ async function detectPhotoWithAI() {
     }
     
     // Show loading state
-    detectBtn.disabled = true;
-    detectBtn.querySelector(".btn-text").textContent = "Detecting...";
-    detectBtn.querySelector(".loading-spinner").classList.remove("hidden");
-    progressBar.classList.remove("hidden");
-    errorDiv.classList.add("hidden");
-    resultsDiv.classList.add("hidden");
+    if (detectBtn) {
+        detectBtn.disabled = true;
+        const btnText = detectBtn.querySelector(".btn-text");
+        const loadingSpinner = detectBtn.querySelector(".loading-spinner");
+        if (btnText) btnText.textContent = "Detecting...";
+        if (loadingSpinner) loadingSpinner.classList.remove("hidden");
+    }
+    
+    if (progressBar) progressBar.classList.remove("hidden");
+    if (errorDiv) errorDiv.classList.add("hidden");
+    if (resultsDiv) resultsDiv.classList.add("hidden");
     
     // Update progress
     updatePhotoDetectionProgress(10, "Preparing image...");
     
     const formData = new FormData();
-    formData.append("file", fileInput.files[0]);
+    // Use currentPhotoFile if available, otherwise use file input
+    const fileToUpload = currentPhotoFile || fileInput.files[0];
+    formData.append("file", fileToUpload);
     formData.append("latitude", latitudeInput.value);
     formData.append("longitude", longitudeInput.value);
-    formData.append("model_name", modelSelect.value);
-    formData.append("confidence_threshold", confidenceSelect.value);
+    
+    // Add model and confidence if available
+    if (modelSelect && modelSelect.value) {
+        formData.append("model_name", modelSelect.value);
+    } else {
+        formData.append("model_name", "yolov8n"); // Default
+    }
+    
+    if (confidenceSelect && confidenceSelect.value) {
+        formData.append("confidence_threshold", confidenceSelect.value);
+    } else {
+        formData.append("confidence_threshold", "0.3"); // Default
+    }
     
     try {
         updatePhotoDetectionProgress(30, "Uploading image...");
@@ -1072,7 +1261,9 @@ async function detectPhotoWithAI() {
         if (response.ok) {
             updatePhotoDetectionProgress(100, "Detection complete!");
             showPhotoDetectionResults(result);
-            window.showNotification("Photo detection completed successfully!", "success");
+            if (window.showNotification) {
+                window.showNotification("Photo detection completed successfully!", "success");
+            }
         } else {
             throw new Error(result.message || "Detection failed");
         }
@@ -1081,9 +1272,13 @@ async function detectPhotoWithAI() {
         showPhotoDetectionError(error.message);
     } finally {
         // Reset button state
-        detectBtn.disabled = false;
-        detectBtn.querySelector(".btn-text").textContent = "Detect Trash with AI";
-        detectBtn.querySelector(".loading-spinner").classList.add("hidden");
+        if (detectBtn) {
+            detectBtn.disabled = false;
+            const btnText = detectBtn.querySelector(".btn-text");
+            const loadingSpinner = detectBtn.querySelector(".loading-spinner");
+            if (btnText) btnText.textContent = "Detect Trash with AI";
+            if (loadingSpinner) loadingSpinner.classList.add("hidden");
+        }
     }
 }
 
@@ -1148,19 +1343,26 @@ function showPhotoDetectionError(message) {
 }
 
 function handlePhotoCapture(file) {
-    if(!file) return;
-
-    const fileInput = document.getElementById('file');
-    const dataTransfer = new DataTransfer();
-    dataTransfer.items.add(file);
-    fileInput.files = dataTransfer.files;
-
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        document.getElementById('photo-preview').src = e.target.result;
-        document.getElementById('photo-preview-container').classList.remove('hidden');
-    };
-    reader.readAsDataURL(file);
+    if (!file) {
+        console.error('No file provided to handlePhotoCapture');
+        return;
+    }
+    
+    // Set the global photo file
+    currentPhotoFile = file;
+    
+    // Show photo preview
+    const photoPreview = document.getElementById('photo-preview');
+    const photoPreviewContainer = document.getElementById('photo-preview-container');
+    
+    if (photoPreview && photoPreviewContainer) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            photoPreview.src = e.target.result;
+            photoPreviewContainer.classList.remove('hidden');
+        };
+        reader.readAsDataURL(file);
+    }
 
     processPhotoForLocation(file);
     
@@ -1168,35 +1370,56 @@ function handlePhotoCapture(file) {
     setupPhotoDetection();
 }
 
+// Update the processPhotoForLocation function to properly show location selection
 function processPhotoForLocation(file) {
-    // Show location status
-    showLocationStatus('Checking photo for location data...');
+    if (!file) {
+        console.error('No file provided to processPhotoForLocation');
+        return;
+    }
     
-    // Try to extract coordinates from the photo
-    extractCoordinatesFromImage(file)
-    .then(coords => {
-        if (coords) {
-            // Location found in photo
-            document.getElementById('latitude').value = coords.latitude;
-            document.getElementById('longitude').value = coords.longitude;
-            showLocationStatus(`Location found: ${coords.latitude.toFixed(4)}, ${coords.lng.toFixed(4)}`);
-            
-            // Show coordinates info
-            document.getElementById('coordinates-info').classList.remove('hidden');
-            document.getElementById('coordinates-text').textContent = `Location: ${coords.latitude.toFixed(4)}, ${coords.lng.toFixed(4)}`;
-            // The toggle will handle showing AI or manual sections
-        } else {
-            // No location found, show manual location section
-            showLocationStatus('No location data found in photo');
-            document.getElementById('manual-location-section').classList.remove('hidden');
-            // The toggle will handle showing AI or manual sections
-        }
-    })
-    .catch(error => {
-        console.error('Error extracting location from photo:', error);
-        showLocationStatus('Error checking photo location');
-        document.getElementById('manual-location-section').classList.remove('hidden');
-    });
+    // Set the global photo file
+    currentPhotoFile = file;
+    
+    // Show photo preview safely
+    const photoPreview = document.getElementById('photo-preview');
+    const photoPreviewContainer = document.getElementById('photo-preview-container');
+    
+    if (photoPreview && photoPreviewContainer) {
+        photoPreview.src = URL.createObjectURL(file);
+        photoPreviewContainer.classList.remove('hidden');
+    }
+    
+    // Show location status safely
+    const locationStatus = document.getElementById('location-status');
+    const locationStatusText = document.getElementById('location-status-text');
+    
+    if (locationStatus && locationStatusText) {
+        locationStatusText.textContent = 'Photo selected. Please choose a location for detection.';
+        locationStatus.classList.remove('hidden');
+    }
+    
+    // Try to extract coordinates from photo (placeholder)
+    // In a real implementation, you might extract GPS data from photo
+    console.log('Processing photo for location:', file.name);
+    
+    // For now, always show manual location selection since we don't have GPS extraction
+    showPhotoManualLocationSection();
+}
+
+// Add function to show manual location section for photos
+function showPhotoManualLocationSection() {
+    const manualLocationSection = document.getElementById('manual-location-section');
+    if (manualLocationSection) {
+        manualLocationSection.classList.remove('hidden');
+    }
+}
+
+// Add function to hide manual location section for photos
+function hidePhotoManualLocationSection() {
+    const manualLocationSection = document.getElementById('manual-location-section');
+    if (manualLocationSection) {
+        manualLocationSection.classList.add('hidden');
+    }
 }
 
 function processVideoForLocation(file) {
@@ -1285,7 +1508,7 @@ function showVideoDetectionReport(detectionData, videoFile) {
     if (!videoReportContainer) {
         videoReportContainer = document.createElement('div');
         videoReportContainer.id = 'video-report-container';
-        videoReportContainer.className = 'bg-white rounded-lg shadow-md p-6 mb-4';
+        videoReportContainer.className = 'bg-white dark:bg-gray-800 rounded-lg shadow-md dark:shadow-gray-900/50 p-6 mb-4';
         document.querySelector('.container').appendChild(videoReportContainer);
     }
     
@@ -1321,15 +1544,66 @@ function handlePhotoModeToggle(event) {
     const aiSection = document.getElementById('ai-detection-section');
     const manualSection = document.getElementById('manual-report-section');
     
+    // Clear any existing results or errors first
+    hidePhotoResults();
+    hidePhotoError();
+    
     if (selectedMode === 'ai') {
         // Show AI detection section, hide manual section
         aiSection.classList.remove('hidden');
         manualSection.classList.add('hidden');
+        
+        // Clear manual form data when switching to AI mode
+        clearManualFormData();
+        
+        // Hide manual submit button, show AI detect button if photo and location are available
+        hideManualSubmitButton();
+        
+        // Check if we have photo and location to show detect button
+        const hasPhoto = currentPhotoFile !== null;
+        const hasLocation = document.getElementById('photo-latitude')?.value && document.getElementById('photo-longitude')?.value;
+        
+        if (hasPhoto && hasLocation) {
+            showPhotoDetectButton();
+        } else {
+            hidePhotoDetectButton();
+        }
+        
+        // Hide any existing submit buttons
+        hidePhotoSubmitButton();
+        
     } else if (selectedMode === 'manual') {
         // Show manual section, hide AI section
         aiSection.classList.add('hidden');
         manualSection.classList.remove('hidden');
+        
+        // Hide AI-related buttons
+        hidePhotoDetectButton();
+        hidePhotoSubmitButton();
+        
+        // Check if we have photo and location to show manual submit button
+        const hasPhoto = currentPhotoFile !== null;
+        const hasLocation = document.getElementById('photo-latitude')?.value && document.getElementById('photo-longitude')?.value;
+        
+        if (hasPhoto && hasLocation) {
+            showManualSubmitButton();
+        } else {
+            hideManualSubmitButton();
+        }
     }
+}
+
+// Add helper function to clear manual form data
+function clearManualFormData() {
+    const manualTrashType = document.getElementById('manual-trash-type');
+    const manualEstimatedKg = document.getElementById('manual-estimated-kg');
+    const manualSparcity = document.getElementById('manual-sparcity');
+    const manualCleanliness = document.getElementById('manual-cleanliness');
+    
+    if (manualTrashType) manualTrashType.value = '';
+    if (manualEstimatedKg) manualEstimatedKg.value = '';
+    if (manualSparcity) manualSparcity.value = '';
+    if (manualCleanliness) manualCleanliness.value = '';
 }
 
 function requestUserLocationOnLoad() {
@@ -1741,7 +2015,7 @@ function setupVideoFlow() {
         
         if (statusElement && statusText) {
             statusElement.classList.remove('hidden');
-            statusElement.className = 'mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg';
+            statusElement.className = 'mt-3 p-3 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded-lg';
             statusText.innerHTML = `<i class="bi bi-hourglass-split mr-2"></i>${message}`;
         }
     }
@@ -1764,31 +2038,377 @@ function setupVideoFlow() {
 //
 // =================================================================================
 
+// Add this function to handle photo form submission
+function setupPhotoFormSubmission() {
+    const uploadForm = document.getElementById('upload-form');
+    if (uploadForm) {
+        uploadForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            handlePhotoFormSubmission(e);
+        });
+    }
+}
+
+async function handlePhotoFormSubmission(event) {
+    const reportMethod = document.querySelector('input[name="photo-report-method"]:checked')?.value;
+    
+    if (reportMethod === 'ai') {
+        // For AI mode, check if we already have detection results
+        const resultsSection = document.getElementById('photo-detection-results');
+        if (resultsSection && !resultsSection.classList.contains('hidden')) {
+            // AI detection has already been performed, submit the results
+            const detectionData = window.currentDetectionData;
+            if (detectionData) {
+                await submitPhotoAIReport(detectionData);
+            } else {
+                // Fallback: submit a basic report with the photo and location
+                await submitBasicPhotoReport();
+            }
+        } else {
+            // No AI detection has been performed yet, show error
+            window.showNotification('Please run AI detection first by clicking "Detect with AI"', 'error');
+        }
+    } else if (reportMethod === 'manual') {
+        // Handle manual report submission
+        await handleManualReportSubmission();
+    }
+}
+
+// Add a fallback function to submit basic photo report
+async function submitBasicPhotoReport() {
+    if (!currentPhotoFile) {
+        window.showNotification('No photo file available', 'error');
+        return;
+    }
+    
+    const latitude = document.getElementById('photo-latitude')?.value || document.getElementById('latitude')?.value;
+    const longitude = document.getElementById('photo-longitude')?.value || document.getElementById('longitude')?.value;
+    
+    if (!latitude || !longitude) {
+        window.showNotification('No location coordinates available', 'error');
+        return;
+    }
+    
+    // Create form data with basic information
+    const formData = new FormData();
+    formData.append('file', currentPhotoFile);
+    formData.append('latitude', latitude);
+    formData.append('longitude', longitude);
+    formData.append('report_type', 'photo_report');
+    
+    try {
+        const response = await fetch('/upload', {
+            method: 'POST',
+            body: formData
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok) {
+            window.showNotification('Photo report submitted successfully!', 'success');
+            clearPhotoFlow();
+            loadMapData(); // Refresh map
+        } else {
+            window.showNotification(result.message || 'Failed to submit photo report', 'error');
+        }
+    } catch (error) {
+        console.error('Photo report submission error:', error);
+        window.showNotification('Network error: ' + error.message, 'error');
+    }
+}
+
+async function handleAIDetectionSubmission() {
+    if (!currentPhotoFile) {
+        window.showNotification('Please select a photo first', 'error');
+        return;
+    }
+    
+    // Check for location coordinates (photo flow uses photo-latitude/photo-longitude)
+    const latitude = document.getElementById('photo-latitude')?.value || document.getElementById('latitude')?.value;
+    const longitude = document.getElementById('photo-longitude')?.value || document.getElementById('longitude')?.value;
+    
+    if (!latitude || !longitude) {
+        window.showNotification('Please select a location first', 'error');
+        return;
+    }
+    
+    try {
+        await performPhotoDetection();
+    } catch (error) {
+        console.error('AI detection error:', error);
+        window.showNotification('AI detection failed: ' + error.message, 'error');
+    }
+}
+
+async function handleManualReportSubmission() {
+    let trashType = document.getElementById('manual-trash-type').value;
+    let estimatedKg = document.getElementById('manual-estimated-kg').value;
+    let sparcity = document.getElementById('manual-sparcity').value;
+    let cleanliness = document.getElementById('manual-cleanliness').value;
+    
+    // Manual report should work even with empty fields - only require photo and location
+    // Optional: show a warning if fields are empty but don't block submission
+    if (!trashType || !estimatedKg || !sparcity || !cleanliness) {
+        console.log('Manual report fields are empty, but proceeding with submission');
+        // Set default values for empty fields
+        if (!trashType) trashType = 'unknown';
+        if (!estimatedKg) estimatedKg = '0.1';
+        if (!sparcity) sparcity = 'medium';
+        if (!cleanliness) cleanliness = 'medium';
+    }
+    
+    if (!currentPhotoFile) {
+        window.showNotification('Please select a photo first', 'error');
+        return;
+    }
+    
+    // Check for location coordinates (photo flow uses photo-latitude/photo-longitude)
+    const latitude = document.getElementById('photo-latitude')?.value || document.getElementById('latitude')?.value;
+    const longitude = document.getElementById('photo-longitude')?.value || document.getElementById('longitude')?.value;
+    
+    if (!latitude || !longitude) {
+        window.showNotification('Please select a location first', 'error');
+        return;
+    }
+    
+    // Submit manual report
+    const formData = new FormData();
+    formData.append('file', currentPhotoFile);
+    formData.append('latitude', latitude);
+    formData.append('longitude', longitude);
+    formData.append('trash_type', trashType);
+    formData.append('estimated_kg', estimatedKg);
+    formData.append('sparcity', sparcity);
+    formData.append('cleanliness', cleanliness);
+    
+    try {
+        const response = await fetch('/upload', {
+            method: 'POST',
+            body: formData
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok) {
+            window.showNotification('Manual report submitted successfully!', 'success');
+            clearPhotoFlow();
+            loadMapData(); // Refresh map
+        } else {
+            window.showNotification(result.message || 'Failed to submit manual report', 'error');
+        }
+    } catch (error) {
+        console.error('Manual report submission error:', error);
+        window.showNotification('Network error: ' + error.message, 'error');
+    }
+}
+
+// Add function to clear photo flow
+function clearPhotoFlow() {
+    currentPhotoFile = null;
+    
+    // Clear stored detection data
+    window.currentDetectionData = null;
+    
+    // Clear file input
+    const photoFileInput = document.getElementById('file');
+    if (photoFileInput) photoFileInput.value = '';
+    
+    // Clear coordinates (photo flow uses photo-latitude/photo-longitude)
+    const latitude = document.getElementById('photo-latitude') || document.getElementById('latitude');
+    const longitude = document.getElementById('photo-longitude') || document.getElementById('longitude');
+    if (latitude) latitude.value = '';
+    if (longitude) longitude.value = '';
+    
+    // Hide preview
+    const photoPreviewContainer = document.getElementById('photo-preview-container');
+    if (photoPreviewContainer) photoPreviewContainer.classList.add('hidden');
+    
+    // Clear photo preview
+    const photoPreview = document.getElementById('photo-preview');
+    if (photoPreview) {
+        photoPreview.src = '';
+    }
+    
+    // Hide results and errors
+    hidePhotoResults();
+    hidePhotoError();
+    
+    // Reset manual form
+    const manualReportSection = document.getElementById('manual-report-section');
+    if (manualReportSection) manualReportSection.classList.add('hidden');
+    
+    // Reset form fields
+    document.getElementById('manual-trash-type').value = '';
+    document.getElementById('manual-estimated-kg').value = '';
+    document.getElementById('manual-sparcity').value = '';
+    document.getElementById('manual-cleanliness').value = '';
+    
+    // Hide all submit buttons
+    hideManualSubmitButton();
+    hidePhotoSubmitButton();
+    hidePhotoDetectButton();
+}
+
+// Update the setupPhotoFlow function to include location button setup
+function setupPhotoFlow() {
+    // Setup photo capture (take photo and upload photo buttons)
+    setupPhotoCapture();
+    
+    // Setup photo detection
+    setupPhotoDetection();
+    
+    // Add form submission handling
+    setupPhotoFormSubmission();
+    
+    // Add radio button change handler for report method
+    const reportMethodRadios = document.querySelectorAll('input[name="photo-report-method"]');
+    reportMethodRadios.forEach(radio => {
+        radio.addEventListener('change', handlePhotoModeToggle);
+    });
+    
+    // Setup photo file input change handler
+    const photoFileInput = document.getElementById('file');
+    if (photoFileInput) {
+        photoFileInput.addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                handlePhotoCapture(file);
+            }
+        });
+    }
+    
+    // Setup photo location selection button
+    const photoSelectLocationBtn = document.getElementById('photo-select-location-btn');
+    if (photoSelectLocationBtn) {
+        photoSelectLocationBtn.addEventListener('click', function() {
+            openLocationSelector();
+        });
+    }
+    
+    // Setup retake photo button
+    const retakePhotoBtn = document.getElementById('retake-photo-btn');
+    if (retakePhotoBtn) {
+        retakePhotoBtn.addEventListener('click', function() {
+            clearPhotoFlow();
+        });
+    }
+}
+
+// Update the confirmLocationSelection function to handle photo flow
+function confirmLocationSelection() {
+    // Try to detect which flow is active
+    const photoFlowVisible = document.getElementById('photo-flow-container') && !document.getElementById('photo-flow-container').classList.contains('hidden');
+    const videoFlowVisible = document.getElementById('video-flow-container') && !document.getElementById('video-flow-container').classList.contains('hidden');
+
+    // Get selected coordinates from the map marker
+    let lat = null, lng = null;
+    if (selectedLocation && selectedLocation.lat && selectedLocation.lng) {
+        lat = selectedLocation.lat;
+        lng = selectedLocation.lng;
+    } else {
+        // fallback: try to get from hidden fields
+        lat = document.getElementById('latitude')?.value || document.getElementById('photo-latitude')?.value || document.getElementById('video-latitude')?.value;
+        lng = document.getElementById('longitude')?.value || document.getElementById('photo-longitude')?.value || document.getElementById('video-longitude')?.value;
+    }
+
+    if (lat && lng) {
+        // Close the location selector
+        closeLocationSelector();
+
+        // Update the correct hidden fields
+        if (photoFlowVisible) {
+            document.getElementById('photo-latitude').value = lat;
+            document.getElementById('photo-longitude').value = lng;
+            // Update UI for photo flow
+            const locationStatusText = document.getElementById('location-status-text');
+            if (locationStatusText) {
+                locationStatusText.textContent = `Location selected: ${parseFloat(lat).toFixed(4)}, ${parseFloat(lng).toFixed(4)}`;
+            }
+            hidePhotoManualLocationSection();
+            const coordinatesInfo = document.getElementById('coordinates-info');
+            const coordinatesText = document.getElementById('coordinates-text');
+            if (coordinatesInfo && coordinatesText) {
+                coordinatesText.textContent = `Location: ${parseFloat(lat).toFixed(4)}, ${parseFloat(lng).toFixed(4)}`;
+                coordinatesInfo.classList.remove('hidden');
+            }
+            if (window.showNotification) window.showNotification(`Location selected: ${parseFloat(lat).toFixed(4)}, ${parseFloat(lng).toFixed(4)}`, 'success');
+            // Enable next step in photo flow
+            if (currentPhotoFile) {
+                const reportMethod = document.querySelector('input[name="photo-report-method"]:checked')?.value;
+                if (reportMethod === 'ai') {
+                    showPhotoDetectButton(); // Use the new function
+                } else {
+                    showManualSubmitButton(); // Use the new function
+                }
+            }
+        } else if (videoFlowVisible) {
+            document.getElementById('video-latitude').value = lat;
+            document.getElementById('video-longitude').value = lng;
+            // Update UI for video flow
+            const videoLocationStatus = document.getElementById('video-location-status');
+            if (videoLocationStatus) {
+                videoLocationStatus.textContent = `Location selected: ${parseFloat(lat).toFixed(4)}, ${parseFloat(lng).toFixed(4)}`;
+            }
+            if (window.showNotification) window.showNotification(`Location selected: ${parseFloat(lat).toFixed(4)}, ${parseFloat(lng).toFixed(4)}`, 'success');
+            // Enable next step in video flow
+            if (currentVideoFile) {
+                showDetectButton(); // Show the video detect button
+            }
+        } else {
+            // fallback: update generic fields
+            document.getElementById('latitude').value = lat;
+            document.getElementById('longitude').value = lng;
+            if (window.showNotification) window.showNotification(`Location selected: ${parseFloat(lat).toFixed(4)}, ${parseFloat(lng).toFixed(4)}`, 'success');
+        }
+    } else {
+        if (window.showNotification) window.showNotification('Please select a valid location.', 'error');
+    }
+}
+
+// Update the openLocationSelector function to work for both photo and video flows
+function openLocationSelector() {
+    const locationSelectorPage = document.getElementById('location-selector-page');
+    if (locationSelectorPage) {
+        // Use the correct CSS class for showing the location selector
+        locationSelectorPage.classList.add('visible');
+        
+        // Initialize location map if not already done
+        if (!locationMap) {
+            setTimeout(() => {
+                initializeLocationMap();
+            }, 100);
+        }
+        
+        // Show notification
+        if (window.showNotification) {
+            window.showNotification('Please select a location on the map', 'info');
+        }
+    } else {
+        console.error('Location selector page not found');
+    }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     console.log('=== MODERN APP INITIALIZATION START ===');
 
-    // Unregister all service workers to break cache
-    // Now that I manually unrwgistered servic worker, do I have to keep this?
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.getRegistrations().then(function(registrations) {
-            for(let registration of registrations) {
-                registration.unregister();
-                console.log('Service Worker unregistered successfully.');
-            }
-        }).catch(function(err) {
-            console.error('Service Worker unregistration failed: ', err);
-        });
-    }
-
-    // Initialize all functionality
+    // Initialize dark mode
+    initializeDarkMode();
+    
+    // Initialize map
     initMap();
     loadMapData();
-    setupEventListeners();
-    setupPhotoCapture();
-    setupPhotoDetection(); // Initialize photo detection
-    requestUserLocationOnLoad();
+    
+    // Setup flow toggle (PHOTO/VIDEO TOGGLE)
     setupFlowToggle();
+    
+    // Setup event listeners
+    setupEventListeners();
+    
+    // Setup video flow
     setupVideoFlow();
+    
+    // Setup photo flow (includes form submission)
+    setupPhotoFlow();
 
     console.log('=== MODERN APP INITIALIZATION COMPLETE ===');
 });
@@ -1796,7 +2416,7 @@ document.addEventListener('DOMContentLoaded', () => {
 // Add the missing generateVideoReportContent function
 function generateVideoReportContent(detectionData) {
     if (!detectionData) {
-        return '<div class="text-red-600">No detection data available</div>';
+        return '<div class="text-red-600 dark:text-red-400">No detection data available</div>';
     }
     
     const totalObjects = detectionData.total_objects || 0;
@@ -1807,7 +2427,7 @@ function generateVideoReportContent(detectionData) {
     
     let categoryHTML = '';
     if (Object.keys(categoryCounts).length > 0) {
-        categoryHTML = '<div class="mt-3"><h6 class="font-medium text-gray-700 mb-2">Detected Categories:</h6><ul class="text-sm text-gray-600">';
+        categoryHTML = '<div class="mt-3"><h6 class="font-medium text-gray-700 dark:text-gray-200 mb-2">Detected Categories:</h6><ul class="text-sm text-gray-600 dark:text-gray-300">';
         for (const [category, count] of Object.entries(categoryCounts)) {
             categoryHTML += `<li>• ${category}: ${count} objects</li>`;
         }
@@ -1816,23 +2436,23 @@ function generateVideoReportContent(detectionData) {
     
     return `
         <div class="space-y-3">
-            <h5 class="font-semibold text-gray-800">AI-Generated Trash Report</h5>
+            <h5 class="font-semibold text-gray-800 dark:text-gray-100">AI-Generated Trash Report</h5>
             <div class="grid grid-cols-2 gap-4 text-sm">
-                <div class="bg-blue-50 p-3 rounded-lg">
-                    <div class="font-medium text-blue-800">Total Objects</div>
-                    <div class="text-2xl font-bold text-blue-600">${totalObjects}</div>
+                <div class="bg-blue-50 dark:bg-blue-900/30 p-3 rounded-lg">
+                    <div class="font-medium text-blue-800 dark:text-blue-200">Total Objects</div>
+                    <div class="text-2xl font-bold text-blue-600 dark:text-blue-300">${totalObjects}</div>
                 </div>
-                <div class="bg-green-50 p-3 rounded-lg">
-                    <div class="font-medium text-green-800">Trash Objects</div>
-                    <div class="text-2xl font-bold text-green-600">${trashObjects}</div>
+                <div class="bg-green-50 dark:bg-green-900/30 p-3 rounded-lg">
+                    <div class="font-medium text-green-800 dark:text-green-200">Trash Objects</div>
+                    <div class="text-2xl font-bold text-green-600 dark:text-green-300">${trashObjects}</div>
                 </div>
-                <div class="bg-yellow-50 p-3 rounded-lg">
-                    <div class="font-medium text-yellow-800">Estimated Weight</div>
-                    <div class="text-2xl font-bold text-yellow-600">${estimatedWeight.toFixed(2)} kg</div>
+                <div class="bg-yellow-50 dark:bg-yellow-900/30 p-3 rounded-lg">
+                    <div class="font-medium text-yellow-800 dark:text-yellow-200">Estimated Weight</div>
+                    <div class="text-2xl font-bold text-yellow-600 dark:text-yellow-300">${estimatedWeight.toFixed(2)} kg</div>
                 </div>
-                <div class="bg-purple-50 p-3 rounded-lg">
-                    <div class="font-medium text-purple-800">Model Used</div>
-                    <div class="text-sm font-bold text-purple-600">${modelUsed}</div>
+                <div class="bg-purple-50 dark:bg-purple-900/30 p-3 rounded-lg">
+                    <div class="font-medium text-purple-800 dark:text-purple-200">Model Used</div>
+                    <div class="text-sm font-bold text-purple-600 dark:text-purple-300">${modelUsed}</div>
                 </div>
             </div>
             ${categoryHTML}
@@ -1847,3 +2467,320 @@ function generateVideoReportContent(detectionData) {
         </div>
     `;
 }
+
+// Add these helper functions for safe element access
+function showPhotoResults(data) {
+    const resultsContainer = document.getElementById('photo-detection-content');
+    const resultsSection = document.getElementById('photo-detection-results');
+    
+    if (resultsContainer && resultsSection) {
+        // Store the detection data globally for later submission
+        window.currentDetectionData = data;
+        
+        resultsContainer.innerHTML = generatePhotoResultsHTML(data);
+        resultsSection.classList.remove('hidden');
+        
+        // Hide detect button and show submit button after AI detection is complete
+        hidePhotoDetectButton();
+        showPhotoSubmitButton();
+    } else {
+        console.warn('Photo results elements not found');
+    }
+}
+
+function generatePhotoResultsHTML(data) {
+    if (!data) {
+        return '<div class="text-red-600 dark:text-red-400">No detection data available</div>';
+    }
+    
+    const totalObjects = data.total_objects || data.all_detections?.length || 0;
+    const trashObjects = data.trash_objects || data.trash_detections?.length || 0;
+    const estimatedWeight = data.estimated_weight_kg || 0;
+    const modelUsed = data.model_used || 'Unknown';
+    
+    let detectionDetails = '';
+    if (data.trash_detections && data.trash_detections.length > 0) {
+        detectionDetails = '<div class="mt-3"><h6 class="font-medium text-gray-700 dark:text-gray-200 mb-2">Detected Trash Objects:</h6><ul class="text-sm text-gray-600 dark:text-gray-300">';
+        data.trash_detections.forEach(detection => {
+            const confidence = (detection.confidence * 100).toFixed(1);
+            detectionDetails += `<li>• ${detection.class_name} (${confidence}% confidence)</li>`;
+        });
+        detectionDetails += '</ul></div>';
+    }
+    
+    return `
+        <div class="space-y-3">
+            <h5 class="font-semibold text-gray-800 dark:text-gray-100">AI-Generated Trash Report</h5>
+            <div class="grid grid-cols-2 gap-4 text-sm">
+                <div class="bg-blue-50 dark:bg-blue-900/30 p-3 rounded-lg">
+                    <div class="font-medium text-blue-800 dark:text-blue-200">Total Objects</div>
+                    <div class="text-2xl font-bold text-blue-600 dark:text-blue-300">${totalObjects}</div>
+                </div>
+                <div class="bg-green-50 dark:bg-green-900/30 p-3 rounded-lg">
+                    <div class="font-medium text-green-800 dark:text-green-200">Trash Objects</div>
+                    <div class="text-2xl font-bold text-green-600 dark:text-green-300">${trashObjects}</div>
+                </div>
+                <div class="bg-yellow-50 dark:bg-yellow-900/30 p-3 rounded-lg">
+                    <div class="font-medium text-yellow-800 dark:text-yellow-200">Estimated Weight</div>
+                    <div class="text-2xl font-bold text-yellow-600 dark:text-yellow-300">${estimatedWeight.toFixed(2)} kg</div>
+                </div>
+                <div class="bg-purple-50 dark:bg-purple-900/30 p-3 rounded-lg">
+                    <div class="font-medium text-purple-800 dark:text-purple-200">Model Used</div>
+                    <div class="text-sm font-bold text-purple-600 dark:text-purple-300">${modelUsed}</div>
+                </div>
+            </div>
+            ${detectionDetails}
+        </div>
+    `;
+}
+
+function showPhotoError(msg) {
+    const errorElement = document.getElementById('photo-detection-error-message');
+    const errorSection = document.getElementById('photo-detection-error');
+    
+    if (errorElement && errorSection) {
+        errorElement.textContent = msg;
+        errorSection.classList.remove('hidden');
+    } else {
+        console.warn('Photo error elements not found, showing notification instead');
+        window.showNotification(msg, 'error');
+    }
+}
+
+function hidePhotoResults() {
+    const resultsSection = document.getElementById('photo-detection-results');
+    if (resultsSection) {
+        resultsSection.classList.add('hidden');
+    }
+}
+
+function hidePhotoError() {
+    const errorSection = document.getElementById('photo-detection-error');
+    if (errorSection) {
+        errorSection.classList.add('hidden');
+    }
+}
+
+// Add this new function to setup location selector
+function setupLocationSelector() {
+    const locationSelectorPage = document.getElementById('location-selector-page');
+    const closeLocationSelectorBtn = document.getElementById('close-location-selector');
+    const locationSearchInput = document.getElementById('location-search-input');
+    const confirmSelectedLocationBtn = document.getElementById('confirm-selected-location');
+    
+    // Close location selector
+    if (closeLocationSelectorBtn) {
+        closeLocationSelectorBtn.addEventListener('click', function() {
+            closeLocationSelector();
+        });
+    }
+    
+    // Location search in selector
+    if (locationSearchInput) {
+        locationSearchInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                searchLocationOnSelectorMap(this.value);
+            }
+        });
+    }
+    
+    // Confirm location selection
+    if (confirmSelectedLocationBtn) {
+        confirmSelectedLocationBtn.addEventListener('click', function() {
+            confirmLocationSelection();
+        });
+    }
+}
+
+// =================================================================================
+//
+//  MISSING PHOTO FLOW FUNCTIONS
+//
+// =================================================================================
+
+// Add the missing processPhotoForLocation function with proper location handling
+function processPhotoForLocation(file) {
+    if (!file) {
+        console.error('No file provided to processPhotoForLocation');
+        return;
+    }
+    
+    // Set the global photo file
+    currentPhotoFile = file;
+    
+    // Show photo preview safely
+    const photoPreview = document.getElementById('photo-preview');
+    const photoPreviewContainer = document.getElementById('photo-preview-container');
+    if (photoPreview && photoPreviewContainer) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            photoPreview.src = e.target.result;
+            photoPreviewContainer.classList.remove('hidden');
+        };
+        reader.readAsDataURL(file);
+    }
+    
+    // Show location status
+    const locationStatusText = document.getElementById('location-status-text');
+    if (locationStatusText) {
+        locationStatusText.textContent = 'Checking photo for location data...';
+    }
+    
+    // Try to extract coordinates from photo
+    extractCoordinatesFromImage(file)
+        .then(coordinates => {
+            if (coordinates && coordinates.latitude && coordinates.longitude) {
+                // Photo has GPS data
+                const latitudeField = document.getElementById('photo-latitude') || document.getElementById('latitude');
+                const longitudeField = document.getElementById('photo-longitude') || document.getElementById('longitude');
+                
+                if (latitudeField && longitudeField) {
+                    latitudeField.value = coordinates.latitude;
+                    longitudeField.value = coordinates.longitude;
+                }
+                
+                // Update location status
+                if (locationStatusText) {
+                    locationStatusText.textContent = `Location found: ${parseFloat(coordinates.latitude).toFixed(4)}, ${parseFloat(coordinates.longitude).toFixed(4)}`;
+                }
+                
+                // Show coordinates info
+                const coordinatesInfo = document.getElementById('coordinates-info');
+                const coordinatesText = document.getElementById('coordinates-text');
+                if (coordinatesInfo && coordinatesText) {
+                    coordinatesText.textContent = `Location: ${parseFloat(coordinates.latitude).toFixed(4)}, ${parseFloat(coordinates.longitude).toFixed(4)}`;
+                    coordinatesInfo.classList.remove('hidden');
+                }
+                
+                // Show the appropriate next step based on report method
+                const reportMethod = document.querySelector('input[name="photo-report-method"]:checked')?.value;
+                if (reportMethod === 'ai') {
+                    // Show AI detection button
+                    showPhotoDetectButton();
+                    // Hide manual submit button
+                    hideManualSubmitButton();
+                } else {
+                    // Show manual report section and submit button
+                    const manualReportSection = document.getElementById('manual-report-section');
+                    if (manualReportSection) {
+                        manualReportSection.classList.remove('hidden');
+                    }
+                    showManualSubmitButton();
+                    // Hide AI detect button
+                    hidePhotoDetectButton();
+                }
+            } else {
+                // No GPS data found, show manual location selection
+                showPhotoManualLocationSection();
+            }
+        })
+        .catch(error => {
+            console.error('Error extracting coordinates:', error);
+            // Show manual location selection on error
+            showPhotoManualLocationSection();
+        });
+}
+
+// Add the missing performPhotoDetection function
+function performPhotoDetection() {
+    if (!currentPhotoFile) {
+        showPhotoError('No photo file selected');
+        return;
+    }
+    
+    const latitude = document.getElementById('photo-latitude')?.value || document.getElementById('latitude')?.value;
+    const longitude = document.getElementById('photo-longitude')?.value || document.getElementById('longitude')?.value;
+    
+    if (!latitude || !longitude) {
+        showPhotoError('Please select a location first');
+        return;
+    }
+    
+    // Show detection progress
+    const progressDiv = document.getElementById('photo-detection-progress');
+    const statusDiv = document.getElementById('photo-detection-status');
+    if (progressDiv) progressDiv.classList.remove('hidden');
+    if (statusDiv) statusDiv.textContent = 'Initializing AI model...';
+    
+    // Hide previous results and errors
+    hidePhotoResults();
+    hidePhotoError();
+    
+    // Get detection parameters
+    const modelName = document.getElementById('photo-model-select')?.value || 'yolov8n';
+    const confidenceThreshold = document.getElementById('photo-confidence-threshold')?.value || '0.3';
+    
+    // Create form data
+    const formData = new FormData();
+    formData.append('file', currentPhotoFile);
+    formData.append('model_name', modelName);
+    formData.append('confidence_threshold', confidenceThreshold);
+    formData.append('latitude', latitude);
+    formData.append('longitude', longitude);
+    
+    // Perform detection
+    fetch('/api/detect-photo', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (progressDiv) progressDiv.classList.add('hidden');
+        
+        if (data.status === 'success') {
+            showPhotoResults(data);
+        } else {
+            showPhotoError(data.message || 'Detection failed');
+        }
+    })
+    .catch(error => {
+        console.error('Detection error:', error);
+        if (progressDiv) progressDiv.classList.add('hidden');
+        showPhotoError('Detection failed: ' + error.message);
+    });
+}
+
+// Add new function to submit AI detection results
+async function submitPhotoAIReport(detectionData) {
+    if (!currentPhotoFile) {
+        window.showNotification('No photo file available', 'error');
+        return;
+    }
+    
+    const latitude = document.getElementById('photo-latitude')?.value || document.getElementById('latitude')?.value;
+    const longitude = document.getElementById('photo-longitude')?.value || document.getElementById('longitude')?.value;
+    
+    if (!latitude || !longitude) {
+        window.showNotification('No location coordinates available', 'error');
+        return;
+    }
+    
+    // Create form data with detection results
+    const formData = new FormData();
+    formData.append('file', currentPhotoFile);
+    formData.append('latitude', latitude);
+    formData.append('longitude', longitude);
+    formData.append('detection_data', JSON.stringify(detectionData));
+    formData.append('report_type', 'ai_detection');
+    
+    try {
+        const response = await fetch('/upload', {
+            method: 'POST',
+            body: formData
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok) {
+            window.showNotification('AI report submitted successfully!', 'success');
+            clearPhotoFlow();
+            loadMapData(); // Refresh map
+        } else {
+            window.showNotification(result.message || 'Failed to submit AI report', 'error');
+        }
+    } catch (error) {
+        console.error('AI report submission error:', error);
+        window.showNotification('Network error: ' + error.message, 'error');
+    }
+}
+

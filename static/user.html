@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Profile - MamaLand</title>
+    <meta name="description" content="View your trash collection stats and achievements">
+    <meta name="theme-color" content="#10b981">
+    <link rel="manifest" href="/static/manifest.json?v=2">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🗑️</text></svg>">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'sans': ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                        },
+                        secondary: {
+                            50: '#f8fafc',
+                            100: '#f1f5f9',
+                            500: '#64748b',
+                            600: '#475569',
+                            700: '#334155',
+                        },
+                        accent: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            500: '#22c55e',
+                            600: '#16a34a',
+                            700: '#15803d',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="/static/css/modern-style.css">
+    
+    <!-- Dark mode initialization - prevents blinking -->
+    <script>
+        (function() {
+            const savedMode = localStorage.getItem('darkMode');
+            const html = document.documentElement;
+            
+            // Default to light mode if no preference is saved
+            if (!savedMode) {
+                html.classList.remove('dark');
+                localStorage.setItem('darkMode', 'light');
+            } else if (savedMode === 'dark') {
+                html.classList.add('dark');
+            } else {
+                html.classList.remove('dark');
+            }
+        })();
+    </script>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 font-sans">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50 dark:bg-gray-800 dark:border-gray-700">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center space-x-3">
+                    <img src="/static/images/Mamaland Beverage Logo - Fun Character Design.png" alt="MamaLand" class="h-8 w-8 rounded-full">
+                    <span class="text-xl font-semibold text-gray-900 dark:text-white">MamaLand</span>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <a href="/" class="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors">
+                        <i class="bi bi-house mr-1"></i>Home
+                    </a>
+                    <a href="/report" class="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors">
+                        <i class="bi bi-plus-circle mr-1"></i>Report
+                    </a>
+                    <a href="/map" class="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors">
+                        <i class="bi bi-map mr-1"></i>Map
+                    </a>
+                    <a href="/user" class="text-primary-600 dark:text-primary-400 px-3 py-2 rounded-md text-sm font-medium transition-colors">
+                        <i class="bi bi-person mr-1"></i>Profile
+                    </a>
+                    <button id="dark-mode-toggle" 
+                            class="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 transition-colors"
+                            title="Toggle dark mode">
+                        <i class="bi bi-moon-fill text-gray-600 dark:text-yellow-300 dark:hidden"></i>
+                        <i class="bi bi-sun-fill text-yellow-500 hidden dark:inline"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Profile Header -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden dark:bg-gray-800 dark:border-gray-700 mb-8">
+            <div class="p-6">
+                <div class="flex items-center space-x-6">
+                    <img src="/static/images/Mamaland Beverage Logo - Fun Character Design.png" alt="User Avatar" class="h-20 w-20 rounded-full shadow-lg">
+                    <div>
+                        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">MamaLand User</h1>
+                        <p class="text-gray-600 dark:text-gray-300">Environmental Champion</p>
+                        <div class="flex items-center space-x-4 mt-2">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                                <i class="bi bi-star-fill mr-1"></i>
+                                Level 5
+                            </span>
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                                <i class="bi bi-calendar-check mr-1"></i>
+                                Member since 2024
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <!-- Total Reports -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 dark:bg-gray-800 dark:border-gray-700">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <i class="bi bi-flag text-3xl text-primary-600 dark:text-primary-400"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Reports</p>
+                        <p class="text-2xl font-bold text-gray-900 dark:text-white">127</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Weight Collected -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 dark:bg-gray-800 dark:border-gray-700">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <i class="bi bi-weight text-3xl text-accent-600 dark:text-accent-400"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Weight Collected</p>
+                        <p class="text-2xl font-bold text-gray-900 dark:text-white">45.2 kg</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Streak -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 dark:bg-gray-800 dark:border-gray-700">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <i class="bi bi-fire text-3xl text-orange-600 dark:text-orange-400"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Current Streak</p>
+                        <p class="text-2xl font-bold text-gray-900 dark:text-white">7 days</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Points -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 dark:bg-gray-800 dark:border-gray-700">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <i class="bi bi-trophy text-3xl text-yellow-600 dark:text-yellow-400"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Points</p>
+                        <p class="text-2xl font-bold text-gray-900 dark:text-white">1,250</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Badges and Achievements -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- Badges -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden dark:bg-gray-800 dark:border-gray-700">
+                <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                    <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Badges Earned</h2>
+                </div>
+                <div class="p-6">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="text-center p-4 bg-gray-50 rounded-lg dark:bg-gray-700">
+                            <i class="bi bi-star-fill text-3xl text-yellow-500 mb-2"></i>
+                            <p class="text-sm font-medium text-gray-900 dark:text-white">First Report</p>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">Earned on Jan 15</p>
+                        </div>
+                        <div class="text-center p-4 bg-gray-50 rounded-lg dark:bg-gray-700">
+                            <i class="bi bi-fire text-3xl text-orange-500 mb-2"></i>
+                            <p class="text-sm font-medium text-gray-900 dark:text-white">7-Day Streak</p>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">Earned on Jan 22</p>
+                        </div>
+                        <div class="text-center p-4 bg-gray-50 rounded-lg dark:bg-gray-700">
+                            <i class="bi bi-weight text-3xl text-green-500 mb-2"></i>
+                            <p class="text-sm font-medium text-gray-900 dark:text-white">10kg Collected</p>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">Earned on Jan 18</p>
+                        </div>
+                        <div class="text-center p-4 bg-gray-50 rounded-lg dark:bg-gray-700">
+                            <i class="bi bi-flag text-3xl text-blue-500 mb-2"></i>
+                            <p class="text-sm font-medium text-gray-900 dark:text-white">50 Reports</p>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">Earned on Jan 25</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Activity -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden dark:bg-gray-800 dark:border-gray-700">
+                <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                    <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Recent Activity</h2>
+                </div>
+                <div class="p-6">
+                    <div class="space-y-4">
+                        <div class="flex items-center space-x-3">
+                            <div class="flex-shrink-0">
+                                <i class="bi bi-flag text-green-600 dark:text-green-400"></i>
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-sm font-medium text-gray-900 dark:text-white">Reported plastic waste</p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400">2 hours ago • San Francisco, CA</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <div class="flex-shrink-0">
+                                <i class="bi bi-trophy text-yellow-600 dark:text-yellow-400"></i>
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-sm font-medium text-gray-900 dark:text-white">Earned "50 Reports" badge</p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400">1 day ago</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <div class="flex-shrink-0">
+                                <i class="bi bi-flag text-green-600 dark:text-green-400"></i>
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-sm font-medium text-gray-900 dark:text-white">Reported paper waste</p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400">2 days ago • Oakland, CA</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <div class="flex-shrink-0">
+                                <i class="bi bi-fire text-orange-600 dark:text-orange-400"></i>
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-sm font-medium text-gray-900 dark:text-white">Started 7-day streak</p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400">3 days ago</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-white mt-12 border-t border-gray-200 dark:bg-gray-800 dark:border-gray-700">
+        <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 text-center text-sm text-gray-500 dark:text-gray-400">
+            &copy; 2024 MamaLand. All rights reserved.
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/static/js/modern-app.js?v=2024061024"></script>
+</body>
+</html> 

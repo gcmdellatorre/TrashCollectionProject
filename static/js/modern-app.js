@@ -1,3 +1,19 @@
+// Initialize dark mode immediately to prevent blinking
+(function() {
+    const savedMode = localStorage.getItem('darkMode');
+    const html = document.documentElement;
+    
+    // Default to light mode if no preference is saved
+    if (!savedMode) {
+        html.classList.remove('dark');
+        localStorage.setItem('darkMode', 'light');
+    } else if (savedMode === 'dark') {
+        html.classList.add('dark');
+    } else {
+        html.classList.remove('dark');
+    }
+})();
+
 //
 // Mamaland Trash Collection App - Modern JavaScript
 //
@@ -509,9 +525,9 @@ function openLocationSelector() {
         locationSelectorPage.classList.add('visible');
         
         // Initialize location map if not already done
-        if (!locationMap) {
+    if (!locationMap) {
             setTimeout(() => {
-                initializeLocationMap();
+        initializeLocationMap();
             }, 100);
         }
         
@@ -527,7 +543,7 @@ function openLocationSelector() {
 function closeLocationSelector() {
     const selectorPage = document.getElementById('location-selector-page');
     if (selectorPage) {
-        selectorPage.classList.remove('visible');
+    selectorPage.classList.remove('visible');
     }
     
     // Clean up the location map to prevent re-initialization issues
@@ -558,20 +574,20 @@ function initializeLocationMap() {
     }
     
     try {
-        locationMap = L.map('location-map').setView([20, 0], 2);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap contributors'
-        }).addTo(locationMap);
+    locationMap = L.map('location-map').setView([20, 0], 2);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+    }).addTo(locationMap);
 
-        locationMap.on('click', function(e) {
-            selectedLocation = { lat: e.latlng.lat, lng: e.latlng.lng };
+    locationMap.on('click', function(e) {
+        selectedLocation = { lat: e.latlng.lat, lng: e.latlng.lng };
 
-            if (locationMapMarker) {
-                locationMap.removeLayer(locationMapMarker);
-            }
+        if (locationMapMarker) {
+            locationMap.removeLayer(locationMapMarker);
+        }
 
-            locationMapMarker = L.marker(e.latlng).addTo(locationMap);
-            
+        locationMapMarker = L.marker(e.latlng).addTo(locationMap);
+        
             const selectedLocationInfo = document.getElementById('selected-location-info');
             const confirmBtn = document.getElementById('confirm-selected-location');
             
@@ -581,16 +597,16 @@ function initializeLocationMap() {
             if (confirmBtn) {
                 confirmBtn.disabled = false;
             }
-        });
+    });
 
-        // Handle search within the location selector
-        const searchInput = document.getElementById('location-search-input');
+    // Handle search within the location selector
+    const searchInput = document.getElementById('location-search-input');
         if (searchInput) {
-            searchInput.addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    searchLocationOnSelectorMap(searchInput.value);
-                }
-            });
+    searchInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            searchLocationOnSelectorMap(searchInput.value);
+        }
+    });
         }
         
         console.log('Location map initialized successfully');
@@ -757,110 +773,7 @@ function addModernMarker(point) {
     markersOnMap.push(marker); // Keep track of markers
 }
 
-function setupEventListeners() {
-    const fileInput = document.getElementById('file');
-    fileInput.addEventListener('change', handleFileInputChange);
-
-    const uploadForm = document.getElementById('upload-form');
-    // Note: Photo form submission is handled separately in setupPhotoFormSubmission()
-    // to avoid conflicts between old and new handlers
-
-    // Main map search
-    document.getElementById('main-map-search-btn').addEventListener('click', window.searchMainMap);
-
-    // Refresh map button
-    const refreshMapBtn = document.getElementById('refresh-map');
-    if (refreshMapBtn) {
-        refreshMapBtn.addEventListener('click', function() {
-            console.log('Refresh map button clicked');
-            loadMapData();
-            window.showNotification('Map data refreshed!', 'success');
-        });
-    }
-
-    // Nearby trash functionality
-    document.getElementById('find-nearby-btn').addEventListener('click', findNearbyTrash);
-    const radiusSlider = document.getElementById('radius-slider');
-    const radiusValue = document.getElementById('radius-value');
-    radiusSlider.addEventListener('input', () => {
-        radiusValue.textContent = radiusSlider.value;
-    });
-
-    // Event listeners for the new full-page selector
-    const manualLocationButton = document.getElementById('manual-location-section').querySelector('button');
-    if (manualLocationButton) {
-        manualLocationButton.addEventListener('click', openLocationSelector);
-    }
-    document.getElementById('close-location-selector').addEventListener('click', closeLocationSelector);
-    document.getElementById('confirm-selected-location').addEventListener('click', confirmLocationSelection);
-
-    // Video upload buttons
-    const takeVideoBtn = document.getElementById('take-video-btn');
-    const uploadVideoBtn = document.getElementById('upload-video-btn');
-    const videoFileInput = document.getElementById('video-file');
-    
-    if (takeVideoBtn && videoFileInput) {
-        takeVideoBtn.addEventListener('click', function() {
-            videoFileInput.value = '';
-            videoFileInput.removeAttribute('multiple');
-            videoFileInput.setAttribute('capture', 'environment');
-            videoFileInput.click();
-        });
-    }
-    
-    if (uploadVideoBtn && videoFileInput) {
-        uploadVideoBtn.addEventListener('click', function() {
-            videoFileInput.value = '';
-            videoFileInput.removeAttribute('capture');
-            videoFileInput.click();
-        });
-    }
-    
-    if (videoFileInput) {
-        videoFileInput.addEventListener('change', handleVideoFileChange);
-    }
-    
-    // Add event listeners for video report buttons (will be added dynamically)
-    // document.addEventListener('click', function(e) {
-    //     if (e.target && e.target.id === 'submit-video-report-btn') {
-    //         submitVideoReport();
-    //     }
-    //     if (e.target && e.target.id === 'edit-video-report-btn') {
-    //         // TODO: Implement edit functionality
-    //         window.showNotification('Edit functionality coming soon!', 'info');
-    //     }
-    // });
-
-    // Dark mode toggle functionality
-    const darkModeToggle = document.getElementById('dark-mode-toggle');
-    if (darkModeToggle) {
-        darkModeToggle.addEventListener('click', toggleDarkMode);
-    }
-
-    // Initialize dark mode from localStorage
-    initializeDarkMode();
-    
-    // Photo detection button
-    const detectPhotoBtn = document.getElementById('detect-photo-btn');
-    if (detectPhotoBtn) {
-        detectPhotoBtn.addEventListener('click', detectPhotoWithAI);
-    }
-    
-    // Photo mode toggle
-    const photoModeRadios = document.querySelectorAll('input[name="photo-report-method"]');
-    photoModeRadios.forEach(radio => {
-        radio.addEventListener('change', handlePhotoModeToggle);
-    });
-    
-    // Photo manual location button
-    const photoSelectLocationBtn = document.getElementById('photo-select-location-btn');
-    if (photoSelectLocationBtn) {
-        photoSelectLocationBtn.addEventListener('click', openLocationSelector);
-    }
-
-    // Location selector functionality
-    setupLocationSelector();
-}
+// Old setupEventListeners function removed - replaced with page-specific event listeners
 
 // Dark mode functionality
 function toggleDarkMode() {
@@ -1104,8 +1017,8 @@ function handleUploadFormSubmit(event) {
     })
     .finally(() => {
         if (submitBtn) {
-            submitBtn.innerHTML = 'Submit Report';
-            submitBtn.disabled = false;
+        submitBtn.innerHTML = 'Submit Report';
+        submitBtn.disabled = false;
         }
     });
 }
@@ -1356,12 +1269,12 @@ function handlePhotoCapture(file) {
     const photoPreviewContainer = document.getElementById('photo-preview-container');
     
     if (photoPreview && photoPreviewContainer) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
             photoPreview.src = e.target.result;
             photoPreviewContainer.classList.remove('hidden');
-        };
-        reader.readAsDataURL(file);
+    };
+    reader.readAsDataURL(file);
     }
 
     processPhotoForLocation(file);
@@ -1423,26 +1336,26 @@ function hidePhotoManualLocationSection() {
 }
 
 function processVideoForLocation(file) {
-    // For videos, we'll try to extract location from the first frame
-    // This is a simplified approach - in a real app, you might want to analyze multiple frames
-    extractCoordinatesFromVideo(file)
-    .then(coords => {
-        if (coords) {
-            document.getElementById('video-latitude').value = coords.latitude;
-            document.getElementById('video-longitude').value = coords.longitude;
-            window.showNotification(`Video location found: ${coords.latitude.toFixed(4)}, ${coords.longitude.toFixed(4)}`, 'success');
-            // Proceed with upload since we have location
-            uploadVideo(file);
+    showLocationStatus('Checking video for location data...');
+    
+    // Try to extract coordinates from video metadata
+    extractCoordinatesFromVideo(file).then(coordinates => {
+        if (coordinates) {
+            // Location found in video
+            document.getElementById('video-latitude').value = coordinates.lat;
+            document.getElementById('video-longitude').value = coordinates.lng;
+            showLocationStatus(`Location found: ${coordinates.lat.toFixed(4)}, ${coordinates.lng.toFixed(4)}`);
+            hideManualLocationSection();
+            showDetectButton();
         } else {
-            window.showNotification('No GPS data found in video. Please select location manually.', 'info');
-            // Show location selector for manual selection
-            showVideoLocationSelector(file);
+            // No location in video, show manual location selection
+            showLocationStatus('No location data found in video. Please select location manually.');
+            showManualLocationSection();
         }
-    })
-    .catch(error => {
-        console.error('Error processing video for location:', error);
-        window.showNotification('Could not extract location from video. Please select location manually.', 'info');
-        showVideoLocationSelector(file);
+    }).catch(error => {
+        console.error('Error extracting location from video:', error);
+        showLocationStatus('Error checking video location. Please select location manually.');
+        showManualLocationSection();
     });
 }
 
@@ -1840,13 +1753,13 @@ function setupVideoFlow() {
                 hideManualLocationSection();
                 showDetectButton();
             } else {
-                // No location in video, show manual selection
-                showLocationStatus('No location data found in video');
+                // No location in video, show manual location selection
+                showLocationStatus('No location data found in video. Please select location manually.');
                 showManualLocationSection();
             }
         }).catch(error => {
             console.error('Error extracting location from video:', error);
-            showLocationStatus('Error checking video location');
+            showLocationStatus('Error checking video location. Please select location manually.');
             showManualLocationSection();
         });
     }
@@ -2266,17 +2179,6 @@ function setupPhotoFlow() {
         radio.addEventListener('change', handlePhotoModeToggle);
     });
     
-    // Setup photo file input change handler
-    const photoFileInput = document.getElementById('file');
-    if (photoFileInput) {
-        photoFileInput.addEventListener('change', function(event) {
-            const file = event.target.files[0];
-            if (file) {
-                handlePhotoCapture(file);
-            }
-        });
-    }
-    
     // Setup photo location selection button
     const photoSelectLocationBtn = document.getElementById('photo-select-location-btn');
     if (photoSelectLocationBtn) {
@@ -2391,27 +2293,178 @@ function openLocationSelector() {
 document.addEventListener('DOMContentLoaded', () => {
     console.log('=== MODERN APP INITIALIZATION START ===');
 
-    // Initialize dark mode
+    // Initialize dark mode (works on all pages)
     initializeDarkMode();
     
-    // Initialize map
-    initMap();
-    loadMapData();
+    // Get current page path
+    const currentPath = window.location.pathname;
+    console.log('Current page:', currentPath);
+    
+    // Page-specific initialization
+    if (currentPath === '/' || currentPath === '/index.html') {
+        // Landing page - only basic initialization
+        console.log('Initializing landing page');
+        setupLandingPage();
+    } else if (currentPath === '/report') {
+        // Report page - video and photo flows
+        console.log('Initializing report page');
+        setupReportPage();
+    } else if (currentPath === '/map') {
+        // Map page - main map functionality
+        console.log('Initializing map page');
+        setupMapPage();
+    } else if (currentPath === '/user') {
+        // User page - user stats and profile
+        console.log('Initializing user page');
+        setupUserPage();
+    }
+
+    console.log('=== MODERN APP INITIALIZATION COMPLETE ===');
+});
+
+// Landing page setup
+function setupLandingPage() {
+    // Setup dark mode toggle for landing page
+    setupDarkModeToggle();
+}
+
+// Report page specific setup functions
+function setupReportPage() {
+    // Setup dark mode toggle
+    setupDarkModeToggle();
     
     // Setup flow toggle (PHOTO/VIDEO TOGGLE)
     setupFlowToggle();
     
-    // Setup event listeners
-    setupEventListeners();
+    // Setup event listeners for report page
+    setupReportEventListeners();
     
     // Setup video flow
     setupVideoFlow();
     
     // Setup photo flow (includes form submission)
     setupPhotoFlow();
+}
 
-    console.log('=== MODERN APP INITIALIZATION COMPLETE ===');
-});
+function setupMapPage() {
+    // Initialize map
+    initMap();
+    loadMapData();
+    
+    // Setup dark mode toggle
+    setupDarkModeToggle();
+    
+    // Setup map-specific event listeners
+    setupMapEventListeners();
+}
+
+function setupUserPage() {
+    // Setup dark mode toggle
+    setupDarkModeToggle();
+    console.log('User page initialized');
+}
+
+// Dark mode toggle setup (works on all pages)
+function setupDarkModeToggle() {
+    const darkModeToggle = document.getElementById('dark-mode-toggle');
+    if (darkModeToggle) {
+        darkModeToggle.addEventListener('click', toggleDarkMode);
+    }
+}
+
+// Report page specific event listeners
+function setupReportEventListeners() {
+    // File input handlers
+    const fileInput = document.getElementById('file');
+    if (fileInput) {
+        fileInput.addEventListener('change', handleFileInputChange);
+    }
+    
+    const videoFileInput = document.getElementById('video-file-input');
+    if (videoFileInput) {
+        videoFileInput.addEventListener('change', handleVideoFileChange);
+    }
+    
+    // Form submission
+    const uploadForm = document.getElementById('upload-form');
+    if (uploadForm) {
+        uploadForm.addEventListener('submit', handleUploadFormSubmit);
+    }
+    
+    // Photo detection button
+    const detectPhotoBtn = document.getElementById('detect-photo-btn');
+    if (detectPhotoBtn) {
+        detectPhotoBtn.addEventListener('click', detectPhotoWithAI);
+    }
+    
+    // Photo mode toggle
+    const photoModeRadios = document.querySelectorAll('input[name="photo-report-method"]');
+    photoModeRadios.forEach(radio => {
+        radio.addEventListener('change', handlePhotoModeToggle);
+    });
+    
+    // Photo manual location button
+    const photoSelectLocationBtn = document.getElementById('photo-select-location-btn');
+    if (photoSelectLocationBtn) {
+        photoSelectLocationBtn.addEventListener('click', openLocationSelector);
+    }
+    
+    // Video manual location button
+    const videoSelectLocationBtn = document.getElementById('video-select-location-btn');
+    if (videoSelectLocationBtn) {
+        videoSelectLocationBtn.addEventListener('click', openLocationSelector);
+    }
+    
+    // Location selector setup
+    setupLocationSelector();
+}
+
+// Map page specific event listeners
+function setupMapEventListeners() {
+    // Map search functionality
+    const mainMapSearch = document.getElementById('main-map-search');
+    if (mainMapSearch) {
+        mainMapSearch.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                searchMainMap();
+            }
+        });
+    }
+    
+    // Search button
+    const mainMapSearchBtn = document.getElementById('main-map-search-btn');
+    if (mainMapSearchBtn) {
+        mainMapSearchBtn.addEventListener('click', searchMainMap);
+    }
+    
+    // Refresh map button
+    const refreshMapBtn = document.getElementById('refresh-map');
+    if (refreshMapBtn) {
+        refreshMapBtn.addEventListener('click', function() {
+            console.log('Refresh map button clicked');
+            loadMapData();
+            window.showNotification('Map data refreshed!', 'success');
+        });
+    }
+    
+    // Nearby trash finder
+    const findNearbyBtn = document.getElementById('find-nearby-btn');
+    if (findNearbyBtn) {
+        findNearbyBtn.addEventListener('click', findNearbyTrash);
+    }
+    
+    // Radius slider
+    const radiusSlider = document.getElementById('radius-slider');
+    const radiusValue = document.getElementById('radius-value');
+    if (radiusSlider && radiusValue) {
+        radiusSlider.addEventListener('input', () => {
+            radiusValue.textContent = radiusSlider.value;
+        });
+    }
+    
+    // Location selector for map
+    setupLocationSelector();
+}
 
 // Add the missing generateVideoReportContent function
 function generateVideoReportContent(detectionData) {

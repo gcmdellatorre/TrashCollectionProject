@@ -32,7 +32,7 @@ class TestPhotoFlow:
     
     def test_toggle_exists_and_photo_flow_accessible(self, base_url):
         """Test that the toggle exists and photo flow can be accessed"""
-        response = requests.get(f"{base_url}/")
+        response = requests.get(f"{base_url}/report")
         assert response.status_code == 200
         
         # Check that toggle buttons exist
@@ -43,7 +43,7 @@ class TestPhotoFlow:
     
     def test_photo_flow_toggle_functionality(self, base_url):
         """Test that clicking photo toggle shows photo flow"""
-        response = requests.get(f"{base_url}/")
+        response = requests.get(f"{base_url}/report")
         assert response.status_code == 200
         
         # Check that photo flow container exists and can be toggled
@@ -53,7 +53,7 @@ class TestPhotoFlow:
     
     def test_photo_upload_page_loads(self, base_url):
         """Test that the photo upload page loads correctly after toggle"""
-        response = requests.get(f"{base_url}/")
+        response = requests.get(f"{base_url}/report")
         assert response.status_code == 200
         assert "photo" in response.text.lower() or "upload" in response.text.lower()
         # Verify photo flow elements are present
@@ -150,6 +150,11 @@ class TestPhotoFlow:
         upload_response = requests.post(f"{base_url}/upload", files=files, data=data)
         assert upload_response.status_code == 200
         
+        # Get the report ID from the upload response
+        upload_data = upload_response.json()
+        assert upload_data['status'] == 'success'
+        report_id = upload_data['report_id']
+        
         # Check that it appears in the map data
         map_response = requests.get(f"{base_url}/api/trash-data")
         assert map_response.status_code == 200
@@ -157,14 +162,14 @@ class TestPhotoFlow:
         map_data = map_response.json()
         assert 'reports' in map_data
         
-        # Find our uploaded report
+        # Find our specific uploaded report by ID
         uploaded_report = None
         for report in map_data['reports']:
-            if report.get('trash_type') == 'paper':
+            if report.get('id') == report_id:
                 uploaded_report = report
                 break
         
-        assert uploaded_report is not None
+        assert uploaded_report is not None, f"Report with ID {report_id} not found in database"
         assert uploaded_report['latitude'] == 37.7749
         assert uploaded_report['longitude'] == -122.4194
     
@@ -228,7 +233,7 @@ class TestPhotoFlowFrontend:
     
     def test_photo_buttons_exist(self):
         """Test that photo upload buttons exist in the HTML"""
-        with open("static/index.html", "r") as f:
+        with open("static/report.html", "r") as f:
             content = f.read()
         
         # Check for photo buttons
@@ -254,7 +259,7 @@ class TestPhotoFlowFrontend:
     
     def test_photo_form_elements(self):
         """Test that photo form elements exist"""
-        with open("static/index.html", "r") as f:
+        with open("static/report.html", "r") as f:
             content = f.read()
         
         # Check for form elements

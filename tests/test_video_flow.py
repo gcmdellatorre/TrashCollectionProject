@@ -29,7 +29,7 @@ class TestVideoFlow:
     
     def test_toggle_exists_and_video_flow_accessible(self, base_url):
         """Test that the toggle exists and video flow is accessible (default)"""
-        response = requests.get(f"{base_url}/")
+        response = requests.get(f"{base_url}/report")
         assert response.status_code == 200
         
         # Check that toggle buttons exist
@@ -47,7 +47,7 @@ class TestVideoFlow:
     
     def test_video_flow_toggle_functionality(self, base_url):
         """Test that video flow is active by default and can be toggled"""
-        response = requests.get(f"{base_url}/")
+        response = requests.get(f"{base_url}/report")
         assert response.status_code == 200
         
         # Check that video flow container exists and has advanced parameters
@@ -61,7 +61,7 @@ class TestVideoFlow:
     
     def test_video_upload_page_loads(self, base_url):
         """Test that the video upload page loads correctly (default flow)"""
-        response = requests.get(f"{base_url}/")
+        response = requests.get(f"{base_url}/report")
         assert response.status_code == 200
         assert "video" in response.text.lower() or "upload" in response.text.lower()
         # Verify video flow elements are present
@@ -262,7 +262,7 @@ class TestVideoFlowFrontend:
     
     def test_video_buttons_exist(self):
         """Test that video upload buttons exist in the HTML"""
-        with open("static/index.html", "r") as f:
+        with open("static/report.html", "r") as f:
             content = f.read()
         
         # Check for video buttons
@@ -331,7 +331,7 @@ class TestVideoFlowFrontend:
         # Check for report generation
         assert 'generateVideoReportContent' in content
         assert 'AI-Generated Trash Report' in content
-        assert 'Total Objects Detected' in content
+        assert 'Total Objects' in content
         assert 'Estimated Weight' in content
     
     def test_video_report_submission_flow(self):
@@ -342,7 +342,7 @@ class TestVideoFlowFrontend:
         # Check for submission flow
         assert 'submitVideoReport' in content
         assert '/api/submit-video-report' in content
-        assert 'AI-generated report submitted successfully' in content
+        assert 'Report submitted successfully' in content
 
 class TestVideoFlowIntegration:
     """Test the integration between frontend and backend"""

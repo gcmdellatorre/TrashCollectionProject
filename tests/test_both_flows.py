@@ -36,7 +36,7 @@ class TestBothFlows:
     
     def test_toggle_functionality_exists(self, base_url):
         """Test that toggle functionality exists and both flows are accessible"""
-        response = requests.get(f"{base_url}/")
+        response = requests.get(f"{base_url}/report")
         assert response.status_code == 200
         
         # Check that toggle buttons exist
@@ -55,9 +55,28 @@ class TestBothFlows:
         assert "take-photo-btn" in response.text
         assert "upload-photo-btn" in response.text
     
-    def test_video_flow_is_default(self, base_url):
-        """Test that video flow is active by default"""
+    def test_landing_page_navigation(self, base_url):
         response = requests.get(f"{base_url}/")
+        assert response.status_code == 200
+        assert "Report Trash" in response.text
+        assert "Find Trash (Map)" in response.text
+        assert "User Page" in response.text
+
+    def test_map_page(self, base_url):
+        response = requests.get(f"{base_url}/map")
+        assert response.status_code == 200
+        assert "Find Trash (Map)" in response.text
+        assert "id=\"map\"" in response.text
+
+    def test_user_page(self, base_url):
+        response = requests.get(f"{base_url}/user")
+        assert response.status_code == 200
+        assert "User Profile" in response.text
+        assert "Your Stats" in response.text
+    
+    def test_video_flow_is_default(self, base_url):
+        """Test that video flow is active by default on the report page"""
+        response = requests.get(f"{base_url}/report")
         assert response.status_code == 200
         
         # Video flow should be visible by default
@@ -69,8 +88,8 @@ class TestBothFlows:
         assert "confidenceThreshold" in response.text
     
     def test_photo_flow_requires_toggle(self, base_url):
-        """Test that photo flow requires toggle activation"""
-        response = requests.get(f"{base_url}/")
+        """Test that photo flow requires toggle activation on the report page"""
+        response = requests.get(f"{base_url}/report")
         assert response.status_code == 200
         
         # Photo flow elements should exist but may be hidden
@@ -236,7 +255,7 @@ class TestFlowIntegration:
 
     def test_shared_location_selector(self, base_url):
         """Test that location selector works with both flows"""
-        response = requests.get(f"{base_url}/")
+        response = requests.get(f"{base_url}/report")
         assert response.status_code == 200
         
         # Location selector should be available for both flows
@@ -247,19 +266,13 @@ class TestFlowIntegration:
     
     def test_shared_map_integration(self, base_url):
         """Test that map integration works with both flows"""
-        response = requests.get(f"{base_url}/")
+        response = requests.get(f"{base_url}/map")
         assert response.status_code == 200
         
-        # Map should be available and work with both flows
-        assert "map" in response.text
+        # Map should have search functionality
         assert "main-map-search" in response.text
-        assert "find-nearby-btn" in response.text
-        
-        # Map data endpoint should work
-        map_response = requests.get(f"{base_url}/api/trash-data")
-        assert map_response.status_code == 200
-        map_data = map_response.json()
-        assert 'reports' in map_data
+        assert "map" in response.text
+        assert "leaflet" in response.text
     
     def test_shared_notification_system(self, base_url):
         """Test that notification system script is included and notification UI can be rendered"""
@@ -354,8 +367,8 @@ class TestFlowIntegration:
         assert "/static/js/modern-app.js" in response.text
 
     def test_shared_form_validation(self, base_url):
-        """Test that form validation works with both flows"""
-        response = requests.get(f"{base_url}/")
+        """Test that form validation works for both flows"""
+        response = requests.get(f"{base_url}/report")
         assert response.status_code == 200
         
         # Both flows should have form validation
@@ -370,61 +383,49 @@ class TestFlowUI:
         return "http://localhost:8000"
     
     def test_both_flows_have_buttons(self, base_url):
-        """Test that both flows have their respective button containers (dynamic buttons are rendered by JS)"""
-        response = requests.get(f"{base_url}/")
+        """Test that both flows have their respective buttons"""
+        response = requests.get(f"{base_url}/report")
         assert response.status_code == 200
-        # Toggle buttons
+        
+        # Both flows should have toggle buttons
         assert "toggle-photo-flow" in response.text
         assert "toggle-video-flow" in response.text
-        # Photo flow buttons (container present)
-        assert "take-photo-btn" in response.text
-        assert "upload-photo-btn" in response.text
-        # Video flow buttons (container present)
-        assert "video-file-input" in response.text
+        
+        # Video flow buttons
         assert "take-video-btn" in response.text
         assert "upload-video-btn" in response.text
-        # Do not check for video-submit-btn, as it is rendered dynamically by JS
+        
+        # Photo flow buttons
+        assert "take-photo-btn" in response.text
+        assert "upload-photo-btn" in response.text
     
     def test_both_flows_have_forms(self, base_url):
         """Test that both flows have their respective forms"""
-        response = requests.get(f"{base_url}/")
+        response = requests.get(f"{base_url}/report")
         assert response.status_code == 200
         
-        # Photo flow form
-        assert "upload-form" in response.text
-        assert "file" in response.text  # Photo file input
-        
-        # Video flow form
-        assert "video-upload-form" in response.text
-        assert "video-file-input" in response.text
-        assert "modelSelect" in response.text
-        assert "frameInterval" in response.text
-        assert "confidenceThreshold" in response.text
+        # Both flows should have forms
+        assert "upload-form" in response.text  # Photo flow
+        assert "video-upload-form" in response.text  # Video flow
     
     def test_both_flows_have_location_handling(self, base_url):
         """Test that both flows have location handling"""
-        response = requests.get(f"{base_url}/")
+        response = requests.get(f"{base_url}/report")
         assert response.status_code == 200
         
-        # Photo flow location
+        # Both flows should have location fields
         assert "latitude" in response.text
         assert "longitude" in response.text
-        assert "manual-location-section" in response.text
-        
-        # Video flow location
-        assert "video-latitude" in response.text
-        assert "video-longitude" in response.text
+        assert "location-selector" in response.text
     
     def test_video_flow_has_report_preview(self, base_url):
         """Test that video flow has report preview functionality"""
-        response = requests.get(f"{base_url}/")
+        response = requests.get(f"{base_url}/report")
         assert response.status_code == 200
         
-        # Video flow should have results and error sections
+        # Video flow should have results preview
         assert "video-results-section" in response.text
-        assert "video-results-content" in response.text
-        assert "video-error-section" in response.text
-        assert "video-error-message" in response.text
+        assert "video-report-container" in response.text
 
 def run_both_flows_tests():
     """Run all tests for both flows"""

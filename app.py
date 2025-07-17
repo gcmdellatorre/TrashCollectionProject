@@ -350,6 +350,16 @@ async def add_test_data(
 async def get_map():
     with open("static/map.html", "r") as file:
         return file.read()
+
+@app.get("/report", response_class=HTMLResponse)
+async def get_report():
+    with open("static/report.html", "r") as file:
+        return file.read()
+
+@app.get("/user", response_class=HTMLResponse)
+async def get_user():
+    with open("static/user.html", "r") as file:
+        return file.read()
     
 @app.get("/api/trash-data")
 async def get_trash_data():
